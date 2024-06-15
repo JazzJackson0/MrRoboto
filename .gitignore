@@ -1,0 +1,6 @@
+docs/*.png
+build/*
+sdk/
+temp/
+tests/graphicsTest.py
+tests/log-*

@@ -23,15 +23,13 @@ int main(int argc, char* argv[]) {
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
-    //pause();
 
     mr_roboto = Robot::CreateRobot();
 
     mr_roboto->RobotStart();
-   // mr_roboto->MapAndLocalize(EKF);
-    mr_roboto->MapEnv();
-
-    // mr_roboto->Localize();
+    // mr_roboto->MapAndLocalize(EKF);
+    // mr_roboto->MapEnv();
+    mr_roboto->Localize("../tests/map2.pbm");
     
     
     return 0;

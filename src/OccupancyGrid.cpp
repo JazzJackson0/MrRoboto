@@ -12,6 +12,10 @@ float OccupancyGridMap::InverseSensorModel(ogrid::Cell cell, std::vector<VectorX
 	float cell_range = sqrt(pow((cell.x - Pose[0]), 2) + pow((cell.y - Pose[1]), 2));
 	float cell_bearing = atan2( (cell.y - Pose[1]), (cell.x - Pose[0]) ) - Pose[2];
 	int k = Get_MostSimilarBeam(beams, cell_range, cell_bearing);
+
+	if (k < 0) { return LogOdds(0.0); }
+
+	//std::cout << "k: " << k << std::endl;
 	
 	// Determine Range of Beam k
 	float beam_range;
@@ -85,6 +89,8 @@ OccupancyGridMap::OccupancyGridMap(int m, int n, float alpha, float beta, float 
 
 Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMap(VectorXf pose, std::vector<VectorXf> scan) {
 
+	std::cout << "Number of Points Scanned: " << scan.size() << std::endl;
+
 	Pose = map_builder.MapCoordinate_to_DataStructureIndex(pose);
 	
 	for (int i = 0; i < M; i++) {
@@ -99,7 +105,11 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMap(VectorXf pose, std::vect
 			GridMap = GridMap + PreviousGridMap - InitialGridMap;
 			PreviousGridMap = GridMap;
 		}
+
+		std::cout << "Map Row " << i + 1 << "/" << M << " Completed" << std::endl;
 	}
+
+	std::cout << "Map Made!!!!" << std::endl;
 
 	return GridMap;
 }
@@ -109,9 +119,12 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMapWithPointCloud(PointCloud
 	
 	for (int i = 0; i < cloud.points.size(); i++) {
 
-		VectorXi index = map_builder.MapCoordinate_to_DataStructureIndex(cloud.points[i]);
+		VectorXf pt(2);
+		pt << (cloud.points[i][0] * 100), (cloud.points[i][1] * 100); // m --> cm
+
+		VectorXi index = map_builder.MapCoordinate_to_DataStructureIndex(pt);
 		
-		GridMap(index[0], index[1]) = 0.07;
+		GridMap(index[0], index[1]) = 1.f;
 	}
 
 	return GridMap;
@@ -122,7 +135,7 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMapWithPointCloud(PointCloud
 /*
  * 			TO-DO
  * 			-----
- *  - 
+ *  - Inverse Sensor Model (Really, the Get_MostSimilarBeam() func) takes waaaay too long lol. I'll drastically overhaul the performance later
  *
  *  - 
  *  

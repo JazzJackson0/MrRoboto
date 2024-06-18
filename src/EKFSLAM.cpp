@@ -425,9 +425,9 @@ void EKFSlam::SetInitialState(Eigen::VectorXf initial_position, float _process_u
 	Build_Covariance();
 	Build_NoiseCovariances();
 
-	std::cout << "CURRENT MAP AFTER BUILD:" << std::endl;
-	std::cout << StateVector.transpose() << std::endl;
-	std::cout << "\n\n";
+	// std::cout << "CURRENT MAP AFTER BUILD:" << std::endl;
+	// std::cout << StateVector.transpose() << std::endl;
+	// std::cout << "\n\n";
 }
 
 

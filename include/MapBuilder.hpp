@@ -49,6 +49,25 @@ class MapBuilder {
          */
         MapBuilder(int p, int m, int n);
 
+
+        /**
+         * @brief 
+         * 
+         * @param m 
+         * @param n 
+         */
+        void Update_2DMapDimensions(int m, int n);
+
+
+        /**
+         * @brief 
+         * 
+         * @param m 
+         * @param n 
+         * @param p
+         */
+        void Update_3DMapDimensions(int m, int n, int p);
+
         /**
          * @brief 
          * 

@@ -29,7 +29,6 @@ namespace diffdrive {
     class Robot {
 
         private:
-            const float PI   = (float)3.14159265;
             std::fstream broadcast_output;
             VectorXf currentPos;
             RPlidarDriver *lidar;

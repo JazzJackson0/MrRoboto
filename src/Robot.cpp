@@ -55,7 +55,7 @@ PointCloud Robot::GetCloud(int broadcast_state) {
         }
 
         angle = ( (float) nodes[i].angle_z_q14 * 90.0f) / 16384.0f;
-        rad = angle * PI / 180.f;
+        rad = angle * M_PI / 180.f;
 
         // Get coordinate of ray.
         int size = currentPos.rows();
@@ -96,12 +96,11 @@ std::vector<VectorXf> Robot::GetScan() {
         else {
             float dist_mm = (float) nodes[i].dist_mm_q2 / 4.0f;
             dist_m = dist_mm / 1000;
-            //dist_cm = dist_mm / 10;
         }
 
         angle = ( (float) nodes[i].angle_z_q14 * 90.0f) / 16384.0f;
-        rad = angle * PI / 180.f;
-        point << dist_m, angle;
+        rad = angle * M_PI / 180.f;
+        point << (dist_m * 100), angle; // Conver dist to cm
         scan.push_back(point);
 
         idx++;
@@ -163,7 +162,7 @@ void Robot::RobotStart() {
     currentPos = VectorXf::Zero(3);
 
     // Setup Map Builder
-    map_builder = new MapBuilder(1000, 1000);
+    map_builder = new MapBuilder(600, 600);
 
     // Setup SLAM 1
     slam1 = new PoseGraphOptSLAM(500, 3, 0.01);
@@ -174,7 +173,7 @@ void Robot::RobotStart() {
     slam2->SetInitialState(currentPos, 0.01, 0.001);
 
     // Setup Mapping
-    og_map = new OccupancyGridMap(1000, 1000, 0.01, 2*PI, 6);
+    og_map = new OccupancyGridMap(500, 500, 0.01, 2 * M_PI, 6);
 
     // Setup Localization
     pfilter = new ParticleFilter(200, 3, 0.01);
@@ -196,8 +195,13 @@ void Robot::MapEnv() {
 
     while (1) {
         RawScan();
-        std::vector<VectorXf> scan = GetScan();
-        std::cout << og_map->UpdateGridMap(currentPos, scan) << std::endl;
+        // std::vector<VectorXf> scan = GetScan();
+        // std::cout << og_map->UpdateGridMap(currentPos, scan) << std::endl;
+        // std::cout << std::endl;
+
+        // Version 2
+        PointCloud cloud = GetCloud(NO_BROADCAST);
+        std::cout << og_map->UpdateGridMapWithPointCloud(cloud) << std::endl;
         std::cout << std::endl;
     }
 }
@@ -205,7 +209,8 @@ void Robot::MapEnv() {
 
 void Robot::Localize(std::string map_filename) {
 
-    pfilter->AddMap(map_builder->MapFile_to_Tensor2D(map_filename, PBM), 6, 2*PI);
+    pfilter->AddMap(map_builder->MapFile_to_Tensor2D(map_filename, PBM), 6, 2 * M_PI);
+    std::cout << "Map Added!!!" << std::endl;
     while (1) {
         RawScan();
         PointCloud cloud = GetCloud(NO_BROADCAST);

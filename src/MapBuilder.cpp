@@ -11,6 +11,21 @@ MapBuilder::MapBuilder(int m, int n) : M(m), N(n) {
 MapBuilder::MapBuilder(int p, int m, int n) : P(p), M(m), N(n) {}
 
 
+void MapBuilder::Update_2DMapDimensions(int m, int n) {
+
+    M = m;
+    N = n;
+}
+
+
+void MapBuilder::Update_3DMapDimensions(int m, int n, int p) {
+
+    M = m;
+    N = n;
+    P = p;
+}
+
+
 
 void MapBuilder::Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filename, int filetype, int max_value) {
 
@@ -68,6 +83,10 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
             
             line_num++;
             elems = split(line, "\\s+");
+
+            // Skip blank lines
+            if (elems.size() == 0)
+                continue;
             
             // Skip Comments
             if (elems[0].compare("#") == 0) {
@@ -78,7 +97,8 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
             // Verify Width & Height
             if (line_num == 2 && elems.size() == 2) {
                 if (std::stoi(elems[0]) != N || std::stoi(elems[1]) != M) {
-                    std::cout << "Map File and Tensor Dimensions Do Not Match" << std::endl;
+                    std::cout << "Map File and Tensor Dimensions Do Not Match. [Map File--> Width: " << elems[0] 
+                        << ", Height: " << elems[1] << "] [Tensor--> Width: " << N << ", " << M << "]" << std::endl;
                     break;
                 }
             }
@@ -168,6 +188,10 @@ Tensor<float, 3> MapBuilder::MapFile_to_Tensor3D(std::string filename, int filet
         while (getline(map_file, line)) {
             
             elems = split(line, "\\s+");
+            
+            // Skip blank lines
+            if (elems.size() == 0)
+                continue;
 
             if (in_header && elems[0].compare("end_header") == 0) {
 
@@ -206,12 +230,12 @@ VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
     VectorXi index = VectorXi::Zero(2);
     if (P <= 0) {index.resize(3);}
 
-    index[0] = (float) (coordinate[0] + (N / 2));
-    index[1] = (float) (coordinate[1] + (M / 2));
+    index[0] = (int) round(coordinate[0] + (N / 2));
+    index[1] = (int) round(coordinate[1] + (M / 2));
 
     if (coordinate.rows() == 3) {
 
-        index[2] = (float) (coordinate[2] + (P / 2));
+        index[2] = (int) round(coordinate[2] + (P / 2));
     }
     
     return index;
@@ -223,12 +247,12 @@ VectorXf MapBuilder::DataStructureIndex_to_MapCoordinate(VectorXi index) {
     VectorXf coordinate = VectorXf::Zero(2);
     if (P <= 0) {coordinate.resize(3);}
 
-    coordinate[0] =  ((int) index[0] + (N / 2));
-    coordinate[1] = ((int) index[1] + (M / 2));
+    coordinate[0] =  (float) (index[0] + (N / 2));
+    coordinate[1] = (float) (index[1] + (M / 2));
 
     if (index.rows() == 3) {
 
-        coordinate[2] = ((int) index[2] + (P / 2));
+        coordinate[2] = (float) (index[2] + (P / 2));
     }
 
     return coordinate;

@@ -22,7 +22,7 @@ set(SOURCES ${SRC}/main.cpp ${SRC}/Robot.cpp ${SRC}/ICP.cpp
     ${RPLIDAR_SDK_SRC} ${SRC}/EKFSLAM.cpp ${SRC}/FeatureExtraction.cpp
     ${SRC}/AStar.cpp ${SRC}/RRT.cpp ${SRC}/MapBuilder.cpp 
     ${SRC}/OccupancyGrid.cpp ${SRC}/ParticleFilter.cpp ${SRC}/DynamicWindow.cpp
-    ${SRC}/FrontierExploration.cpp ${SRC}/PID.cpp)
+    ${SRC}/FrontierExploration.cpp ${SRC}/PID.cpp ${SRC}/Serial.cpp ${SRC}/Odometry.cpp)
 
 include_directories(
     ${RPLIDAR_SDK_PATH}/include

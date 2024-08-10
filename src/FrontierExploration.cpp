@@ -3,6 +3,39 @@
 // NOT FINISHED!!!!!!!!!!!
 
 // Private-----------------------------------------------------------------------------------------------------------------------------------
+void FrontierExplorer::Build_CellStatusMap() {
+
+    CellStatusMap = new PointStatus*[M];
+    for (int i = 0; i < M; i++) {
+        CellStatusMap[i] = new PointStatus[N];
+    }
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+
+            MapStatus map_status;
+            FrontierStatus frontier_status;
+            map_status = M_NONE;
+            frontier_status = F_NONE;
+            PointStatus cell = PointStatus(map_status, frontier_status);
+            CellStatusMap[i][j] = cell;
+        }
+    }
+}
+
+void FrontierExplorer::Build_RecursionMap(RecursionPoint **&RecursionMap) {
+
+    RecursionMap = new RecursionPoint*[M];
+    for (int i = 0; i < M; i++) {
+        RecursionMap[i] = new RecursionPoint[N];
+    }
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+
+            RecursionPoint cell = RecursionPoint(false);
+            RecursionMap[i][j] = cell;
+        }
+    }
+}
 
 bool FrontierExplorer::isValid(int row, int col) {
     return (col >= 0) && (col < N) && 
@@ -15,36 +48,101 @@ bool FrontierExplorer::isFrontier(VectorXf point) {
     int col = point[0]; // Change VectorXf to VectorXi!!!!!!!!!!!!
  
     // North Cell: (x-1, y)
-    if (isValid(row, col - 1) && Map(row, col - 1) < 0.5) { return true; }
+    if (isValid(row, col - 1) && Map(row, col - 1) == 0.5) { return true; }
 
     // South Cell (x+1, y)
-    if (isValid(row, col - 1) && Map(row, col + 1) < 0.5) { return true; }
+    if (isValid(row, col + 1) && Map(row, col + 1) == 0.5) { return true; }
 
     // East Cell (x, y+1)
-    if (isValid(row, col - 1) && Map(row + 1, col) < 0.5) { return true; }
+    if (isValid(row + 1, col) && Map(row + 1, col) == 0.5) { return true; }
 
     // West Cell (x, y-1)
-    if (isValid(row, col - 1) && Map(row - 1, col) < 0.5) { return true; }
+    if (isValid(row - 1, col) && Map(row - 1, col) == 0.5) { return true; }
 
     // North-East Cell (x-1, y+1)
-    if (isValid(row, col - 1) && Map(row + 1, col - 1) < 0.5) { return true; }
+    if (isValid(row + 1, col - 1) && Map(row + 1, col - 1) == 0.5) { return true; }
 
     // North-West Cell (x-1, y-1)
-    if (isValid(row, col - 1) && Map(row - 1, col - 1) < 0.5) { return true; }
+    if (isValid(row - 1, col - 1) && Map(row - 1, col - 1) == 0.5) { return true; }
 
     // South-East Cell (x+1, y+1)
-    if (isValid(row, col - 1) && Map(row + 1, col + 1) < 0.5) { return true; }
+    if (isValid(row + 1, col + 1) && Map(row + 1, col + 1) == 0.5) { return true; }
 
     // South-West Cell (x+1, y-1)
-    if (isValid(row, col - 1) && Map(row - 1, col + 1) < 0.5) { return true; }
+    if (isValid(row - 1, col + 1) && Map(row - 1, col + 1) == 0.5) { return true; }
 
     return false;
 
 }
 
-std::vector<VectorXf> FrontierExplorer::Get_AdjacentCells(VectorXf point) {
+VectorXf FrontierExplorer::Get_Centroid(std::vector<VectorXf> frontier) {
 
-    // TODO: 
+    VectorXf centroid(2);
+    float x_sum = 0;
+    float y_sum = 0;
+    for (int j = 0; j < frontier.size(); j++) {
+
+        x_sum += frontier[j][0];
+        y_sum += frontier[j][1];
+    }
+
+    centroid << x_sum / (frontier.size()), y_sum / (frontier.size());
+    return centroid;
+}
+
+void FrontierExplorer::Get_AdjacentCells(VectorXf point, std::vector<VectorXf> &adjacents, RecursionPoint **RecursionMap) {
+
+    adjacents.push_back(point);
+
+    int row = point[1]; // Change VectorXf to VectorXi!!!!!!!!!!!!
+    int col = point[0]; // Change VectorXf to VectorXi!!!!!!!!!!!!
+
+    RecursionMap[col][row].added = true;
+
+    VectorXf north(2);
+    VectorXf south(2);
+    VectorXf east(2);
+    VectorXf west(2);
+    VectorXf north_east(2);
+    VectorXf north_west(2);
+    VectorXf south_east(2);
+    VectorXf south_west(2);
+    north << row, col - 1;
+    south << row, col + 1;
+    east << row + 1, col;
+    west << row - 1, col;
+    north_east << row + 1, col - 1;
+    north_west << row - 1, col - 1;
+    south_east << row + 1, col + 1;
+    south_west << row - 1, col + 1;
+
+    // North Cell: (x-1, y)
+    if (isValid(row, col - 1) && isFrontier(north) && !RecursionMap[col - 1][row].added) { Get_AdjacentCells(north, adjacents, RecursionMap); }
+
+    // South Cell (x+1, y)
+    if (isValid(row, col + 1) && isFrontier(south) && !RecursionMap[col + 1][row].added) { Get_AdjacentCells(south, adjacents, RecursionMap); }
+
+    // East Cell (x, y+1)
+    if (isValid(row + 1, col) && isFrontier(east) && !RecursionMap[col][row + 1].added) { Get_AdjacentCells(east, adjacents, RecursionMap); }
+
+    // West Cell (x, y-1)
+    if (isValid(row - 1, col) && isFrontier(west) && !RecursionMap[col][row - 1].added) { Get_AdjacentCells(west, adjacents, RecursionMap); }
+
+    // North-East Cell (x-1, y+1)
+    if (isValid(row + 1, col - 1) && isFrontier(north_east) && !RecursionMap[col - 1][row + 1].added) { Get_AdjacentCells(north_east, adjacents, RecursionMap); }
+
+    // North-West Cell (x-1, y-1)
+    if (isValid(row - 1, col - 1) && isFrontier(north_west) && !RecursionMap[col - 1][row - 1].added) { Get_AdjacentCells(north_west, adjacents, RecursionMap); }
+
+    // South-East Cell (x+1, y+1)
+    if (isValid(row + 1, col + 1) && isFrontier(south_east) && !RecursionMap[col + 1][row + 1].added) { Get_AdjacentCells(south_east, adjacents, RecursionMap); }
+
+    // South-West Cell (x+1, y-1)
+    if (isValid(row - 1, col + 1) && isFrontier(south_west) && !RecursionMap[col + 1][row - 1].added) { Get_AdjacentCells(south_west, adjacents, RecursionMap); }
+
+    return;
+
+    
 }
 
 
@@ -93,6 +191,34 @@ void FrontierExplorer::Update_CellStatus(VectorXf point, int map_frontier, int s
 
 bool FrontierExplorer::Has_OpenSpaceNeighbor(VectorXf point) {
 
+    int row = point[1]; // Change VectorXf to VectorXi!!!!!!!!!!!!
+    int col = point[0]; // Change VectorXf to VectorXi!!!!!!!!!!!!
+ 
+    // North Cell: (x-1, y)
+    if (isValid(row, col - 1) && Map(row, col - 1) < 0.5) { return true; }
+
+    // South Cell (x+1, y)
+    if (isValid(row, col + 1) && Map(row, col + 1) < 0.5) { return true; }
+
+    // East Cell (x, y+1)
+    if (isValid(row + 1, col) && Map(row + 1, col) < 0.5) { return true; }
+
+    // West Cell (x, y-1)
+    if (isValid(row - 1, col) && Map(row - 1, col) < 0.5) { return true; }
+
+    // North-East Cell (x-1, y+1)
+    if (isValid(row + 1, col - 1) && Map(row + 1, col - 1) < 0.5) { return true; }
+
+    // North-West Cell (x-1, y-1)
+    if (isValid(row - 1, col - 1) && Map(row - 1, col - 1) < 0.5) { return true; }
+
+    // South-East Cell (x+1, y+1)
+    if (isValid(row + 1, col + 1) && Map(row + 1, col + 1) < 0.5) { return true; }
+
+    // South-West Cell (x+1, y-1)
+    if (isValid(row - 1, col + 1) && Map(row - 1, col + 1) < 0.5) { return true; }
+
+    return false;
 }
 
 
@@ -116,7 +242,10 @@ std::vector<std::vector<VectorXf>> FrontierExplorer::Detect_WavefrontFrontier(Ve
             frontiers.push_back(new_frontier);
         }
 
-        std::vector<VectorXf> neighbors = Get_AdjacentCells(point);
+        RecursionPoint **recursion_map;
+        Build_RecursionMap(recursion_map);
+        std::vector<VectorXf> neighbors;
+        Get_AdjacentCells(point, neighbors, recursion_map);
 
         for (int i = 0; i < neighbors.size(); i++) {
 
@@ -148,7 +277,10 @@ std::vector<VectorXf> FrontierExplorer::Extract_Frontier2D(VectorXf frontier_pt)
         if (isFrontier(point)) {
             
             new_frontier.push_back(point);
-            std::vector<VectorXf> neighbors = Get_AdjacentCells(point);
+            RecursionPoint **recursion_map;
+            Build_RecursionMap(recursion_map);
+            std::vector<VectorXf> neighbors;
+            Get_AdjacentCells(point, neighbors, recursion_map);
 
             for (int i = 0; i < neighbors.size(); i++) {
 
@@ -176,36 +308,40 @@ FrontierExplorer::FrontierExplorer(Eigen::Tensor<float, 2> map) : Map(map) {
     M = d[0];
 	N = d[1];
 
-    // Build CallStatusMap
-    CellStatusMap = new PointStatus*[M];
-    for (int i = 0; i < M; i++) {
-        CellStatusMap[i] = new PointStatus[N];
-    }
-    for (int i = 0; i < M; i++) {
-        for (int j = 0; j < N; j++) {
-
-            MapStatus map_status;
-            FrontierStatus frontier_status;
-            map_status = M_NONE;
-            frontier_status = F_NONE;
-            PointStatus cell = PointStatus(map_status, frontier_status);
-            CellStatusMap[i][j] = cell;
-        }
-    }
+    Build_CellStatusMap();
 }
 
 
-void FrontierExplorer::Explore(VectorXf robot_pose) {
+void FrontierExplorer::Load_MAP(Eigen::Tensor<float, 2> map) {
+
+    Map = map;
+    auto &d = Map.dimensions();
+    M = d[0];
+	N = d[1];
+
+    Build_CellStatusMap();
+}
+
+
+VectorXf FrontierExplorer::FindFrontier(VectorXf robot_pose) {
 
     std::vector<std::vector<VectorXf>> frontiers = Detect_WavefrontFrontier(robot_pose);
+    
+    // Decide on frontier to visit----------
+    // TODO: Currently only takes into account closest frontier, not mix between closest and largest
+    VectorXf closest_centroid(2);
+    float closest_dist = std::numeric_limits<float>::max();
+    for (int i = 0; i < frontiers.size(); i++) {
 
-    // Decide on frontier to visit
-
-    // Prepare data for Path Planning algo
-
-    // Update status of frontiers
-
-
-    // Probably need to make list of frontiers global
+        VectorXf centroid = Get_Centroid(frontiers[i]);
+        float dist = std::sqrt(std::pow((centroid[0] - robot_pose[0]), 2) + std::pow((centroid[0] - robot_pose[0]), 2));
+        if (dist < closest_dist) {
+            closest_dist = dist;
+            closest_centroid = centroid;
+        }
+    }
+    return closest_centroid;
 }
+
+
 

@@ -1,7 +1,5 @@
 #include "../include/DynamicWindow.hpp"
 
-// NOT FINISHED!!!!!!!!!!!
-
 // Private---------------------------------------------------------------------------------------------------------------------------------
 
 VectorXf DynamicWindowApproach::Get_ClosestObstacle() {
@@ -134,10 +132,18 @@ VectorXf DynamicWindowApproach::Optimize(std::vector<Velocities> vels) {
     }
 
     VectorXf best_vel(2);
-    best_vel << vels[lowest_cost_idx].trans_vel, vels[lowest_cost_idx].rot_vel;
-    PreviousVel.trans_vel = best_vel[0];
-    PreviousVel.rot_vel = best_vel[1];
 
+    if (vels.size() == 0) {
+        std::cout << "No permissible velocities available" << std::endl;
+        best_vel << 0, 0;
+    }
+    
+    else {
+        best_vel << vels[lowest_cost_idx].trans_vel, vels[lowest_cost_idx].rot_vel;
+        PreviousVel.trans_vel = best_vel[0];
+        PreviousVel.rot_vel = best_vel[1];
+    }
+    
     return best_vel;
 }
 

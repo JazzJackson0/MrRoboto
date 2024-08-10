@@ -130,6 +130,28 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMapWithPointCloud(PointCloud
 	return GridMap;
 }
 
+// NEW. Test This
+Eigen::Tensor<float, 2> OccupancyGridMap::Get_MaximumLikelihoodMap() {
+	Eigen::Tensor<float, 2> max_likelihood(M, N);
+	max_likelihood.setConstant(0.5);
+
+	for (int m = 0; m < M; m++) {
+
+		for (int n = 0; n < N; n++) {
+
+			if (GridMap(m, n) < 0.5) {
+				max_likelihood(m, n) = 0;
+			}
+
+			else if (GridMap(m, n) > 0.5) {
+				max_likelihood(m, n) = 1;
+			}
+		}
+	}
+
+	return max_likelihood;
+}
+
 
 
 /*

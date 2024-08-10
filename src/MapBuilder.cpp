@@ -71,6 +71,7 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
     Tensor<float, 2> tensor_2d(M, N);
     tensor_2d.setZero();
     std::vector<std::string> elems;
+    int max_val = 65535;
 
     map_file.open(filename, std::ios::in);
 
@@ -103,6 +104,15 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
                 }
             }
 
+            // Verify MaxVal
+            if (line_num == 3 && elems.size() == 1) {
+                if (std::stoi(elems[0]) <= 0 || std::stoi(elems[0]) >= 65536) {
+                    std::cout << "Max Val is Out of Range " << std::endl;
+                    break;
+                }
+                max_val = std::stoi(elems[0]);
+            }
+
             // Enter Raster Section (Version 1)
             else if (filetype == PBM && line_num >= 3) {
 
@@ -119,8 +129,21 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
 
                 // Populate Tensor
                 for (int n = 0; n < elems.size(); n++) {
+                    int val = std::stoi(elems[n]);
+                    float elem = 0.5;
+                    if (val > (max_val / 2)) {
+                        elem = 0.f;
+                    }
 
-                    tensor_2d(m, n) = std::stof(elems[n]);
+                    else if (val < (max_val / 2)) {
+                        elem = 1.f;
+                    }
+
+                    else if (val == max_val / 2) {
+                        elem = 0.5;
+                    }
+
+                    tensor_2d(m, n) = elem;
                 }
                 m++;
             } 

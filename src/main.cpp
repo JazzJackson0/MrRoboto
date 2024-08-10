@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     // mr_roboto->MapAndLocalize(EKF);
     // mr_roboto->MapEnv();
     mr_roboto->Localize("../tests/map2.pbm");
-    
+
     
     return 0;
 }

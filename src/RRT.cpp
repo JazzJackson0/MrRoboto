@@ -435,7 +435,7 @@ std::vector<VectorXi> RRT::RRTStar_Path(VectorXi start, VectorXi goal, float max
 /*
  * 			TO-DO
  * 			-----
- *  - 
+ *  - Incorporate Costmap to keep robot from hugging the edges
  *
  *  - 
  *

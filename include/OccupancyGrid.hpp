@@ -110,14 +110,6 @@ class OccupancyGridMap {
 		 */
 		Eigen::Tensor<float, 2> UpdateGridMapWithPointCloud(PointCloud cloud);
 
-
-		/**
-		 * @brief Obtains the maximum likelihood map by rounding the probability of each cell to 0 or 1
-		 * 
-		 * @return Eigen::Tensor<float, 2> 
-		 */
-		Eigen::Tensor<float, 2> Get_MaximumLikelihoodMap();
-
 };
 
 

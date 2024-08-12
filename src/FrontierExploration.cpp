@@ -1,7 +1,5 @@
 #include "../include/FrontierExploration.hpp"
 
-// NOT FINISHED!!!!!!!!!!!
-
 // Private-----------------------------------------------------------------------------------------------------------------------------------
 void FrontierExplorer::Build_CellStatusMap() {
 

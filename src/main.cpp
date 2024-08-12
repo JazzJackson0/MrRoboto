@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
     sigaction(SIGINT, &sigIntHandler, NULL);
 
     mr_roboto = Robot::CreateRobot();
+    mr_roboto->Set_MapDimensions(1000, 1000);
 
     mr_roboto->RobotStart();
     // mr_roboto->MapAndLocalize(EKF);

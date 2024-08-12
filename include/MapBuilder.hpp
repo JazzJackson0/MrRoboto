@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
 #include </usr/include/eigen3/Eigen/Dense>
 #include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "utils.hpp"
@@ -125,5 +126,14 @@ class MapBuilder {
          * @return VectorXi 
          */
         VectorXf DataStructureIndex_to_MapCoordinate(VectorXi index);
+
+        /**
+         * @brief Add inflation layer to map
+         * 
+         * @param map 
+         * @param inflation_radius 
+         */
+        void Apply_InflationLayer(Tensor<float, 2> &map, int inflation_radius);
+
 };
 

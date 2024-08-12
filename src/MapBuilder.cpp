@@ -280,3 +280,63 @@ VectorXf MapBuilder::DataStructureIndex_to_MapCoordinate(VectorXi index) {
 
     return coordinate;
 }
+
+
+void MapBuilder::Apply_InflationLayer(Tensor<float, 2> &map, int inflation_radius) {
+
+    int height = map.dimension(0);
+    int width = map.dimension(1);
+    std::queue<std::pair<int, int>> bfsQueue;
+
+    // Distance Matrix: Holds each cell's distance to nearest obstacle
+    std::vector<std::vector<int>> distanceMap(height, std::vector<int>(width, std::numeric_limits<int>::max()));
+    
+    // Store all obstacle cells
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (map(y, x) == 1) {
+                bfsQueue.push({y, x});
+                distanceMap[y][x] = 0; // Distance to itself is 0
+            }
+        }
+    }
+    
+    // Compute minimum distances from obstacles with BFS
+    const std::vector<std::pair<int, int>> directions = {
+        {0, 1}, {1, 0}, {0, -1}, {-1, 0},  // Four cardinal directions
+        {1, 1}, {1, -1}, {-1, 1}, {-1, -1} // Four diagonals
+    };
+    
+    while (!bfsQueue.empty()) {
+        auto [y, x] = bfsQueue.front();
+        bfsQueue.pop();
+        
+        // Search Neighbors
+        for (const auto& dir : directions) {
+            int current_y = y + dir.first;
+            int current_x = x + dir.second;
+            
+            if (current_y >= 0 && current_y < height && current_x >= 0 && current_x < width) {
+                
+                // Only update distance of neighbor if shorter path (or closer distance to obstacle) is found.
+                if (distanceMap[current_y][current_x] > distanceMap[y][x] + 1) {
+                    // Shorten Neighbor's Distance
+                    distanceMap[current_y][current_x] = distanceMap[y][x] + 1;
+                    bfsQueue.push({current_y, current_x});
+                }
+            }
+        }
+    }
+    
+    // Set Costs in Costmap
+    for (int y = 0; y < height; ++y) {
+        
+        for (int x = 0; x < width; ++x) {
+            
+            if (distanceMap[y][x] <= inflation_radius) {
+                // map(y, x) = inflation_radius - distanceMap[y][x] + 1; // Example cost scaling
+                map(y, x) = 1.0;
+            }
+        }
+    }
+}

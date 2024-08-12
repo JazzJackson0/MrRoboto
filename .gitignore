@@ -1,4 +1,5 @@
 docs/*.png
+docs/*.xlsx
 build/*
 sdk/
 temp/

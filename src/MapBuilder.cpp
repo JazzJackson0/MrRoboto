@@ -282,6 +282,33 @@ VectorXf MapBuilder::DataStructureIndex_to_MapCoordinate(VectorXi index) {
 }
 
 
+Eigen::Tensor<float, 2> MapBuilder::Get_MaximumLikelihoodMap(Eigen::Tensor<float, 2> map) {
+    
+    int height = map.dimension(0);
+    int width = map.dimension(1);
+
+	Eigen::Tensor<float, 2> max_likelihood(height, width);
+	max_likelihood.setConstant(0.5);
+
+	for (int m = 0; m < height; m++) {
+
+		for (int n = 0; n < width; n++) {
+
+			if (map(m, n) < 0.5) {
+				max_likelihood(m, n) = 0;
+			}
+
+			else if (map(m, n) > 0.5) {
+				max_likelihood(m, n) = 1;
+			}
+		}
+	}
+
+	return max_likelihood;
+}
+
+
+
 void MapBuilder::Apply_InflationLayer(Tensor<float, 2> &map, int inflation_radius) {
 
     int height = map.dimension(0);

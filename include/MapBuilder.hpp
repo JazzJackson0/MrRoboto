@@ -127,6 +127,16 @@ class MapBuilder {
          */
         VectorXf DataStructureIndex_to_MapCoordinate(VectorXi index);
 
+
+        /**
+		 * @brief Obtains the maximum likelihood map by rounding the probability of each cell to 0 or 1
+		 * 
+         * @param map 
+		 * @return Eigen::Tensor<float, 2> 
+		 */
+		Eigen::Tensor<float, 2> Get_MaximumLikelihoodMap(Eigen::Tensor<float, 2> map);
+
+
         /**
          * @brief Add inflation layer to map
          * 

@@ -75,6 +75,10 @@ namespace diffdrive {
             int8_t serial_bus1;
             int8_t serial_bus2;
 
+            // Map
+            int map_height;
+            int map_width;
+
 
 
             /**
@@ -162,6 +166,14 @@ namespace diffdrive {
              * @param robot_wheel_radius 
              */
             void Set_PhysicalParameters(float robot_trackwidth, float robot_wheel_radius);
+
+            /**
+             * @brief 
+             * 
+             * @param height 
+             * @param width 
+             */
+            void Set_MapDimensions(int height, int width);
 
             
             /**

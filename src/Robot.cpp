@@ -328,6 +328,12 @@ void Robot::Set_PhysicalParameters(float robot_trackwidth, float robot_wheel_rad
     odom->Set_Trackwidth(trackwidth);
 }
 
+
+void Robot::Set_MapDimensions(int height, int width) {
+    map_height = height;
+    map_width = width;
+}
+
 void Robot::RobotStart() {
 
     StartScanner();
@@ -344,10 +350,12 @@ void Robot::RobotStart() {
     // Setup SLAM 1
     slam1 = new PoseGraphOptSLAM(500, 3, 0.01);
     slam1->FrontEndInit(5, 1.f);
+    slam1->Set_MapDimensions(map_height, map_width);
 
     // Setup SLAM 2
     slam2 = new EKFSlam(3, 2);
     slam2->SetInitialState(current_pos, 0.01, 0.001);
+    slam2->Set_MapDimensions(map_height, map_width);
 
     // Setup Mapping
     og_map = new OccupancyGridMap(500, 500, 0.01, 2 * M_PI, 6);

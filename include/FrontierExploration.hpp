@@ -5,6 +5,7 @@
 #include <limits>
 #include </usr/include/eigen3/Eigen/Dense>
 #include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+
 using namespace Eigen;
 
 typedef enum {M_OPEN, M_CLOSED, M_NONE} MapStatus; 
@@ -38,12 +39,12 @@ class FrontierExplorer {
         int M;
         int N;
         PointStatus **CellStatusMap;
-        std::queue<VectorXf> MapQueue;
-        std::queue<VectorXf> FrontierQueue;
-        std::vector<VectorXf> MapOpenList;
-        std::vector<VectorXf> MapClosedList;
-        std::vector<VectorXf> FrontierOpenList;
-        std::vector<VectorXf> FrontierClosedList;
+        std::queue<VectorXi> MapQueue;
+        std::queue<VectorXi> FrontierQueue;
+        std::vector<VectorXi> MapOpenList;
+        std::vector<VectorXi> MapClosedList;
+        std::vector<VectorXi> FrontierOpenList;
+        std::vector<VectorXi> FrontierClosedList;
 
         /**
          * @brief 
@@ -75,15 +76,15 @@ class FrontierExplorer {
          * @return true 
          * @return false 
          */
-        bool isFrontier(VectorXf point);
+        bool isFrontierPoint(VectorXi point);
 
         /**
          * @brief 
          * 
          * @param frontier 
-         * @return VectorXf 
+         * @return VectorXi 
          */
-        VectorXf Get_Centroid(std::vector<VectorXf> frontier);
+        VectorXi Get_Centroid(std::vector<VectorXi> frontier);
 
         /**
          * @brief 
@@ -92,7 +93,7 @@ class FrontierExplorer {
          * @param adjacents 
          * @param RecursionMap 
          */
-        void Get_AdjacentCells(VectorXf point, std::vector<VectorXf> &adjacents, RecursionPoint **RecursionMap);
+        void Get_AdjacentCells(VectorXi point, std::vector<VectorXi> &adjacents, RecursionPoint **RecursionMap);
 
         /**
          * @brief 
@@ -101,7 +102,7 @@ class FrontierExplorer {
          * @param map_frontier 
          * @return int 
          */
-        int Get_CellStatus(VectorXf point, int map_frontier);
+        int Get_CellStatus(VectorXi point, int map_frontier);
 
         /**
          * @brief 
@@ -110,7 +111,7 @@ class FrontierExplorer {
          * @param map_frontier 
          * @param status 
          */
-        void Update_CellStatus(VectorXf point, int map_frontier, int status);
+        void Update_CellStatus(VectorXi point, int map_frontier, int status);
 
         /**
          * @brief 
@@ -119,23 +120,23 @@ class FrontierExplorer {
          * @return true 
          * @return false 
          */
-        bool Has_OpenSpaceNeighbor(VectorXf point);
+        bool Has_OpenSpaceNeighbor(VectorXi point);
 
         /**
          * @brief 
          * 
-         * @param robot_pose 
-         * @return std::vector<std::vector<VectorXf>> 
+         * @param robot_index 
+         * @return std::vector<std::vector<VectorXi>> 
          */
-        std::vector<std::vector<VectorXf>> Detect_WavefrontFrontier(VectorXf robot_pose);
+        std::vector<std::vector<VectorXi>> Detect_WavefrontFrontier(VectorXi robot_index);
 
         /**
          * @brief 
          * 
          * @param frontier_pt 
-         * @return std::vector<VectorXf> 
+         * @return std::vector<VectorXi> 
          */
-        std::vector<VectorXf> Extract_Frontier2D(VectorXf frontier_pt);
+        std::vector<VectorXi> Extract_Frontier2D(VectorXi frontier_pt);
 
     public:
 
@@ -164,9 +165,9 @@ class FrontierExplorer {
          * @brief 
          * 
          * @param robot_pose 
-         * @return VectorXf - Frontier Centroid
+         * @return VectorXi - Frontier Centroid
          */
-        VectorXf FindFrontier(VectorXf robot_pose);
+        VectorXi FindFrontier(VectorXi robot_pose);
 };
 
 

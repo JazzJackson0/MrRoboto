@@ -70,6 +70,7 @@ namespace diffdrive {
             // Robot Physical Dimensions
             float trackwidth;
             float wheel_radius;
+            bool physical_set;
 
             // Actuation
             int8_t serial_bus1;
@@ -78,8 +79,25 @@ namespace diffdrive {
             // Map
             int map_height;
             int map_width;
+            bool map_set;
+            bool map_data_available;
 
 
+            /**
+             * @brief 
+             * 
+             * @return true 
+             * @return false 
+             */
+            bool map_params_set();
+
+            /**
+             * @brief 
+             * 
+             * @return true 
+             * @return false 
+             */
+            bool physical_params_set();
 
             /**
              * @brief 
@@ -168,7 +186,7 @@ namespace diffdrive {
             void Set_PhysicalParameters(float robot_trackwidth, float robot_wheel_radius);
 
             /**
-             * @brief 
+             * @brief (Must be called AFTER the RobobtStart() function)
              * 
              * @param height 
              * @param width 
@@ -223,5 +241,12 @@ namespace diffdrive {
              * 
              */
             void BroadcastPointCloud();
+
+            /**
+             * @brief 
+             * 
+             * @param output_filename 
+             */
+            void Save_Map(std::string output_filename);
     };
 }

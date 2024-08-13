@@ -49,15 +49,33 @@ void MapBuilder::Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filena
         }
 
         // Populate Raster
-        for (int i = 0; i < M; i++) {
+        if (filetype == PBM) {
+            
+            for (int i = 0; i < M; i++) {
 
-            for (int j = 0; j < N; j++) {
+                for (int j = 0; j < N; j++) {
 
-                if (tensor(i, j) > 0.1) { map_file << "1 "; }
-                else { map_file << "0 "; }        
+                    if (tensor(i, j) > 0.1) { map_file << "1 "; }
+                    else { map_file << "0 "; }        
+                }
+                map_file << std::endl;
             }
-            map_file << std::endl;
         }
+
+        else if (filetype == PGM) {
+
+            for (int i = 0; i < M; i++) {
+
+                for (int j = 0; j < N; j++) {
+
+                    if (tensor(i, j) > 0.5) { map_file << "0 "; }
+                    else if (tensor(i, j) < 0.5) { map_file << std::to_string(max_value) + " "; }
+                    else { map_file << std::to_string(max_value / 2) + " ";; }        
+                }
+                map_file << std::endl;
+            }
+        }
+        
 
 
         map_file.close();

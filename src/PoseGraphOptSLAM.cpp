@@ -487,6 +487,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 
 void PoseGraphOptSLAM::Optimize() {
 	
+	std::cout << "Optimizing" << std::endl;
 	UpdateStateVector();
 	VectorXf StateVectorIncrement;
 	StateVectorIncrement = VectorXf::Ones(CurrentPoses_n * PoseDimensions);
@@ -507,7 +508,7 @@ void PoseGraphOptSLAM::Optimize() {
 			int edge_index_i = Pose_Graph.Get_EdgeEnds(n).first;
 			int edge_index_j = Pose_Graph.Get_EdgeEnds(n).second;
 
-			std::cout << "Edge i Index: " << edge_index_i << " Edge j Index: " << edge_index_j << " Graph Size: " << Pose_Graph.Get_NumOfVertices() << "\n";
+			// std::cout << "Edge i Index: " << edge_index_i << " Edge j Index: " << edge_index_j << " Graph Size: " << Pose_Graph.Get_NumOfVertices() << "\n";
 
 			VectorXf pose_i = Pose_Graph.Get_Vertex(edge_index_i).pose;	
 			VectorXf pose_j = Pose_Graph.Get_Vertex(edge_index_j).pose;
@@ -609,14 +610,16 @@ void PoseGraphOptSLAM::FrontEndInit(int n_recent_poses, float closure_distance) 
 
 Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks, VectorXf &currentPose) {
 	
-	if (FrontEnd(current_landmarks))
+	if (FrontEnd(current_landmarks)) {
 		Optimize();
+		std::cout << "Uhh... Sending MAP" << std::endl;
+		return UpdateMap();
+	}
+		
 	
 	for (int i = 0; i < currentPose.rows(); i++) {
 		currentPose[i] = PreviousPose.pose[i];
 	}
-
-	return UpdateMap();
 }
 
 void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {

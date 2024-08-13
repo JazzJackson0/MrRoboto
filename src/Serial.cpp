@@ -1,8 +1,5 @@
 #include "../include/Serial.hpp"
 
-// TODO: Need to test
-
-
 Serial::Serial() {
     buffer_size = 255;
 }
@@ -87,7 +84,6 @@ int8_t Serial::I2CInit(uint8_t i2cNum, uint8_t slaveAddress) {
 
     if(i2c_bus < 0) {
         std::cerr << "Unable to open file. Cannot initialize i2c-" << std::to_string(i2cNum) << std::endl;
-        std::cout << "Can you see this number???: " << std::to_string(i2cNum) << std::endl;
         return -1;
     }
 	

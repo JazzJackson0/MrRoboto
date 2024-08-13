@@ -8,9 +8,9 @@ using namespace diffdrive;
 Robot *mr_roboto;
 
 void ctrl_c_handler(int s){
-    
-    printf("\nShutting Down Mr. Roboto...\n");
+
     mr_roboto->RobotStop();
+    mr_roboto->Save_Map("final_map.pgm");
     exit(1); 
 }
 
@@ -25,12 +25,13 @@ int main(int argc, char* argv[]) {
     sigaction(SIGINT, &sigIntHandler, NULL);
 
     mr_roboto = Robot::CreateRobot();
-    mr_roboto->Set_MapDimensions(1000, 1000);
-
     mr_roboto->RobotStart();
-    // mr_roboto->MapAndLocalize(EKF);
+    mr_roboto->Set_MapDimensions(1000, 1000);
+    mr_roboto->Set_PhysicalParameters(0.3, 0.05);
+
+    mr_roboto->MapAndLocalize(EKF);
     // mr_roboto->MapEnv();
-    mr_roboto->Localize("../tests/map2.pbm");
+    // mr_roboto->Localize("../tests/map2.pbm");
 
     
     return 0;

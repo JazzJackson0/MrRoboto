@@ -321,10 +321,10 @@ RRT::RRT(Eigen::Tensor<float, 2> map) : MAP(map) {
 	auto &d = MAP.dimensions();
 	WIDTH = d[1];
 	HEIGHT = d[0];
-	std::cout << std::endl;
-    std::cout << "Map:" << std::endl;
-    std::cout << MAP << std::endl;
-    std::cout << std::endl;
+	// std::cout << std::endl;
+    // std::cout << "Map:" << std::endl;
+    // std::cout << MAP << std::endl;
+    // std::cout << std::endl;
 }
 
 
@@ -336,10 +336,10 @@ void RRT::Load_MAP(Eigen::Tensor<float, 2> map) {
     auto &d = MAP.dimensions();
 	WIDTH = d[1];
 	HEIGHT = d[0];
-    std::cout << std::endl;
-    std::cout << "Map:" << std::endl;
-    std::cout << MAP << std::endl;
-    std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "Map:" << std::endl;
+    // std::cout << MAP << std::endl;
+    // std::cout << std::endl;
 }
 
 

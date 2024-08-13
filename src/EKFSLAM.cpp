@@ -572,9 +572,9 @@ Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, VectorXf current_p
 	Prediction(current_pose, ctrl);
 	Correction(landmarks);
 
-	std::cout << "CURRENT MAP:" << std::endl;
-	std::cout << StateVector.transpose() << std::endl;
-	std::cout << "\n\n";
+	// std::cout << "CURRENT MAP:" << std::endl;
+	// std::cout << StateVector.transpose() << std::endl;
+	// std::cout << "\n\n";
 
 	return UpdateMap();
 }

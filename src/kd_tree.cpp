@@ -1,4 +1,4 @@
-#include "kd_tree.hpp"
+#include "../include/kd_tree.hpp"
 
 // Private ------------------------------------------------------------------------
 float KDTree::get_radius_squared(VectorXf point_a, VectorXf point_b) {

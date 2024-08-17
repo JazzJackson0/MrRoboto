@@ -423,7 +423,7 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
 /*
  * 			TO-DO
  * 			-----
- *  - Incorporate Costmap to keep robot from hugging the edges
+ *  - 
  *
  *  - 
  *  

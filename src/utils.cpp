@@ -82,7 +82,7 @@ float RotationMatrix2D_to_Angle(MatrixXf R) {
 }
 
 
-MatrixXf Angle_to_RotationMatrix3D(AngleAndAxis a_a) {
+MatrixXf Angle_to_3DRotationMatrix(AngleAndAxis a_a) {
 
     // Rodriguez Formula method
     // MatrixXf identity;

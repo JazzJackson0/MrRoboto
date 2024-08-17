@@ -3,6 +3,15 @@
 namespace diffdrive {
 
 // Private------------------------------------------------------------------------------------------------------------------------
+
+bool Robot::map_ready() {
+    bool result;
+    std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
+    result = map_data_available;
+    map_state_lock.unlock();
+    return result;
+}
+
 bool Robot::map_params_set() {
     return map_set;
 }
@@ -120,13 +129,14 @@ std::vector<VectorXf> Robot::GetScan() {
 
 void Robot::FindFrontier() {
 
-    while (!map_data_available);
+    while (!map_ready());
 
     while (1) {
 
         std::unique_lock<std::mutex> map_lock(map_mutex);
         Eigen::Tensor<float, 2> map = current_map;
         map_lock.unlock();
+        std::cout << "Current Map Dimensions: " << map.dimension(0) << " x " << map.dimension(1) << std::endl;
 
         std::unique_lock<std::mutex> cloud_lock(map_mutex);
         PointCloud cloud = current_cloud;
@@ -206,6 +216,8 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
 
 void Robot::RunSLAM(int algorithm) {
 
+    bool first_map = true;
+
     while (1) {
         RawScan();
         PointCloud cloud = GetCloud(NO_BROADCAST);
@@ -224,11 +236,19 @@ void Robot::RunSLAM(int algorithm) {
             
             std::unique_lock<std::mutex> map_lock(map_mutex);
             current_map = slam1->Run(cloud);
+            std::cout << "SLAM Output Map Dimensions: " << current_map.dimension(0) << " x " << current_map.dimension(1) << std::endl;
             map_lock.unlock();
-            map_data_available = true;
+
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
             current_pos = slam1->BroadcastCurrentPose();
             pos_lock.unlock();
+
+            if (first_map) {
+                std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
+                map_data_available = true;
+                map_state_lock.unlock();
+                first_map = false;
+            } 
             // std::cout << current_map << std::endl;
         }
         
@@ -237,10 +257,17 @@ void Robot::RunSLAM(int algorithm) {
             std::unique_lock<std::mutex> map_lock(map_mutex);
             current_map = slam2->Run(cloud, ctrl);
             map_lock.unlock();
-            map_data_available = true;
+
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
             current_pos = slam2->BroadcastCurrentPose();
             pos_lock.unlock();
+            
+            if (first_map) {
+                std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
+                map_data_available = true;
+                map_state_lock.unlock();
+                first_map = false;
+            }
             // std::cout << current_map << std::endl;
         }
     }

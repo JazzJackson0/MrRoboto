@@ -621,8 +621,7 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 		return UpdateMap();
 	}
 		
-	
-	
+	return map_structure;
 }
 
 void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {

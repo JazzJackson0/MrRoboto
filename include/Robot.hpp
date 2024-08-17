@@ -21,6 +21,7 @@
 #include "PID.hpp"
 #include "Odometry.hpp"
 #include "Serial.hpp"
+#include "PathUtil.hpp"
 #define POSE_GRAPH 0
 #define EKF 1
 #define A_STAR 2
@@ -66,6 +67,7 @@ namespace diffdrive {
             PID *pid_left;
             Odom *odom;
             Serial *serial;
+            PathUtil *path_util;
 
             // Robot Physical Dimensions
             float trackwidth;
@@ -148,7 +150,7 @@ namespace diffdrive {
 
 
 
-            void FollowLocalPath(std::vector<VectorXi> waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos);
+            void FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos);
 
 
             void RunSLAM(int algorithm);

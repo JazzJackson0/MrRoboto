@@ -120,7 +120,7 @@ std::vector<VectorXf> Robot::GetScan() {
 
 void Robot::FindFrontier() {
 
-    while (!map_data_available) {}
+    while (!map_data_available);
 
     while (1) {
 
@@ -137,9 +137,10 @@ void Robot::FindFrontier() {
         VectorXf flt_pos = current_pos;
         pos_lock.unlock();
         
+        map_builder->Apply_InflationLayer(map, 5); // Create Cost Map
         frontier_explorer->Load_MAP(map);
         VectorXi frontier_goal = frontier_explorer->FindFrontier(pos);
-        std::vector<VectorXi> waypoints = CreatePath(A_STAR, map, pos, frontier_goal);
+        std::vector<VectorXf> waypoints = path_util->SmoothPath(path_util->SamplePath(CreatePath(A_STAR, map, pos, frontier_goal)));
         FollowLocalPath(waypoints, map, cloud, flt_pos);
     }
 }
@@ -169,14 +170,13 @@ std::vector<VectorXi> Robot::CreatePath(int algorithm, Eigen::Tensor<float, 2> m
 }
 
 
-void Robot::FollowLocalPath(std::vector<VectorXi> waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos) {
+void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos) {
 
     VectorXf odom_vels = odom->Get_NewVelocities();
 
-    for (int i = 0; i < waypoints.size(); i++) {
+    for (int i = 0; i < smooth_waypoints.size(); i++) {
 
-        VectorXf point = map_builder->DataStructureIndex_to_MapCoordinate(waypoints[i]);
-        d_window->Set_Goal(point);
+        d_window->Set_Goal(smooth_waypoints[i]);
         VectorXf vels = d_window->Run(pos, cloud);
 
         float setpoint_vel_r = (2 * vels[0] + vels[1] * trackwidth) / (2 * wheel_radius);
@@ -214,10 +214,7 @@ void Robot::RunSLAM(int algorithm) {
         current_cloud = cloud;
         cloud_lock.unlock();
 
-        std::unique_lock<std::mutex> pos_lock(pos_mutex);
-        VectorXf pos = current_pos;
-        pos_lock.unlock();
-
+        // TODO: Put odom behind mutex??
         VectorXf odom_out = odom->Get_NewVelocities();
         ControlCommand ctrl;
         ctrl.trans_vel = odom_out[0];
@@ -226,24 +223,30 @@ void Robot::RunSLAM(int algorithm) {
         if (algorithm == POSE_GRAPH) {
             
             std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = slam1->Run(cloud, pos);
+            current_map = slam1->Run(cloud);
             map_lock.unlock();
             map_data_available = true;
+            std::unique_lock<std::mutex> pos_lock(pos_mutex);
+            current_pos = slam1->BroadcastCurrentPose();
+            pos_lock.unlock();
             // std::cout << current_map << std::endl;
         }
         
         else if (algorithm == EKF) {
 
             std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = slam2->Run(cloud, pos, ctrl);
+            current_map = slam2->Run(cloud, ctrl);
             map_lock.unlock();
             map_data_available = true;
+            std::unique_lock<std::mutex> pos_lock(pos_mutex);
+            current_pos = slam2->BroadcastCurrentPose();
+            pos_lock.unlock();
             // std::cout << current_map << std::endl;
         }
     }
 }
 
-
+// Should probably add some way to recognize when you are localized and stopping pfilter process.
 void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
 
     pfilter->AddMap(map, 6, 2 * M_PI);
@@ -265,6 +268,7 @@ void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
 }
 
 
+// Needs GPS running on separate thread to update the "current_pos" variable.
 void Robot::RunMapper() {
 
     while (1) {
@@ -407,8 +411,9 @@ void Robot::RobotStart() {
     frontier_explorer = new FrontierExplorer();
 
     //Setup Local Path Planning
-    d_window = new DynamicWindowApproach(1, 1, 1, 1); // Temporary garbage values
-    d_window->Set_VelocityLimits(1, 1, 1); // Temporary garbage values
+    d_window = new DynamicWindowApproach(1, 0.04, 0.2, 0.1); // Temporary garbage values
+    d_window->Set_TranslationalVelocityLimits(1, 1, 1); // Temporary garbage values
+    d_window->Set_RotationalVelocityLimits(1, 1, 1); // Temporary garbage values
 
     // Setup PIDs
     pid_left = new PID(1, 1, 1, 1, 1); // Temporary garbage values
@@ -417,11 +422,26 @@ void Robot::RobotStart() {
     pid_right->Set_Output_Limits(1, 1); // Temporary garbage values
 
     odom = new Odom(1, 0.1); // Temporary garbage values 
+
+    path_util = new PathUtil();
 }
 
 void Robot::RobotStop() {
     std::cout << "Shutting Down..." << std::endl;
     StopScanner();
+    delete map_builder;
+    delete slam1;
+    delete slam2;
+    delete og_map;
+    delete pfilter;
+    delete astar_path;
+    delete rrt_path;
+    delete frontier_explorer;
+    delete d_window;
+    delete pid_left;
+    delete pid_right; 
+    delete odom;
+    delete path_util;
 }
 
 

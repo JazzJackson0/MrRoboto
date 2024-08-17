@@ -111,6 +111,14 @@ class PoseGraphOptSLAM {
 		 */
 		bool isVisible(int x, int y, int x_robot, int y_robot);
 
+
+		/**
+		 * @brief 
+		 * 
+		 * @return Eigen::Tensor<float, 2> 
+		 */
+		Eigen::Tensor<float, 2> UpdateMap();
+
 		/**
 		 * @brief Takes 2 point clouds and determines the amount of overlap between them.
 		 * 			This is done by calculating the mean of each point cloud and returning
@@ -269,10 +277,9 @@ class PoseGraphOptSLAM {
          * @brief Run the Pose Graph Optimization SLAM Algorithm for 1 iteration.
          * 
          * @param current_landmarks 
-         * @param currentPose 
          * @return Eigen::Tensor<float, 2> 
          */
-        Eigen::Tensor<float, 2> Run(PointCloud current_landmarks, VectorXf &currentPose);
+        Eigen::Tensor<float, 2> Run(PointCloud current_landmarks);
 
 		/**
 		 * @brief 
@@ -282,13 +289,15 @@ class PoseGraphOptSLAM {
 		 */
 		void Set_MapDimensions(int height, int width);
 
-
 		/**
 		 * @brief 
 		 * 
-		 * @return Eigen::Tensor<float, 2> 
+		 * @return VectorXf 
 		 */
-		Eigen::Tensor<float, 2> UpdateMap();
+		VectorXf BroadcastCurrentPose();
+
+
+		
 };
 
 

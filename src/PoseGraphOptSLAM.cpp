@@ -283,7 +283,6 @@ bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 	}
 
 	return false;
-
 }
 
 
@@ -614,7 +613,7 @@ void PoseGraphOptSLAM::FrontEndInit(int n_recent_poses, float closure_distance) 
 
 
 
-Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks, VectorXf &currentPose) {
+Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 	
 	if (FrontEnd(current_landmarks)) {
 		Optimize();
@@ -623,9 +622,7 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks, Vect
 	}
 		
 	
-	for (int i = 0; i < currentPose.rows(); i++) {
-		currentPose[i] = PreviousPose.pose[i];
-	}
+	
 }
 
 void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {
@@ -633,6 +630,12 @@ void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {
 	map_structure.setConstant(0.5);
 	map_builder.Update_2DMapDimensions(height, width);
 }
+
+VectorXf PoseGraphOptSLAM::BroadcastCurrentPose() {
+
+	return PreviousPose.pose;
+}
+
 
 
 

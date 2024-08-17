@@ -442,7 +442,7 @@ MatrixXf EKFSlam::CalculateJacobian(FunctionType f_type, int landmark_location) 
 
 
 
-void EKFSlam::Prediction(VectorXf current_pose, ControlCommand ctrl) {
+void EKFSlam::Prediction(ControlCommand ctrl) {
 	
 	// STEP 1: Update the State Vector. -----------------
 	VectorXf predicted_pose = PredictPose_g(ctrl);
@@ -507,15 +507,13 @@ void EKFSlam::Correction(std::vector<Landmark> landmarks) {
 
 		StateVector = StateVector + KalmanGain * (current_landmark - estimated_landmark);
 		Covariance = (Identity - (KalmanGain * HighDimension_H)) * Covariance;
+		PreviousPose = StateVector.block(0, 0, PoseDimensions, 1);
 	}
 	
 }
 
 
-EKFSlam::EKFSlam() {
-
-	// Default constructor
-}
+EKFSlam::EKFSlam() { /*Default constructor*/ }
 
 
 
@@ -550,6 +548,7 @@ void EKFSlam::SetInitialState(Eigen::VectorXf initial_position, float _process_u
 	
 
 	InitialPosition = initial_position;
+	PreviousPose = InitialPosition;
 	process_uncertainty_r = _process_uncertainty_r; 
 	measurement_uncertainty_q = _measurement_uncertainty_q;
 
@@ -564,11 +563,11 @@ void EKFSlam::SetInitialState(Eigen::VectorXf initial_position, float _process_u
 }
 
 
-Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, VectorXf current_pose, ControlCommand ctrl) {
+Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, ControlCommand ctrl) {
 	
-	std::vector<Landmark> landmarks = feature_extractor.LandmarksFromScan(current_scan, current_pose);
+	std::vector<Landmark> landmarks = feature_extractor.LandmarksFromScan(current_scan, PreviousPose);
 
-	Prediction(current_pose, ctrl);
+	Prediction(ctrl);
 	Correction(landmarks);
 
 	// std::cout << "CURRENT MAP:" << std::endl;
@@ -592,6 +591,12 @@ void EKFSlam::Set_MapDimensions(int height, int width) {
 	map_structure.setConstant(0.5);
 	map_builder.Update_2DMapDimensions(height, width);
 }
+
+VectorXf EKFSlam::BroadcastCurrentPose() {
+
+	return PreviousPose;
+}
+
 
 
 

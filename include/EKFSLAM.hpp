@@ -88,6 +88,14 @@ class EKFSlam {
 		bool isVisible(int x, int y, int x_robot, int y_robot);
 
 		/**
+		 * @brief Create a Map object
+		 * 
+		 * @return Eigen::Tensor<float, 2> 
+		 */
+		Eigen::Tensor<float, 2> UpdateMap();
+
+
+		/**
 		 * @brief Builds the INITIAL State Vector.
 		 *
 		 * @return ** void 
@@ -187,13 +195,11 @@ class EKFSlam {
          * @brief Update the Mean with a new Predicted State and propagate the Covariance Matrix
          *          forward in time.
 		 *
-		 * @param current_pose The current Pose that will be updated while going through 
-		 * 						the Prediction Step
 		 * @param ctrl Odometry reading (translation velocity & rotation velocity) 
          * 
          * @return ** void 
          */
-        void Prediction(VectorXf current_pose, ControlCommand ctrl);
+        void Prediction(ControlCommand ctrl);
 
 
 
@@ -238,11 +244,10 @@ class EKFSlam {
 		 * @brief Run the EKF SLAM Algorithm
 		 * 
 		 * @param current_scan 
-		 * @param current_pose 
 		 * @param ctrl 
 		 * @return Eigen::Tensor<float, 2> 
 		 */
-        Eigen::Tensor<float, 2> Run(PointCloud current_scan, VectorXf current_pose, ControlCommand ctrl);
+        Eigen::Tensor<float, 2> Run(PointCloud current_scan, ControlCommand ctrl);
 
 
 		/**
@@ -262,11 +267,14 @@ class EKFSlam {
 
 
 		/**
-		 * @brief Create a Map object
+		 * @brief 
 		 * 
-		 * @return Eigen::Tensor<float, 2> 
+		 * @return VectorXf 
 		 */
-		Eigen::Tensor<float, 2> UpdateMap();
+		VectorXf BroadcastCurrentPose();
+
+
+		
 };
 
 

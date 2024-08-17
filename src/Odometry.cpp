@@ -8,8 +8,8 @@ Odom::Odom(float robot_trackwidth, float time_step) : trackwidth(robot_trackwidt
     serial = new Serial();
 
     // I2C
-    serial_bus1 = serial->I2CInit(0, 0x0);
-    serial_bus2 = serial->I2CInit(1, 0x0);
+    serial_bus1 = serial->I2CInit(1, 0x0);
+    // serial_bus2 = serial->I2CInit(20, 0x0);
 
     // UART
     // serial_bus1 = serial->UARTInit(0);
@@ -25,12 +25,14 @@ void Odom::Set_Trackwidth(float robot_trackwidth) {
 VectorXf Odom::Get_NewPosition() {
 
     VectorXf new_position(3);
-    int8_t *left_encoder_buffer;
-    int8_t *right_encoder_buffer;
-    serial->I2CRead(serial_bus1, left_encoder_buffer, 2);
-    serial->I2CRead(serial_bus2, right_encoder_buffer, 2);
-    left_distance = (float)(*(float*)&left_encoder_buffer);
-    right_distance = (float)(*(float*)&right_encoder_buffer);
+    int8_t *encoder_buffer;
+    serial->I2CRead(serial_bus1, encoder_buffer, 8);
+    int32_t left = *encoder_buffer;
+    int32_t right = *(encoder_buffer + 4);
+    // left_distance = (float)left;
+    // right_distance = (float)right;
+    left_distance = *((float *)&left);
+    right_distance = *((float *)&right);
 
     float phi = left_distance - right_distance / trackwidth;
     float r_center = trackwidth / 2;
@@ -43,12 +45,14 @@ VectorXf Odom::Get_NewPosition() {
 VectorXf Odom::Get_NewVelocities() {
 
     VectorXf new_velocity(2);
-    int8_t *left_encoder_buffer;
-    int8_t *right_encoder_buffer;
-    serial->I2CRead(serial_bus1, left_encoder_buffer, 2);
-    serial->I2CRead(serial_bus2, right_encoder_buffer, 2);
-    left_distance = (float)(*(float*)&left_encoder_buffer);
-    right_distance = (float)(*(float*)&right_encoder_buffer);
+    int8_t *encoder_buffer;
+    serial->I2CRead(serial_bus1, encoder_buffer, 8);
+    int32_t left = *encoder_buffer;
+    int32_t right = *(encoder_buffer + 4);
+    // left_distance = (float)left;
+    // right_distance = (float)right;
+    left_distance = *((float *)&left);
+    right_distance = *((float *)&right);
 
     float phi = left_distance - right_distance / trackwidth;
     float r_center = trackwidth / 2;

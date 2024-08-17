@@ -79,7 +79,6 @@ bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
 }
 
 
-// Test this!!
 Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose);
@@ -166,7 +165,7 @@ float PoseGraphOptSLAM::Calculate_Overlap(PointCloud landmarks_a, PointCloud lan
 
 MatrixXf PoseGraphOptSLAM::VectorToTransformationMatrix(int x, int y, AngleAndAxis angle_axis) {
 
-	MatrixXf R = Angle_to_RotationMatrix(angle_axis);
+	MatrixXf R = Angle_to_3DRotationMatrix(angle_axis);
 	VectorXf t(3);
 	t << x, y, 1;
 	MatrixXf transformation = MatrixXf::Zero(3, 3);
@@ -179,6 +178,7 @@ MatrixXf PoseGraphOptSLAM::VectorToTransformationMatrix(int x, int y, AngleAndAx
 
 void PoseGraphOptSLAM::UpdateStateVector() {
 
+	rotation_axes.clear();
 	CurrentPoses_n = Pose_Graph.Get_NumOfVertices();
 	StateVector.resize(CurrentPoses_n * PoseDimensions);
 	int stateVecIndex = 0;
@@ -189,7 +189,7 @@ void PoseGraphOptSLAM::UpdateStateVector() {
 		Pose p = Pose_Graph.Get_Vertex(i);
 		MatrixXf rotation = p.TransformationMatrix.block(0, 0, 3, 3);
 		VectorXf translation = p.TransformationMatrix.block(0, 2, 3, 1);
-		AngleAndAxis angle_axis = RotationMatrix_to_Angle(rotation); // Angle & Axis of Rotation
+		AngleAndAxis angle_axis = RotationMatrix3D_to_Angle(rotation); // Angle & Axis of Rotation
 		
 		// Add pose data to State Vector 
 		for (int j = 0; j < 2; j++) {
@@ -369,7 +369,6 @@ HbResults PoseGraphOptSLAM::Build_LinearSystem(VectorXf pose_i, VectorXf pose_j,
 	}
 
 	// Set up Sparsity Pattern********** Pattern For R (Where J(x) = F(x) * R)
-	// TODO: I still don't understand the point of this sparsity pattern
 	int numOfRows = (PoseDimensions * 2); // Rows must = num of independent variables X
 	int numOfCols = (PoseDimensions * 2); 
 	int numOfNonZeroElements = (PoseDimensions * 2); 
@@ -467,7 +466,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		PreviousLandmarks = current_landmarks;
 		pose.pose[0] = t[0];
 		pose.pose[1] = t[1];
-		pose.pose[2] = 1; // TODO: 1 is just a place holder!! Need to use RotationMatrix_to_Angle() but its not finished
+		pose.pose[2] = RotationMatrix2D_to_Angle(R);
 		
 		// Turn R & t to a Transformation Matrix
 		pose.TransformationMatrix.topLeftCorner(2, 2) = R;
@@ -540,18 +539,24 @@ void PoseGraphOptSLAM::Optimize() {
 
 		// Update State Vector
 		StateVector = StateVector + StateVectorIncrement;
-		// TODO: Angles should be normalized after applying the increments
 
 		iteration++;
 
 	}
 
 
-	// TODO: PUT THIS IN ITS OWN FUNCTION-----------------------------------------------------------------------------------------------------------------
-	// Update all vertices in Graph with new Transformation Matrices. i.e. Convert from StateVector back to transformation matrices.
+	ConvertStateVector();
+	
+}
+
+
+void PoseGraphOptSLAM::ConvertStateVector() {
+
 	int n = 0;
 	for (int i = 0; i < StateVector.size(); i = i + PoseDimensions) {
 		
+		// Re-normalize each angle
+		StateVector(i + 2) = normalizeAngleRadians(StateVector(i + 2), false);
 		Pose updated_pose = Pose_Graph.Get_Vertex(n);
 		updated_pose.TransformationMatrix = VectorToTransformationMatrix(StateVector(i), StateVector(i+1), std::make_pair(StateVector(i+2), rotation_axes[n]));
 		Pose_Graph.Update_VertexData(n, updated_pose);
@@ -572,6 +577,7 @@ void PoseGraphOptSLAM::Optimize() {
 			Pose_Graph.Update_EdgeData(i, j, edge);
 		}
 	}
+
 }
 
 

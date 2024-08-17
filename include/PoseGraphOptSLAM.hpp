@@ -137,6 +137,14 @@ class PoseGraphOptSLAM {
 
 
 		/**
+		 * @brief Update all vertices in Graph with new Transformation Matrices. 
+		 * 		i.e. Convert from StateVector back to transformation matrices.
+		 * 
+		 */
+		void ConvertStateVector();
+
+
+		/**
 		 * @brief Update the State Vector from the Graph Nodes' Transformation matrices received from Front End
 		 * 
 		 * @return ** pair<VectorXf, std::vector<VectorXf>> StateVector and coressponding rotation axes 

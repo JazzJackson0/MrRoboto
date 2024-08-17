@@ -329,7 +329,7 @@ VectorXf ICP::RunICP_LeastSquares(PointCloud RefPointCloud, PointCloud NewPointC
 		iterations++;
 	}
 
-	x_update[0] = normalizeAngleRadians(x_update[0], false);
+	x_update[0] = normalizeAngleRadians(x_update[0], true);
 
 	return x_update;
 }

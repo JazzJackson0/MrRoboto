@@ -556,7 +556,7 @@ void PoseGraphOptSLAM::ConvertStateVector() {
 	for (int i = 0; i < StateVector.size(); i = i + PoseDimensions) {
 		
 		// Re-normalize each angle
-		StateVector(i + 2) = normalizeAngleRadians(StateVector(i + 2), false);
+		StateVector(i + 2) = normalizeAngleRadians(StateVector(i + 2), true);
 		Pose updated_pose = Pose_Graph.Get_Vertex(n);
 		updated_pose.TransformationMatrix = VectorToTransformationMatrix(StateVector(i), StateVector(i+1), std::make_pair(StateVector(i+2), rotation_axes[n]));
 		Pose_Graph.Update_VertexData(n, updated_pose);

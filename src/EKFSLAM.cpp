@@ -78,7 +78,6 @@ bool EKFSlam::isVisible(int x, int y, int x_robot, int y_robot) {
     }
 }
 
-// Test this!!
 Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose);

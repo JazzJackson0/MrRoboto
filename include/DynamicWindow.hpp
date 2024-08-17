@@ -28,9 +28,12 @@ class DynamicWindowApproach {
         float vel_weight;
         float time_interval;
         Velocities PreviousVel;
-        float MinVel;
-        float MaxVel;
-        float VelInterval;
+        float MinTransVel;
+        float MaxTransVel;
+        float TransVelInterval;
+        float MinRotVel;
+        float MaxRotVel;
+        float RotVelInterval;
 
         VectorXf Get_ClosestObstacle();
 
@@ -38,7 +41,7 @@ class DynamicWindowApproach {
 
         float distance(float trans_vel, float rot_vel);
 
-        float velocity(float trans_vel, float rot_vel);
+        float velocity(float trans_vel);
 
         float ObjectiveFunction(float trans_vel, float rot_vel);
 
@@ -59,7 +62,9 @@ class DynamicWindowApproach {
 
         DynamicWindowApproach(float smoothing_val, float heading_w, float dist_w, float vel_w);
 
-        void Set_VelocityLimits(float min_vel, float max_vel, float vel_interval);
+        void Set_TranslationalVelocityLimits(float min_vel, float max_vel, float vel_interval);
+
+        void Set_RotationalVelocityLimits(float min_vel, float max_vel, float vel_interval);
 
         void Set_Goal(VectorXf goal);
 

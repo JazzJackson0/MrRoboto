@@ -37,31 +37,33 @@ float DynamicWindowApproach::distance(float trans_vel, float rot_vel) {
     return circle_trajectory_radius * gamma;
 }
 
-float DynamicWindowApproach::velocity(float trans_vel, float rot_vel) {
+float DynamicWindowApproach::velocity(float trans_vel) {
 
     float dist = std::sqrt(std::pow((RobotPos[0] - Goal[0]), 2) + std::pow((RobotPos[1] - Goal[1]), 2));
-    float v_norm = std::sqrt(std::pow(trans_vel, 2) + std::pow(rot_vel, 2)); // I have no idea if this is correct. Needs research
+    float v_norm = std::abs(trans_vel);
 
     if (dist > dist_nearing_goal) {
-        return v_norm / MaxVel;
+        return v_norm / MaxTransVel;
     }
 
-    return 1 - (v_norm / MaxVel);
+    return 1 - (v_norm / MaxTransVel);
 }
 
 float DynamicWindowApproach::ObjectiveFunction(float trans_vel, float rot_vel) {
 
     return smoothing * (heading_weight * heading(trans_vel, rot_vel) + 
-        dist_weight * distance(trans_vel, rot_vel) + vel_weight * velocity(trans_vel, rot_vel));
+        dist_weight * distance(trans_vel, rot_vel) + vel_weight * velocity(trans_vel));
 }
 
 std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
 
     std::vector<Velocities> circular_trajectories;
-    for (float i = MinVel; i < MaxVel + 0.1; i += VelInterval) {
+    for (float i = MinTransVel; i < MaxTransVel + 0.01; i += TransVelInterval) {
 
-        Velocities v = Velocities(i, i);
-        circular_trajectories.push_back(v);
+        for (float j = MinRotVel; j < MaxRotVel + 0.01; j += RotVelInterval) {
+            Velocities v = Velocities(i, j);
+            circular_trajectories.push_back(v);
+        }
     }
 
     return circular_trajectories;
@@ -155,26 +157,44 @@ DynamicWindowApproach::DynamicWindowApproach(float smoothing_val, float heading_
     smoothing(smoothing_val), heading_weight(heading_w), dist_weight(dist_w), vel_weight(vel_w) {
 
     time_interval = 0.1;
-    dist_nearing_goal = 1;
+    dist_nearing_goal = 0.05;
     PreviousVel = Velocities(0.f, 0.f);
 }
 
-void DynamicWindowApproach::Set_VelocityLimits(float min_vel, float max_vel, float vel_interval) {
+void DynamicWindowApproach::Set_TranslationalVelocityLimits(float min_vel, float max_vel, float vel_interval) {
 
-    MinVel = min_vel;
-    MaxVel = max_vel;
-    VelInterval = vel_interval;
+    MinTransVel = min_vel;
+    MaxTransVel = max_vel;
+    TransVelInterval = vel_interval;
 
     if (min_vel == 0) { 
         std::cout << "Warning. Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
-        MinVel = 0.1;
+        MinTransVel = 0.1;
     }
 
     if (max_vel == 0) { 
         std::cout << "Warning. Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
-        MaxVel = 0.5;
+        MaxTransVel = 0.5;
     }
     
+}
+
+
+void DynamicWindowApproach::Set_RotationalVelocityLimits(float min_vel, float max_vel, float vel_interval) {
+
+    MinRotVel = min_vel;
+    MaxRotVel = max_vel;
+    RotVelInterval = vel_interval;
+
+    if (min_vel == 0) { 
+        std::cout << "Warning. Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
+        MinRotVel = 0.1;
+    }
+
+    if (max_vel == 0) { 
+        std::cout << "Warning. Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
+        MaxRotVel = 0.5;
+    }
 }
 
 void DynamicWindowApproach::Set_Goal(VectorXf goal) {

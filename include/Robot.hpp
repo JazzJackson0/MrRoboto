@@ -44,10 +44,12 @@ namespace diffdrive {
             PointCloud current_cloud;
             std::vector<VectorXf> current_scan;
             Eigen::Tensor<float, 2> current_map;
+            bool map_data_available;
+            std::mutex pos_mutex;
             std::mutex cloud_mutex;
             std::mutex scan_mutex;
             std::mutex map_mutex;
-            std::mutex pos_mutex;
+            std::mutex map_ready_mutex;
 
             RPlidarDriver *lidar;
             // IChannel *_channel;
@@ -82,8 +84,9 @@ namespace diffdrive {
             int map_height;
             int map_width;
             bool map_set;
-            bool map_data_available;
+            
 
+            bool map_ready();
 
             /**
              * @brief 

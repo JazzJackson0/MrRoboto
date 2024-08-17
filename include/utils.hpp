@@ -32,12 +32,21 @@ typedef pair<float, VectorXf> AngleAndAxis;
 
 
 /**
- * @brief Convert rotation matrix to rotation angle and axis of rotation pair
+ * @brief Convert 3D rotation matrix to rotation angle and axis of rotation pair
  * 
  * @param R Rotation matrix
  * @return AngleAndAxis - rotation angle and axis
  */
-AngleAndAxis RotationMatrix_to_Angle(MatrixXf R);
+AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R);
+
+
+/**
+ * @brief Convert 2D rotation matrix to rotation angle
+ * 
+ * @param R Rotation matrix
+ * @return float 
+ */
+float RotationMatrix2D_to_Angle(MatrixXf R);
 
 
 /**
@@ -46,7 +55,7 @@ AngleAndAxis RotationMatrix_to_Angle(MatrixXf R);
  * @param a_a rotation angle and axis
  * @return MatrixXf - Return rotation matrix
  */
-MatrixXf Angle_to_RotationMatrix(AngleAndAxis a_a);
+MatrixXf Angle_to_3DRotationMatrix(AngleAndAxis a_a);
 
 
 /**
@@ -85,3 +94,15 @@ int min(int a, int b);
  * @return std::vector<std::string> 
  */
 std::vector<std::string> split(const std::string& s, std::string regx);
+
+
+/**
+ * @brief Normalize radian angle to 
+ * 
+ * @param angle Angle to normalize
+ * @param pi_to_pi Indicate normalization range: 
+ * 			False -> Range [0, 2PI); 
+ * 			True -> Range [-PI, PI);
+ * @return double 
+ */
+double normalizeAngleRadians(double angle, bool pi_to_pi);

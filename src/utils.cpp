@@ -3,22 +3,33 @@
 
 
 
-AngleAndAxis RotationMatrix_to_Angle(MatrixXf R) {
+AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
     
-    if (R.cols() != 3)
+    
+    if (R.cols() != 3 && R.rows() != 3) {
         std::cerr << "Rotation Matrix dimensions should be 3x3. Cannot convert to angle." << std::endl;
+        VectorXf fail_axis(3);
+        fail_axis << -1, -1, -1;
+        float fail_angle = -1;
+        return std::make_pair(fail_angle, fail_axis);
+    }
 
     float angle = (float) acos((R.trace() - 1) / 2);
-    VectorXf axis(3);
+    VectorXf rot_axis(3);
+    VectorXf R_diff(3);
+    R_diff << (R(2, 1) - R(1, 2)), (R(0, 2) - R(2, 0)), (R(1, 0) - R(0, 1));
+
+    float sinAngle = sqrt(1 - pow((R.trace() - 1 / 2), 2));
+    
 
     // Singularity
     if (angle == 0.0) {
 
-        // COMPLETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        rot_axis << 0, 0, 1;
     }
 
-    // Singularity
-    else if (angle == 180.0) {
+    // Singularity (angle is 180 or very close to it)
+    else if (sinAngle == 1e-6) {
         
         // Find diagonal term with highest value
         float largest = std::numeric_limits<float>::min();;
@@ -33,24 +44,45 @@ AngleAndAxis RotationMatrix_to_Angle(MatrixXf R) {
         }
 
         // Calculate the axis vector
-        axis = VectorXf::Zero(3);
-        axis[0] = (float) sqrt((R(row, row) + 1) / 2);
-        for (int j = 1; j < R.cols(); j++) {
+        float v_a = 0.5 * sqrt(max(0, (1 + R(0, 0) - R(1, 1) - R(2, 2))));
 
-            axis[j] = (float) R(row, row+j) / (2 * axis[0]);
+        if (largest == R(0, 0)) {
+            rot_axis << v_a, ((R(0, 1) + R(1, 0)) / (2 * v_a)), ((R(0, 2) + R(2, 0)) / (2 * v_a));
+        }
+
+        else if (largest == R(1, 1)) {
+            rot_axis << ((R(0, 1) + R(1, 0)) / (-2 * v_a)), v_a, ((R(0, 2) + R(2, 0)) / (-2 * v_a));
+        }
+
+        else {
+            rot_axis << ((R(0, 2) + R(2, 0)) / (-2 * v_a)), ((R(1, 2) + R(2, 1)) / (-2 * v_a)), v_a;
         }
     }
 
     else {
-        // Hardcoded for 3x3 matrices
-        axis << (R(2,1) - R(1,2) / (2 * sin(angle))), (R(0,2) - R(2,0) / (2 * sin(angle))), (R(1,0) - R(0,1) / (2 * sin(angle)));
+        rot_axis = (1 / (2 * sin(angle))) * R_diff;
     }
-    return std::make_pair(angle, axis);
+
+    // Normalize
+    rot_axis = rot_axis / (sqrt(rot_axis.dot(rot_axis)));
+
+    return std::make_pair(angle, rot_axis);
 }
 
 
+float RotationMatrix2D_to_Angle(MatrixXf R) {
+    
+    
+    if (R.cols() != 2 && R.rows() != 2) {
+        std::cerr << "Rotation Matrix dimensions should be 2x2. Cannot convert to angle." << std::endl;
+        return -1;
+    }
 
-MatrixXf Angle_to_RotationMatrix(AngleAndAxis a_a) {
+    return atan2(R(1, 0), R(0, 0));
+}
+
+
+MatrixXf Angle_to_RotationMatrix3D(AngleAndAxis a_a) {
 
     // Rodriguez Formula method
     // MatrixXf identity;
@@ -113,4 +145,26 @@ std::vector<std::string> split(const std::string& s, std::string regx) {
     }
 
   return elems;
+}
+
+
+
+double normalizeAngleRadians(double angle, bool pi_to_pi) {
+    
+    if (std::isnan(angle) || std::isinf(angle))
+        return std::numeric_limits<double>::quiet_NaN();
+
+    // Normalize to the range [0, 2*PI)
+    angle = fmod(angle, 2 * M_PI);
+    if (angle < 0)
+        angle += 2 * M_PI;
+    
+    if (pi_to_pi) {
+
+        // Normalize to the range [-PI, PI)
+        if (angle >= M_PI)
+            angle -= 2 * M_PI;
+    }
+    
+    return angle;
 }

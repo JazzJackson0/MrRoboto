@@ -29,7 +29,7 @@ float DynamicWindowApproach::heading(float trans_vel, float rot_vel) {
 
 float DynamicWindowApproach::distance(float trans_vel, float rot_vel) {
 
-    float circle_trajectory_radius = trans_vel / rot_vel; // Maybe handle case of rot_vel being 0??
+    float circle_trajectory_radius = trans_vel / rot_vel;
     float robot_angle = std::atan2(RobotPos[1], RobotPos[0]);
     VectorXf obstacle = Get_ClosestObstacle();
     float gamma = std::atan2(obstacle[1], obstacle[0]) - robot_angle;
@@ -53,8 +53,6 @@ float DynamicWindowApproach::ObjectiveFunction(float trans_vel, float rot_vel) {
 
     return smoothing * (heading_weight * heading(trans_vel, rot_vel) + 
         dist_weight * distance(trans_vel, rot_vel) + vel_weight * velocity(trans_vel, rot_vel));
-
-    // TODO: Normalize all 3 of these components to [0, 1]
 }
 
 std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
@@ -166,6 +164,17 @@ void DynamicWindowApproach::Set_VelocityLimits(float min_vel, float max_vel, flo
     MinVel = min_vel;
     MaxVel = max_vel;
     VelInterval = vel_interval;
+
+    if (min_vel == 0) { 
+        std::cout << "Warning. Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
+        MinVel = 0.1;
+    }
+
+    if (max_vel == 0) { 
+        std::cout << "Warning. Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
+        MaxVel = 0.5;
+    }
+    
 }
 
 void DynamicWindowApproach::Set_Goal(VectorXf goal) {

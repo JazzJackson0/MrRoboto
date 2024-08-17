@@ -43,7 +43,7 @@ int8_t Serial::UARTInit(uint8_t uartNum) {
     // char path[buffer_size];
     // snprintf(path, sizeof(path), "/dev/serial.%d", uartNum);
 
-    std::string path = "/dev/serial." + std::to_string(uartNum);
+    std::string path = "/dev/serial" + std::to_string(uartNum);
     const char *raw_path = path.c_str();
     
     if(uart = open(raw_path, O_RDWR | O_NDELAY, O_NOCTTY) < 0) {

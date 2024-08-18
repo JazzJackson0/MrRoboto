@@ -84,7 +84,7 @@ void FrontierExplorer::Get_AdjacentCells(VectorXi point, std::vector<VectorXi> &
     int row = point[1];
     int col = point[0]; 
 
-    RecursionMap[col][row].added = true;
+    RecursionMap[row][col].added = true;
 
     int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
                              {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
@@ -95,9 +95,9 @@ void FrontierExplorer::Get_AdjacentCells(VectorXi point, std::vector<VectorXi> &
         int nrow = row + dir[1];
 
         VectorXi direction(2);
-        direction << nrow, ncol;
+        direction << ncol, nrow;
 
-        if (isValid(nrow, ncol) && isFrontierPoint(direction) && !RecursionMap[ncol][nrow].added) { 
+        if (isValid(nrow, ncol) && isFrontierPoint(direction) && !RecursionMap[nrow][ncol].added) { 
             Get_AdjacentCells(direction, adjacents, RecursionMap); 
         }
     }
@@ -294,8 +294,8 @@ VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
     }
 
     std::cout << "Returning Frontier Point!" << std::endl;
-    std::cout << "Robot Pose: " << robot_pose << std::endl;
-    std::cout << "Closest Frontier: " << closest_centroid << std::endl;
+    std::cout << "Robot Pose: " << robot_pose.transpose() << std::endl;
+    std::cout << "Closest Frontier: " << closest_centroid.transpose() << std::endl;
     return closest_centroid;
 }
 

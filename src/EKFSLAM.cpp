@@ -139,7 +139,6 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 		}
 	}
 	propagateFreeSpace();
-	std::cout << "Printing Map from EKF SLAM." << std::endl;
 	// std::cout << map_structure << std::endl;
 	return map_structure;
 }

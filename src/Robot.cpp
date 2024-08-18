@@ -138,7 +138,6 @@ void Robot::FindFrontier() {
         std::unique_lock<std::mutex> map_lock(map_mutex);
         Eigen::Tensor<float, 2> map = current_map;
         map_lock.unlock();
-        std::cout << "Current Map Dimensions: " << map.dimension(0) << " x " << map.dimension(1) << std::endl;
 
         std::unique_lock<std::mutex> cloud_lock(map_mutex);
         PointCloud cloud = current_cloud;
@@ -236,24 +235,22 @@ void Robot::RunSLAM(int algorithm) {
 
         if (algorithm == POSE_GRAPH) {
             
-            std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = slam1->Run(cloud);
-            // std::cout << "SLAM Output Map Dimensions: " << current_map.dimension(0) << " x " << current_map.dimension(1) << std::endl;
+            Eigen::Tensor<float, 2> new_map = slam1->Run(cloud);
             // std::cout << current_map << std::endl;
             // std::cout << std::endl;
-            map_lock.unlock();
-
-            std::unique_lock<std::mutex> pos_lock(pos_mutex);
-            current_pos = slam1->BroadcastCurrentPose();
-            pos_lock.unlock();
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
                 map_data_available = true;
-                map_state_lock.unlock();
                 first_map = false;
             } 
-            
+
+            std::unique_lock<std::mutex> map_lock(map_mutex);
+            current_map = new_map;
+            map_lock.unlock();
+
+            std::unique_lock<std::mutex> pos_lock(pos_mutex);
+            current_pos = slam1->BroadcastCurrentPose();  
         }
         
         else if (algorithm == EKF) {
@@ -264,22 +261,22 @@ void Robot::RunSLAM(int algorithm) {
             ctrl.rot_vel = 0.0;
             //-------------------------------------------------
 
-            std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = slam2->Run(cloud, ctrl);
+            Eigen::Tensor<float, 2> new_map = slam2->Run(cloud, ctrl);
             // std::cout << current_map << std::endl;
             // std::cout << std::endl;
-            map_lock.unlock();
 
-            std::unique_lock<std::mutex> pos_lock(pos_mutex);
-            current_pos = slam2->BroadcastCurrentPose();
-            pos_lock.unlock();
-            
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
                 map_data_available = true;
-                map_state_lock.unlock();
                 first_map = false;
             }
+
+            std::unique_lock<std::mutex> map_lock(map_mutex);
+            current_map = new_map;
+            map_lock.unlock();
+
+            std::unique_lock<std::mutex> pos_lock(pos_mutex);
+            current_pos = slam2->BroadcastCurrentPose();       
         }
     }
 }
@@ -322,8 +319,10 @@ void Robot::RunMapper() {
         VectorXf pos = current_pos;
         pos_lock.unlock();
 
+        Eigen::Tensor<float, 2> new_map = og_map->UpdateGridMap(pos, scan);
+
         std::unique_lock<std::mutex> map_lock(map_mutex);
-        current_map = og_map->UpdateGridMap(pos, scan);
+        current_map = new_map;
         map_lock.unlock();
 
 
@@ -334,8 +333,10 @@ void Robot::RunMapper() {
         // current_cloud = cloud;
         // cloud_lock.unlock();
 
+        // Eigen::Tensor<float, 2> new_map = og_map->UpdateGridMapWithPointCloud(cloud);
+
         // std::unique_lock<std::mutex> map_lock(map_mutex);
-        // current_map = og_map->UpdateGridMapWithPointCloud(cloud);
+        // current_map = new_map;
         // map_lock.unlock();
     }
 }
@@ -349,8 +350,10 @@ void Robot::Save_Map(std::string output_filename) {
     }
 
     std::unique_lock<std::mutex> map_lock(map_mutex);
-    map_builder->Tensor2D_to_MapFile(current_map, output_filename, PGM, 255);
+    Eigen::Tensor<float, 2> map = current_map;
     map_lock.unlock();
+
+    map_builder->Tensor2D_to_MapFile(map, output_filename, PGM, 255);
 }
 
 

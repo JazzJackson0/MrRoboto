@@ -80,7 +80,9 @@ bool EKFSlam::isVisible(int x, int y, int x_robot, int y_robot) {
 
 Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 
+	// std::cout << "Previous Pose: " << PreviousPose << std::endl;
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose);
+	// std::cout << "Robot Index: " << robot_index.transpose() << std::endl;
 	int width = map_structure.dimension(1);
 	int height = map_structure.dimension(0);
 
@@ -89,7 +91,7 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 		for (int j = 0; j < Correspondence[i].points.size(); j++) {
 
 			VectorXf point(2);
-			point << Correspondence[i].points[i].x, Correspondence[i].points[i].y;
+			point << Correspondence[i].points[j].x, Correspondence[i].points[j].y;
 			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point);
 
 			if ((beam_index[0] >= 0 && beam_index[0] < width) && (beam_index[1] >= 0 && beam_index[1] < height)) {
@@ -105,7 +107,15 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 				int x = robot_index[0];
 				int y = robot_index[1];
 
+				// std::cout << "Point: (" << x << ", " << y << ")" << std::endl; 
+
 				while (true) {
+
+					// std::cout << "Point: (" << x << ", " << y << ")" << std::endl; 
+					if (x < 0 || x >= width || y < 0 || y >= height) {
+						// std::cout << "OUT OF BOUNDS: (" << x << ", " << y << ")" << std::endl; 
+						continue;
+					}
 
 					if (map_structure(y, x) == 0.5) { map_structure(y, x) = 0.0; }
 
@@ -129,6 +139,8 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 		}
 	}
 	propagateFreeSpace();
+	std::cout << "Printing Map from EKF SLAM." << std::endl;
+	// std::cout << map_structure << std::endl;
 	return map_structure;
 }
 
@@ -211,7 +223,7 @@ void EKFSlam::Build_Identity() {
 
 int EKFSlam::UpdateMapAndResize(Landmark landmark) {
 	
-	// If State Vector has landmarks in it
+	// If State Vector has landmarks in it. Check if this landmark already exists.
 	if (StateVector.rows() > PoseDimensions) {
 
 		for (int i = PoseDimensions; i < StateVector.rows(); i += LandmarkDimensions) {
@@ -224,6 +236,8 @@ int EKFSlam::UpdateMapAndResize(Landmark landmark) {
 			}
 		}
 	}
+
+	// If landmark is NEW-----------------------------------------
 
 	// Resize State Vector-------------
 	int original_size = StateVector.size();
@@ -263,15 +277,32 @@ int EKFSlam::UpdateMapAndResize(Landmark landmark) {
 
 
 VectorXf EKFSlam::PredictPose_g(ControlCommand ctrl) {
-	
-	VectorXf PredictedPose(PoseDimensions);
-	PredictedPose = VectorXf::Zero(3);
+
+	VectorXf PredictedPose = VectorXf::Zero(PoseDimensions);
 	float trans = ctrl.trans_vel;
 	float rot = ctrl.rot_vel;
+
+	// Linear Motion
+	if (rot == 0) {
+
+		non_linear = false;
+		PredictedPose[0] = PreviousPose[0] + (trans * std::cos(PreviousPose[2]) * time_interval); 
+
+		PredictedPose[1] = PreviousPose[1] + (trans * std::sin(PreviousPose[2]) * time_interval);
+
+		PredictedPose[2] = 0;
+
+		return PredictedPose;
+	}
+
+	non_linear = true;
+
 	PredictedPose[0] = (PreviousPose[0] + (-1*(trans / rot)) * std::sin(PreviousPose[2]) 
 			+ (-1*(trans / rot)) * std::sin(PreviousPose[2] + rot * time_interval) );
+
 	PredictedPose[1] = (PreviousPose[1] + (-1*(trans / rot)) * std::cos(PreviousPose[2]) 
 			+ (-1*(trans / rot)) * std::cos(PreviousPose[2] + rot * time_interval) );
+
 	PredictedPose[2] = (PreviousPose[2] + rot * time_interval);
 
 	return PredictedPose;
@@ -315,10 +346,18 @@ void EKFSlam::BuildPredictionFunctionFor_G() {
 
 	// Set up your functions that will be Auto-Differentiated
 	// Differentiate w.r.t.: X[0] = x_prev, X[1] = y_prev, X[2] = theta_prev
-	Yg[0] = (Xg[0] + (-1.f * fraction) * CppAD::sin(Xg[2]) + (fraction) * CppAD::sin(Xg[2] + (rot_vel * time)));
-	Yg[1] = (Xg[1] + (fraction) * CppAD::cos(Xg[2]) + (-1.f * fraction) * CppAD::cos(Xg[2] + (rot_vel * time)) );
-	Yg[2] = (fraction * time);
+	if (non_linear) {
 
+		Yg[0] = (Xg[0] + (-1.f * fraction) * CppAD::sin(Xg[2]) + (fraction) * CppAD::sin(Xg[2] + (rot_vel * time)));
+		Yg[1] = (Xg[1] + (fraction) * CppAD::cos(Xg[2]) + (-1.f * fraction) * CppAD::cos(Xg[2] + (rot_vel * time)) );
+		Yg[2] = (fraction * time);
+	}
+
+	else {
+		Yg[0] = Xg[0] + (trans_vel * CppAD::cos(Xg[2]) * time);
+		Yg[1] = Xg[1] + (trans_vel * CppAD::sin(Xg[2]) * time);
+		Yg[2] = 0;
+	}
 
 	// Creates f: x -> y and stops tape recording
 		// Performs the derivative calculations on the empty x variables.
@@ -374,7 +413,9 @@ MatrixXf EKFSlam::CalculateJacobian(FunctionType f_type, int landmark_location) 
 		h_inputs << robot_pose, landmark;
 	}
 
-	g_inputs << robot_pose;
+	g_inputs = robot_pose;
+	// std::cout << "Robot Pose: " << g_inputs.transpose() << std::endl;
+	// std::cout << "With Respect To: " << g_inputs.transpose() << std::endl;
 
 
 	// STEP 1: Set Up Prediction Function----------------------------------------------
@@ -504,7 +545,6 @@ void EKFSlam::Correction(std::vector<Landmark> landmarks) {
 		// STEP 4: Compute updated state & covariance -----------------
 		VectorXf current_landmark(LandmarkDimensions);
 		current_landmark << global_landmark.range, global_landmark.bearing; 
-
 		StateVector = StateVector + KalmanGain * (current_landmark - estimated_landmark);
 		Covariance = (Identity - (KalmanGain * HighDimension_H)) * Covariance;
 		PreviousPose = StateVector.block(0, 0, PoseDimensions, 1);
@@ -520,7 +560,7 @@ EKFSlam::EKFSlam() { /*Default constructor*/ }
 EKFSlam::EKFSlam(int pose_dim, int landmark_dim) : PoseDimensions(pose_dim), LandmarkDimensions(landmark_dim) {
 
 		//feature_extractor = FeatureExtractor (0.005, 0.5, 0.15, 9);
-		feature_extractor = FeatureExtractor (0.5, 0.5, 0.15, 9);
+		feature_extractor = FeatureExtractor (1.0, 2.0, 0.15, 9);
 		time_interval = 0.01;
 		SimilarityMargin = 0.01; // m
 		
@@ -541,14 +581,16 @@ EKFSlam::EKFSlam(int pose_dim, int landmark_dim) : PoseDimensions(pose_dim), Lan
 		// Set up Mapping Functions & Indentity
 		Build_MappingFunctions();
 		Build_Identity();
+		initial_state_set = false;
+		map_state_set = false;
+		non_linear = true;
 }
 
 
 void EKFSlam::SetInitialState(Eigen::VectorXf initial_position, float _process_uncertainty_r, float _measurement_uncertainty_q) {
-	
 
 	InitialPosition = initial_position;
-	PreviousPose = InitialPosition;
+	PreviousPose = initial_position;
 	process_uncertainty_r = _process_uncertainty_r; 
 	measurement_uncertainty_q = _measurement_uncertainty_q;
 
@@ -560,19 +602,30 @@ void EKFSlam::SetInitialState(Eigen::VectorXf initial_position, float _process_u
 	// std::cout << "CURRENT MAP AFTER BUILD:" << std::endl;
 	// std::cout << StateVector.transpose() << std::endl;
 	// std::cout << "\n\n";
+	initial_state_set = true;
 }
 
 
 Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, ControlCommand ctrl) {
 	
+	if (!map_state_set) {
+		std::cerr << "Error: Map Dimensions have not been set for EKF. Cancelling..." << std::endl;
+		map_structure = Eigen::Tensor<float, 2>(1, 1);
+		return map_structure;
+	}
+	
+	if (!initial_state_set) {
+		std::cerr << "Error: Initial States have not been set for EKF. Cancelling..." << std::endl;
+		return map_structure;
+
+	}
 	std::vector<Landmark> landmarks = feature_extractor.LandmarksFromScan(current_scan, PreviousPose);
 
-	Prediction(ctrl);
-	Correction(landmarks);
 
-	// std::cout << "CURRENT MAP:" << std::endl;
-	// std::cout << StateVector.transpose() << std::endl;
-	// std::cout << "\n\n";
+	Prediction(ctrl);
+	std::cout << "Prediction Done." << std::endl;
+	Correction(landmarks);
+	std::cout << "Correction Done." << std::endl;
 
 	return UpdateMap();
 }
@@ -590,6 +643,7 @@ void EKFSlam::Set_MapDimensions(int height, int width) {
 	map_structure = Eigen::Tensor<float, 2>(height, width);
 	map_structure.setConstant(0.5);
 	map_builder.Update_2DMapDimensions(height, width);
+	map_state_set = true;
 }
 
 VectorXf EKFSlam::BroadcastCurrentPose() {

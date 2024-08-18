@@ -120,7 +120,7 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMapWithPointCloud(PointCloud
 	for (int i = 0; i < cloud.points.size(); i++) {
 
 		VectorXf pt(2);
-		pt << (cloud.points[i][0] * 100), (cloud.points[i][1] * 100); // m --> cm
+		pt << (cloud.points[i][0]), (cloud.points[i][1]);
 
 		VectorXi index = map_builder.MapCoordinate_to_DataStructureIndex(pt);
 		

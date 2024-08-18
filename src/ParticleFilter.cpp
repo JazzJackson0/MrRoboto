@@ -103,7 +103,6 @@ void ParticleFilter::Generate_Weight(PointCloud robot_pointcloud, Particle &part
 			float simulated_point_range = Get_Range(particle.pose, simulated_pointcloud.points[p]);
 			Distribution normal_distro1 = Distribution(robot_point_range, range_sigma);
 			float range_weight = ProbabilityDensityFunction(simulated_point_range, normal_distro1);
-
 			//std::cout << "Range Weight: " << (float) range_weight << std::endl;
 			
 			// Normalize to 1
@@ -121,8 +120,6 @@ void ParticleFilter::Generate_Weight(PointCloud robot_pointcloud, Particle &part
 			float min_angle = abs(robot_point_bearing - simulated_point_bearing);
 			if (min_angle > M_PI) { min_angle = abs(min_angle - (2 * M_PI)); } // Normalized	
 			float bearing_weight = ProbabilityDensityFunction(min_angle, normal_distro2);
-
-
 			// std::cout << "Bearing Weight: " << (float) bearing_weight << std::endl;
 			
 			// Normalize to 1

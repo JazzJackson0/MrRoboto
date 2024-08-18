@@ -68,6 +68,11 @@ class EKFSlam {
 		ADFun<float> PredictionFunction;		
 		ADFun<float> ObservationFunction;	
 
+		bool initial_state_set;
+		bool map_state_set;
+
+		bool non_linear;
+
 
 		/**
 		 * @brief Uses a BFS to propagate accross the map, marking the spaces that the robot can see as "free"

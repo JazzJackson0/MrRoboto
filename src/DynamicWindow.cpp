@@ -13,6 +13,13 @@ VectorXf DynamicWindowApproach::Get_ClosestObstacle() {
         if (dist < closest_dist) {
             closest_idx = i;
         }
+    } 
+
+    // The result of this is Unknown
+    if (Cloud.size() == 0) {
+        VectorXf fail(2);
+        fail << RobotPos[0], RobotPos[1];
+        return fail;
     }
 
     return Cloud[closest_idx];

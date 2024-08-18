@@ -9,8 +9,7 @@ Robot *mr_roboto;
 
 void ctrl_c_handler(int s){
 
-    mr_roboto->RobotStop();
-    mr_roboto->Save_Map("final_map.pgm");
+    mr_roboto->RobotStop("final_map.pgm");
     exit(1); 
 }
 

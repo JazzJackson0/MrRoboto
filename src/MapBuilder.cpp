@@ -268,8 +268,14 @@ Tensor<float, 3> MapBuilder::MapFile_to_Tensor3D(std::string filename, int filet
 
 VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
 
+    
     VectorXi index = VectorXi::Zero(2);
     if (P <= 0) {index.resize(3);}
+
+    if (coordinate[0] >= (N / 2)) { coordinate[0] = (N / 2) - 1; }
+    else if (coordinate[0] < -(N / 2)) { coordinate[0] = -(N / 2); }
+    if (coordinate[1] >= (M / 2)) { coordinate[1] = (M / 2) - 1; }
+    else if (coordinate[1] < -(M / 2)) { coordinate[1] = -(M / 2); }
 
     index[0] = (int) round(coordinate[0] + (N / 2));
     index[1] = (int) round(coordinate[1] + (M / 2));

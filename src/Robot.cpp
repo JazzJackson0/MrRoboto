@@ -69,6 +69,7 @@ PointCloud Robot::GetCloud(int broadcast_state) {
         else {
             float dist_mm = (float) nodes[i].dist_mm_q2 / 4.0f;
             dist_m = dist_mm / 1000;
+            dist_cm = dist_m * 100;
         }
 
         angle = ( (float) nodes[i].angle_z_q14 * 90.0f) / 16384.0f;
@@ -76,8 +77,8 @@ PointCloud Robot::GetCloud(int broadcast_state) {
 
         // Get coordinate of ray.
         int size = current_pos.rows();
-        float x = (current_pos[0] + (dist_m * std::cos(rad)));
-        float y = (current_pos[1] + (dist_m * std::sin(rad)));
+        float x = (current_pos[0] + (dist_cm * std::cos(rad)));
+        float y = (current_pos[1] + (dist_cm * std::sin(rad)));
 
         if (broadcast_state == NO_BROADCAST) {
 
@@ -113,11 +114,12 @@ std::vector<VectorXf> Robot::GetScan() {
         else {
             float dist_mm = (float) nodes[i].dist_mm_q2 / 4.0f;
             dist_m = dist_mm / 1000;
+            dist_cm = dist_m * 100;
         }
 
         angle = ( (float) nodes[i].angle_z_q14 * 90.0f) / 16384.0f;
         rad = angle * M_PI / 180.f;
-        point << (dist_m * 100), angle; // Convert dist to cm
+        point << dist_cm, angle; // Convert dist to cm
         scan.push_back(point);
 
         idx++;
@@ -228,15 +230,17 @@ void Robot::RunSLAM(int algorithm) {
 
         // TODO: Put odom behind mutex??
         VectorXf odom_out = odom->Get_NewVelocities();
-        ControlCommand ctrl;
-        ctrl.trans_vel = odom_out[0];
-        ctrl.rot_vel = odom_out[1];
+        // ControlCommand ctrl;
+        // ctrl.trans_vel = odom_out[0];
+        // ctrl.rot_vel = odom_out[1];
 
         if (algorithm == POSE_GRAPH) {
             
             std::unique_lock<std::mutex> map_lock(map_mutex);
             current_map = slam1->Run(cloud);
-            std::cout << "SLAM Output Map Dimensions: " << current_map.dimension(0) << " x " << current_map.dimension(1) << std::endl;
+            // std::cout << "SLAM Output Map Dimensions: " << current_map.dimension(0) << " x " << current_map.dimension(1) << std::endl;
+            // std::cout << current_map << std::endl;
+            // std::cout << std::endl;
             map_lock.unlock();
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
@@ -249,13 +253,21 @@ void Robot::RunSLAM(int algorithm) {
                 map_state_lock.unlock();
                 first_map = false;
             } 
-            // std::cout << current_map << std::endl;
+            
         }
         
         else if (algorithm == EKF) {
 
+            // TEMPORARY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ControlCommand ctrl;
+            ctrl.trans_vel = 0.5;
+            ctrl.rot_vel = 0.0;
+            //-------------------------------------------------
+
             std::unique_lock<std::mutex> map_lock(map_mutex);
             current_map = slam2->Run(cloud, ctrl);
+            // std::cout << current_map << std::endl;
+            // std::cout << std::endl;
             map_lock.unlock();
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
@@ -268,7 +280,6 @@ void Robot::RunSLAM(int algorithm) {
                 map_state_lock.unlock();
                 first_map = false;
             }
-            // std::cout << current_map << std::endl;
         }
     }
 }
@@ -327,6 +338,19 @@ void Robot::RunMapper() {
         // current_map = og_map->UpdateGridMapWithPointCloud(cloud);
         // map_lock.unlock();
     }
+}
+
+
+void Robot::Save_Map(std::string output_filename) {
+
+    if (!map_params_set()) {
+        std::cout << "No Map Available. Cancelling Save..." << std::endl;
+        return;
+    }
+
+    std::unique_lock<std::mutex> map_lock(map_mutex);
+    map_builder->Tensor2D_to_MapFile(current_map, output_filename, PGM, 255);
+    map_lock.unlock();
 }
 
 
@@ -393,6 +417,8 @@ void Robot::Set_MapDimensions(int height, int width) {
     slam2->Set_MapDimensions(map_height, map_width);
     map_set = true;
     std::cout << "Map Parameters Set: (" << height << " x " << width << ")" << std::endl;
+    current_map = Eigen::Tensor<float, 2>(height, width);
+    current_map.setConstant(0.3);
 }
 
 void Robot::RobotStart() {
@@ -453,7 +479,11 @@ void Robot::RobotStart() {
     path_util = new PathUtil();
 }
 
-void Robot::RobotStop() {
+void Robot::RobotStop(std::string output_filename) {
+
+    std::cout << "Saving Map..." << std::endl;
+    Save_Map(output_filename);
+    
     std::cout << "Shutting Down..." << std::endl;
     StopScanner();
     delete map_builder;
@@ -557,15 +587,7 @@ void Robot::BroadcastPointCloud() {
 }
 
 
-void Robot::Save_Map(std::string output_filename) {
 
-    if (!map_params_set()) {
-        std::cout << "No Map Available. Cancelling Save..." << std::endl;
-        return;
-    }
-
-    map_builder->Tensor2D_to_MapFile(current_map, output_filename, PGM, 255);
-}
 
 
 

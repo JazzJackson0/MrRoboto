@@ -45,37 +45,37 @@ GeneralFormLine FeatureExtractor::SlopeInt2General(SlopeInterceptLine slope_line
     general_line.b = 1;
     general_line.c = -slope_line.b;
 
-    if (general_line.a < 0) {
-        general_line.a *= -1;
-        general_line.b *= -1;
-        general_line.c *= -1;
-    }
+    // if (general_line.a < 0) {
+    //     general_line.a *= -1;
+    //     general_line.b *= -1;
+    //     general_line.c *= -1;
+    // }
 
-    // Pull out fraction part of A 
-    fractionPart = modf(general_line.a, &integerPart);
+    // // Pull out fraction part of A 
+    // fractionPart = modf(general_line.a, &integerPart);
 
-    // Calculate Simplified Denominator for A 
-    numerator = (int)fractionPart * denominator_limit;
-    int denominator_a = denominator_limit;
-    div = gcd(numerator, denominator_limit);
-    denominator_a /= div; // (This denom calculated for the fraction part is the same as it would be for the entire number)
+    // // Calculate Simplified Denominator for A 
+    // numerator = (int)fractionPart * denominator_limit;
+    // int denominator_a = denominator_limit;
+    // div = gcd(numerator, denominator_limit);
+    // denominator_a /= div; // (This denom calculated for the fraction part is the same as it would be for the entire number)
 
-    // Pull out fraction part of C 
-    fractionPart = modf(general_line.c, &integerPart);
+    // // Pull out fraction part of C 
+    // fractionPart = modf(general_line.c, &integerPart);
 
-    // Calculate Simplified Denominator for C 
-    numerator = (int)fractionPart * denominator_limit;
-    int denominator_c = denominator_limit;
-    div = gcd(numerator, denominator_limit);
-    denominator_c /= div; // (This denom calculated for the fraction part is the same as it would be for the entire number)
+    // // Calculate Simplified Denominator for C 
+    // numerator = (int)fractionPart * denominator_limit;
+    // int denominator_c = denominator_limit;
+    // div = gcd(numerator, denominator_limit);
+    // denominator_c /= div; // (This denom calculated for the fraction part is the same as it would be for the entire number)
 
-    // Calculate the LCM
-    int lcm = abs((denominator_a * denominator_c)) / gcd(denominator_a, denominator_c);
+    // // Calculate the LCM
+    // int lcm = abs((denominator_a * denominator_c)) / gcd(denominator_a, denominator_c);
 
-    // Update Line Params
-    general_line.a *= lcm;
-    general_line.b *= lcm;
-    general_line.c *= lcm;
+    // // Update Line Params
+    // general_line.a *= lcm;
+    // general_line.b *= lcm;
+    // general_line.c *= lcm;
 
     return general_line;
 }
@@ -84,7 +84,7 @@ SlopeInterceptLine FeatureExtractor::General2SlopeInt(GeneralFormLine general_li
 
     SlopeInterceptLine slope_line;
     slope_line.m = -(general_line.a / general_line.b);
-    slope_line.b = -(general_line.a / general_line.b);
+    slope_line.b = -(general_line.c / general_line.b);
 
     return slope_line;
 }
@@ -96,9 +96,12 @@ Point FeatureExtractor::Get_Intersection(GeneralFormLine general_line_1, General
 
     // Switched the subtraction order in the denominators so the sign of the output point match the actual point
     point.x = ((general_line_1.b * general_line_2.c) - (general_line_2.b * general_line_1.c)) / 
-        ((general_line_2.a * general_line_1.b) - (general_line_1.a * general_line_2.b));
+        ((general_line_1.a * general_line_2.b) - (general_line_2.a * general_line_1.b));
+
     point.y = ((general_line_2.a * general_line_1.c) - (general_line_1.a * general_line_2.c)) / 
-        ((general_line_2.a * general_line_1.b) - (general_line_1.a * general_line_2.b));
+        ((general_line_1.a * general_line_2.b) - (general_line_2.a * general_line_1.b));
+
+    // point.y = ((general_line_1.a * point.x) - general_line_1.c) / general_line_1.b;
         
     return point;
 }
@@ -206,15 +209,14 @@ GeneralFormLine FeatureExtractor::ODRFit(std::vector<Point> laser_points) {
    
     else {
 
-        // General Line Output
-        
+        // General Line Output  
         float  slope_m = sYY - sXX + sqrt(pow((sYY - sXX), 2) + (4 * (sXY * sXY))) / (2 * sXY);
         float intercept_b = mY - (slope_m * mX);
-        float norm_factor = (intercept_b >= 0.0? 1.0 : -1.0) * sqrt((slope_m * slope_m) + 1);
+        // float norm_factor = (intercept_b >= 0.0? 1.0 : -1.0) * sqrt((slope_m * slope_m) + 1);
 
-        fit_line.a = (-slope_m / norm_factor);
-        fit_line.b = (1.0 / norm_factor);
-        fit_line.c = (intercept_b / norm_factor);
+        fit_line.a = (-slope_m );
+        fit_line.b = (1.0);
+        fit_line.c = (-intercept_b);
     }
 
 
@@ -225,10 +227,10 @@ GeneralFormLine FeatureExtractor::ODRFit(std::vector<Point> laser_points) {
 Point FeatureExtractor::Get_PointPrediction(GeneralFormLine fitted_line, Point point_in_scan) {
 
     // Calculate the Beam Line
-    SlopeInterceptLine line = CreateLinearModel(point_in_scan, RobotPos);
+    SlopeInterceptLine line = CreateLinearModel(RobotPos, point_in_scan);
     GeneralFormLine general_beam = SlopeInt2General(line);
 
-    return Get_Intersection(fitted_line, general_beam);
+    return Get_Intersection(general_beam, fitted_line);
 }
 
 
@@ -245,7 +247,7 @@ Point FeatureExtractor::OrthogProjectPoint2Line(SlopeInterceptLine slope_line, P
 
     
     Point intersect_point;
-    intersect_point.x = (data_point.x+ (slope_line.m*data_point.y) - (slope_line.m*slope_line.b)) /
+    intersect_point.x = (data_point.x + (slope_line.m * data_point.y) - (slope_line.m * slope_line.b)) /
             ((slope_line.m * slope_line.m) + 1);
 
     intersect_point.y = (slope_line.m * intersect_point.x) + slope_line.b;
@@ -288,10 +290,6 @@ void FeatureExtractor::CheckOverlap() {
 }
 
 LineSegment FeatureExtractor::DetectSeedSegment() {
-
-    // std::cout << "Num of Points: " << num_of_points << std::endl;
-    // std::cout << "Min Seed Seg Num: " << MinSeedSegNum << std::endl;
-    // std::cout << "Detecting Seed Segment----------------------------------------------" << std::endl;
     
     LineSegment seed_seg;
     seed_seg.err = 0;
@@ -310,27 +308,29 @@ LineSegment FeatureExtractor::DetectSeedSegment() {
         }
         seed_seg.points = sliding_window;
         seed_seg.line_fit = ODRFit(seed_seg.points);
-        //std::cout << "Fit Line (During Detection): " << seed_seg.line_fit.a << "A + " << seed_seg.line_fit.b << "B + " << seed_seg.line_fit.c << "C" << std::endl;
-
-        // Validate the seed segment window
+        
+        // Check if all points within window satisfy as a seed segment.
         for (int k = i; k < seed_seg.end_idx; k++) {
-
+            
             Point predicted = Get_PointPrediction(seed_seg.line_fit, LaserPoints[k]);
-            // std::cout << "Laser Point: (" << LaserPoints[k].x << ", " << LaserPoints[k].y << ") Predicted Point: (" 
-            //     << predicted.x << ", " << predicted.y << ")" << std::endl;
             float dist1 = Get_EuclideanDistance(predicted, LaserPoints[k]); 
-            //std::cout << "Distance btw Point & Predicted: " << dist1 << " Delta: " << Delta << std::endl;           
+            // std::cout << "Distance btw Point & Predicted: " << dist1 << " Delta: " << Delta << std::endl;  
+
+            // Distance btw Point & Predicted Point        
             if (dist1 > Delta) {
                 flag = false;
                 break;
             }
 
             float dist2 = Get_Point2LineDistance(LaserPoints[k], seed_seg.line_fit);
-            //std::cout << "Distance btw Point & Fit Line: " << dist2 << " Epsillon: " << Epsillon << std::endl; 
+
+            // Distance btw Point & Fit Line:
             if (dist2 > Epsillon) {
                 flag = false;
                 break;
             }
+
+            
         }
 
         if (flag) {
@@ -340,7 +340,7 @@ LineSegment FeatureExtractor::DetectSeedSegment() {
     }
 
     seed_seg.err = 1;
-    std::cout << "Error Segment Returned (During Detection): " << seed_seg.points.size() << std::endl;
+    // std::cout << "Error Segment Returned (During Detection): " << seed_seg.points.size() << std::endl;
     return seed_seg;
 }
 
@@ -351,22 +351,17 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
     
     int beginning_point_index = max(breakpoint_idx, seed_seg.start_idx - 1);
     int final_point_index = min(seed_seg.end_idx + 1, LaserPoints.size() - 1);
-    //std::cout << "P_b: " << beginning_point_index << " P_f: " << final_point_index << std::endl;
-    //std::cout << "Seed Seg Start: " << seed_seg.start_idx - 1 <<  " Breakpoint: " << breakpoint_idx << std::endl;
     GeneralFormLine refit;
     LineSegment error;
     error.err = 0;
-
+    // No Seed Segment Detected. Cannot Grow
     if (seed_seg.err == 1) {
-        std::cout << "No Seed Segment Detected. Cannot Grow" << std::endl;
         error.err = 1;
         return error;
     }
 
-    // std::cout << "Growing Right" << std::endl;
     // Grow Right
     while (Get_Point2LineDistance(LaserPoints[final_point_index], seed_seg.line_fit) < Epsillon) {
-        // std::cout << "[RIGHT] Point-2-FitLine Dist: " << Get_Point2LineDistance(LaserPoints[final_point_index], seed_seg.line_fit) << "m   e = " << Epsillon << std::endl;
 
         if (final_point_index >= LaserPoints.size()) 
             break;
@@ -380,7 +375,6 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
         else {
             seed_seg.points.push_back(LaserPoints[final_point_index]);
             seed_seg.line_fit = ODRFit(seed_seg.points);
-            //std::cout << "[RIGHT] New Fit Made. Seg Size: " << seed_seg.points.size() << std::endl;
         }
         final_point_index++;
   
@@ -388,11 +382,8 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
 
     final_point_index--;
     
-    // std::cout << "Growing Left" << std::endl;
     // Grow Left
     while (Get_Point2LineDistance(LaserPoints[beginning_point_index], seed_seg.line_fit) < Epsillon) {
-        
-        // std::cout << "[LEFT] Point-2-FitLine Dist: " << Get_Point2LineDistance(LaserPoints[beginning_point_index], seed_seg.line_fit) << "m   e = " << Epsillon << std::endl;
 
         if (beginning_point_index < 0)
             break;
@@ -413,7 +404,6 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
             refit = ODRFit(subset);
             seed_seg.points = subset;
             seed_seg.line_fit = refit;
-            //std::cout << "[LEFT] New Fit Made. Seg Size: " << seed_seg.points.size() << std::endl;
         }
         beginning_point_index--;
         
@@ -425,15 +415,10 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
     seed_seg.start_idx = 0;
     seed_seg.end_idx = seed_seg.points.size() - 1;
 
-    // std::cout << "Start Index: " << seed_seg.start_idx << " End Index: " << seed_seg.end_idx << std::endl;
-    // std::cout << "Start: (" << seed_seg.points[seed_seg.start_idx].x << ", " << seed_seg.points[seed_seg.start_idx].y 
-    //     <<") End: (" << seed_seg.points[seed_seg.end_idx].x << ", " << seed_seg.points[seed_seg.end_idx].y << ")" << std::endl;
-
     // Validate Seed Segment
     int line_seg_point_num = seed_seg.points.size();
     float line_seg_len = Get_EuclideanDistance(seed_seg.points[seed_seg.start_idx], seed_seg.points[seed_seg.end_idx]);
 
-    // std::cout << "Num Points: " << line_seg_point_num << " Seed Line Len: " << line_seg_len << std::endl;
     if (line_seg_point_num >= MinSeedSegNum && line_seg_len >= MinLineSegLen) {
 
         breakpoint_idx = min(final_point_index + 1, LaserPoints.size());
@@ -478,7 +463,7 @@ void FeatureExtractor::reset() {
     NewLandmarks.clear();
     LaserPoints.clear();
     //PredictedPoints.clear();
-    SeedSegWindowSize = 15;
+    SeedSegWindowSize = 10;
     MinLineSegLen = 0.001; // m (Very small length for test case)
     breakpoint_idx = 0;
 }
@@ -494,7 +479,7 @@ FeatureExtractor::FeatureExtractor(float delta, float epsillon, float gap_value,
     : Delta(delta), Epsillon(epsillon), GapValue(gap_value), MinSeedSegNum(min_seed_seg_num) {
 
     LandmarkIDs = 0;
-    SeedSegWindowSize = 15; 
+    SeedSegWindowSize = 10; 
     MinLineSegLen = 0.001; // m (Very small length for test case)
     breakpoint_idx = 0;
 }
@@ -515,23 +500,26 @@ std::vector<Landmark> FeatureExtractor::LandmarksFromScan(PointCloud current_sca
     RobotPos.angle = current_pose[2];
 
     while (breakpoint_idx < (LaserPoints.size() - MinSeedSegNum)) {
-
-        // std::cout << "\n";
         
         landmark = ValidationGate(GrowSeedSegment(DetectSeedSegment()));
 
         // If landmark is valid
         if (landmark.err == 0) {
-            
-            Point origin;
-            origin.x = 0;
-            origin.y = 0;
-            origin.angle = 0;
-            landmark.position = OrthogProjectPoint2Line(General2SlopeInt(landmark.line), origin);
-            NewLandmarks.push_back(landmark);
 
+            // std::cout << "Printing Landmark Points" << std::endl;
+            // for (int i = 0; i < landmark.points.size(); i++) {
+            //     std::cout << landmark.points[i].x << ", " << landmark.points[i].y << std::endl;
+            // }
+            // std::cout << std::endl;
+            
+            // std::cout << "Landmark General Line: " << landmark.line.a << ", " << landmark.line.b << ", " << landmark.line.c << std::endl;
+            // std::cout << "Landmark Slope Line: " << General2SlopeInt(landmark.line).m << ", " << General2SlopeInt(landmark.line).b << std::endl;
+            landmark.position = OrthogProjectPoint2Line(General2SlopeInt(landmark.line), RobotPos);
+            // std::cout << "Landmark Position: " << landmark.position.x << ", " << landmark.position.y << std::endl;
             landmark.range = Get_EuclideanDistance(RobotPos, landmark.position);
             landmark.bearing = atan2(landmark.position.y, landmark.position.x) - RobotPos.angle;
+            NewLandmarks.push_back(landmark);
+
 
             // std::cout << "NEW LANDMARK!!!!!!!!!!!!" << std::endl;
             // std::cout << "Position: " << landmark.position.x << ", " << landmark.position.y  << std::endl;

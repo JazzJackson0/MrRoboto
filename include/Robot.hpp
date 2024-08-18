@@ -164,6 +164,13 @@ namespace diffdrive {
 
             void RunMapper();
 
+            /**
+             * @brief 
+             * 
+             * @param output_filename 
+             */
+            void Save_Map(std::string output_filename);
+
 
             /**
              * @brief Construct a new Robot object
@@ -207,8 +214,9 @@ namespace diffdrive {
             /**
              * @brief 
              * 
+             * @param output_filename name of ouptut map file
              */
-            void RobotStop();
+            void RobotStop(std::string output_filename);
 
             /**
              * @brief 
@@ -246,12 +254,5 @@ namespace diffdrive {
              * 
              */
             void BroadcastPointCloud();
-
-            /**
-             * @brief 
-             * 
-             * @param output_filename 
-             */
-            void Save_Map(std::string output_filename);
     };
 }

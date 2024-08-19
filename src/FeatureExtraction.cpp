@@ -418,11 +418,13 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
     // Validate Seed Segment
     int line_seg_point_num = seed_seg.points.size();
     float line_seg_len = Get_EuclideanDistance(seed_seg.points[seed_seg.start_idx], seed_seg.points[seed_seg.end_idx]);
+    // std::cout << "Line Seg Point Num: " << line_seg_point_num << " Min Seed Seg Num: " << MinSeedSegNum << std::endl;
+    // std::cout << "Line Seg Len: " << line_seg_len << " Min Line Seg Len: " << MinLineSegLen << std::endl;
 
     if (line_seg_point_num >= MinSeedSegNum && line_seg_len >= MinLineSegLen) {
 
         breakpoint_idx = min(final_point_index + 1, LaserPoints.size());
-        // std::cout << "Seed Seg Size (After Growth): " << seed_seg.points.size() << std::endl;
+        std::cout << "New Breakpoint Index: " << breakpoint_idx << std::endl;
         seed_seg.endpoints = Get_Endpoints(seed_seg.line_fit, seed_seg.points[seed_seg.start_idx], seed_seg.points[seed_seg.end_idx]);
         return seed_seg;
     }
@@ -501,6 +503,7 @@ std::vector<Landmark> FeatureExtractor::LandmarksFromScan(PointCloud current_sca
 
     while (breakpoint_idx < (LaserPoints.size() - MinSeedSegNum)) {
         
+        // std::cout << "Breakpoint: " << breakpoint_idx << "---> GOAL: " << LaserPoints.size() - MinSeedSegNum << std::endl;
         landmark = ValidationGate(GrowSeedSegment(DetectSeedSegment()));
 
         // If landmark is valid

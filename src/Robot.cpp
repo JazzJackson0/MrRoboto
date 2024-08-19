@@ -135,6 +135,8 @@ void Robot::FindFrontier() {
 
     while (1) {
 
+        std::cout << "Inside While Loop. About to Find Frontier." << std::endl;
+
         std::unique_lock<std::mutex> map_lock(map_mutex);
         Eigen::Tensor<float, 2> map = current_map;
         map_lock.unlock();
@@ -150,6 +152,7 @@ void Robot::FindFrontier() {
         
         map_builder->Apply_InflationLayer(map, 5); // Create Cost Map
         frontier_explorer->Load_MAP(map);
+        // std::cout << map << std::endl;
         VectorXi frontier_goal = frontier_explorer->FindFrontier(pos);
         std::vector<VectorXf> waypoints = path_util->SmoothPath(path_util->SamplePath(CreatePath(A_STAR, map, pos, frontier_goal)));
         FollowLocalPath(waypoints, map, cloud, flt_pos);
@@ -262,8 +265,8 @@ void Robot::RunSLAM(int algorithm) {
             //-------------------------------------------------
 
             Eigen::Tensor<float, 2> new_map = slam2->Run(cloud, ctrl);
-            // std::cout << current_map << std::endl;
-            // std::cout << std::endl;
+            std::cout << current_map << std::endl;
+            std::cout << std::endl;
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
@@ -467,9 +470,9 @@ void Robot::RobotStart() {
     frontier_explorer = new FrontierExplorer();
 
     //Setup Local Path Planning
-    d_window = new DynamicWindowApproach(1, 0.04, 0.2, 0.1); // Temporary garbage values
-    d_window->Set_TranslationalVelocityLimits(1, 1, 1); // Temporary garbage values
-    d_window->Set_RotationalVelocityLimits(1, 1, 1); // Temporary garbage values
+    d_window = new DynamicWindowApproach(1, 0.04, 0.2, 0.1); 
+    d_window->Set_TranslationalVelocityLimits(0.01, 1, 0.01); 
+    d_window->Set_RotationalVelocityLimits(0.01, 0.5, 0.01); 
 
     // Setup PIDs
     pid_left = new PID(1, 1, 1, 1, 1); // Temporary garbage values

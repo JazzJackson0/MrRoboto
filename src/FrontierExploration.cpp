@@ -20,20 +20,20 @@ void FrontierExplorer::Build_CellStatusMap() {
     }
 }
 
-void FrontierExplorer::Build_RecursionMap(RecursionPoint **&RecursionMap) {
+// void FrontierExplorer::Build_RecursionMap(RecursionPoint **&RecursionMap) {
 
-    RecursionMap = new RecursionPoint*[M];
-    for (int i = 0; i < M; i++) {
-        RecursionMap[i] = new RecursionPoint[N];
-    }
-    for (int i = 0; i < M; i++) {
-        for (int j = 0; j < N; j++) {
+//     RecursionMap = new RecursionPoint*[M];
+//     for (int i = 0; i < M; i++) {
+//         RecursionMap[i] = new RecursionPoint[N];
+//     }
+//     for (int i = 0; i < M; i++) {
+//         for (int j = 0; j < N; j++) {
 
-            RecursionPoint cell = RecursionPoint(false);
-            RecursionMap[i][j] = cell;
-        }
-    }
-}
+//             RecursionPoint cell = RecursionPoint(false);
+//             RecursionMap[i][j] = cell;
+//         }
+//     }
+// }
 
 bool FrontierExplorer::isValid(int row, int col) {
     return (col >= 0) && (col < N) && 
@@ -42,11 +42,17 @@ bool FrontierExplorer::isValid(int row, int col) {
 
 bool FrontierExplorer::isFrontierPoint(VectorXi point) {
 
-    int row = point[1];
-    int col = point[0]; 
+    // If Point is not an unknown space it can't be a frontier
+    if (Map(point[1], point[0]) != 0.5) { return false; }
 
-    // If Point is not an open space
-    if (Map(row, col) >= 0.5) { return false; }
+    return Has_OpenSpaceNeighbor(point);
+}
+
+
+bool FrontierExplorer::Has_OpenSpaceNeighbor(VectorXi point) {
+
+    int row = point[1];
+    int col = point[0];
 
     int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
                              {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
@@ -55,12 +61,12 @@ bool FrontierExplorer::isFrontierPoint(VectorXi point) {
         int ncol = col + dir[0];
         int nrow = row + dir[1];
 
-        if (isValid(nrow, ncol) && Map(nrow, ncol) == 0.5) { return true; }
+        if (isValid(nrow, ncol) && Map(nrow, ncol) < 0.5) { return true; }
     }
 
     return false;
-
 }
+
 
 VectorXi FrontierExplorer::Get_Centroid(std::vector<VectorXi> frontier) {
 
@@ -77,32 +83,32 @@ VectorXi FrontierExplorer::Get_Centroid(std::vector<VectorXi> frontier) {
     return centroid;
 }
 
-void FrontierExplorer::Get_AdjacentCells(VectorXi point, std::vector<VectorXi> &adjacents, RecursionPoint **RecursionMap) {
+// void FrontierExplorer::Get_AdjacentCells(VectorXi point, std::vector<VectorXi> &adjacents, RecursionPoint **RecursionMap) {
 
-    adjacents.push_back(point);
+//     adjacents.push_back(point);
 
-    int row = point[1];
-    int col = point[0]; 
+//     int row = point[1];
+//     int col = point[0]; 
 
-    RecursionMap[row][col].added = true;
+//     RecursionMap[row][col].added = true;
 
-    int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
-                             {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
+//     int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
+//                              {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
 
 
-    for (auto& dir : directions) {
-        int ncol = col + dir[0];
-        int nrow = row + dir[1];
+//     for (auto& dir : directions) {
+//         int ncol = col + dir[0];
+//         int nrow = row + dir[1];
 
-        VectorXi direction(2);
-        direction << ncol, nrow;
+//         VectorXi direction(2);
+//         direction << ncol, nrow;
 
-        if (isValid(nrow, ncol) && isFrontierPoint(direction) && !RecursionMap[nrow][ncol].added) { 
-            Get_AdjacentCells(direction, adjacents, RecursionMap); 
-        }
-    }
-    return;
-}
+//         if (isValid(nrow, ncol) && isFrontierPoint(direction) && !RecursionMap[nrow][ncol].added) { 
+//             Get_AdjacentCells(direction, adjacents, RecursionMap); 
+//         }
+//     }
+//     return;
+// }
 
 
 int FrontierExplorer::Get_CellStatus(VectorXi point, int map_frontier) {
@@ -157,23 +163,6 @@ void FrontierExplorer::Update_CellStatus(VectorXi point, int map_frontier, int s
 }
 
 
-bool FrontierExplorer::Has_OpenSpaceNeighbor(VectorXi point) {
-
-    int row = point[1];
-    int col = point[0];
-
-    int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
-                             {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
-
-    for (auto& dir : directions) {
-        int ncol = col + dir[0];
-        int nrow = row + dir[1];
-
-        if (isValid(nrow, ncol) && Map(nrow, ncol) < 0.5) { return true; }
-    }
-
-    return false;
-}
 
 
 std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(VectorXi robot_index) {
@@ -196,18 +185,27 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
             frontiers.push_back(new_frontier);
         }
 
-        RecursionPoint **recursion_map;
-        Build_RecursionMap(recursion_map);
-        std::vector<VectorXi> neighbors;
-        Get_AdjacentCells(point, neighbors, recursion_map);
+        // Direction vectors for 8-connected neighbors
+        int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
+                             {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
 
-        for (int i = 0; i < neighbors.size(); i++) {
+        // Check all 8-connected neighbors
+        for (auto& dir : directions) {
+            VectorXi neighbor(2);
+            int neighborx = point[0] + dir[0];
+            int neighbory = point[1] + dir[1];
+            neighbor << neighborx, neighbory;
 
-            if (Get_CellStatus(point, MAP_STATUS) == xNONE && Has_OpenSpaceNeighbor(neighbors[i])) {
-                MapQueue.push(neighbors[i]);
-                Update_CellStatus(neighbors[i], MAP_STATUS, xOPEN);
+            // Check bounds
+            if (isValid(neighbory, neighborx)) {
+                continue;
             }
 
+            //NOTE: 'Has_OpenSpaceNeighbor(neighbor)' Prevents you from propagating deep into unknown space.
+            if (Get_CellStatus(neighbor, MAP_STATUS) == xNONE && Has_OpenSpaceNeighbor(neighbor)) {
+                Update_CellStatus(neighbor, MAP_STATUS, xOPEN);
+                MapQueue.push(neighbor);
+            }
         }
         Update_CellStatus(point, MAP_STATUS, xCLOSED);
     }
@@ -231,16 +229,26 @@ std::vector<VectorXi> FrontierExplorer::Extract_Frontier2D(VectorXi frontier_pt)
         if (isFrontierPoint(point)) {
             
             new_frontier.push_back(point);
-            RecursionPoint **recursion_map;
-            Build_RecursionMap(recursion_map);
-            std::vector<VectorXi> neighbors;
-            Get_AdjacentCells(point, neighbors, recursion_map);
 
-            for (int i = 0; i < neighbors.size(); i++) {
+            // Direction vectors for 8-connected neighbors
+            int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
+                                {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
 
-                if (Get_CellStatus(point, FRONTIER_STATUS) == xNONE && Get_CellStatus(point, MAP_STATUS) != xCLOSED) {
-                    MapQueue.push(neighbors[i]);
-                    Update_CellStatus(neighbors[i], FRONTIER_STATUS, xOPEN);
+             // Check all 8-connected neighbors
+            for (auto& dir : directions) {
+                VectorXi neighbor(2);
+                int neighborx = point[0] + dir[0];
+                int neighbory = point[1] + dir[1];
+                neighbor << neighborx, neighbory;
+
+                // Check bounds
+                if (isValid(neighbory, neighborx)) {
+                    continue;
+                }
+
+                if (Get_CellStatus(neighbor, FRONTIER_STATUS) == xNONE && Get_CellStatus(neighbor, MAP_STATUS) != xCLOSED) {
+                    Update_CellStatus(neighbor, FRONTIER_STATUS, xOPEN);
+                    FrontierQueue.push(neighbor);
                 }
             }
         }
@@ -278,6 +286,7 @@ void FrontierExplorer::Load_MAP(Eigen::Tensor<float, 2> map) {
 VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
 
     std::vector<std::vector<VectorXi>> frontiers = Detect_WavefrontFrontier(robot_pose);
+    // std::cout << Map << std::endl;
     
     // Decide on frontier to visit----------
     // TODO: Currently only takes into account closest frontier, not mix between closest and largest

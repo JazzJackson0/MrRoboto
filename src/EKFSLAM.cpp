@@ -619,6 +619,7 @@ Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, ControlCommand ctr
 
 	}
 	std::vector<Landmark> landmarks = feature_extractor.LandmarksFromScan(current_scan, PreviousPose);
+	// std::cout << "New Landmark for EKF." << std::endl;
 
 
 	Prediction(ctrl);

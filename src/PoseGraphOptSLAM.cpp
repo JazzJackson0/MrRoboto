@@ -239,14 +239,13 @@ bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 	if (Pose_Graph.Get_NumOfVertices() <= NRecentPoses) { return false; }
 
 	// Loop Closure Process Start-------------------------------------------------------------------------------
+	float min_dist = std::numeric_limits<float>::max();
 	for (int i = 0; i < Pose_Graph.Get_NumOfVertices() - NRecentPoses; i++) {
 
 		Pose p = Pose_Graph.Get_Vertex(i);
-
 		float dist = sqrt(((p.pose[0] - PreviousPose.pose[0]) * (p.pose[0] - PreviousPose.pose[0])) + 
 			((p.pose[1] - PreviousPose.pose[1]) * (p.pose[1] - PreviousPose.pose[1])));
-		float min_dist = std::numeric_limits<float>::max();
-
+		
 		// If node is within valid loop closure Radius
 		if (dist < ClosureDistance) {
 			

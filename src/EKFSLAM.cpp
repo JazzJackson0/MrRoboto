@@ -88,10 +88,10 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 
 	for (int i = 0; i < Correspondence.size(); i++) {
 
-		for (int j = 0; j < Correspondence[i].points.size(); j++) {
+		for (int j = 0; j < Correspondence[i].line_seg.points.size(); j++) {
 
 			VectorXf point(2);
-			point << Correspondence[i].points[j].x, Correspondence[i].points[j].y;
+			point << Correspondence[i].line_seg.points[j].x, Correspondence[i].line_seg.points[j].y;
 			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point);
 
 			if ((beam_index[0] >= 0 && beam_index[0] < width) && (beam_index[1] >= 0 && beam_index[1] < height)) {

@@ -41,7 +41,7 @@ float DynamicWindowApproach::distance(float trans_vel, float rot_vel) {
     VectorXf obstacle = Get_ClosestObstacle();
     float gamma = std::atan2(obstacle[1], obstacle[0]) - robot_angle;
 
-    return circle_trajectory_radius * gamma;
+    return std::abs(circle_trajectory_radius * gamma);
 }
 
 float DynamicWindowApproach::velocity(float trans_vel) {
@@ -85,8 +85,9 @@ std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::
         
         float trans_accel = (vels[i].trans_vel - PreviousVel.trans_vel) / time_interval; 
         float rot_accel = (vels[i].rot_vel - PreviousVel.rot_vel) / time_interval; 
-        float trans_vel_limit = std::sqrt(2 * distance(vels[i].trans_vel, vels[i].rot_vel) * trans_accel);
-        float rot_vel_limit = std::sqrt(2 * distance(vels[i].trans_vel, vels[i].rot_vel) * rot_accel);
+        float collision_dist = distance(vels[i].trans_vel, vels[i].rot_vel);
+        float trans_vel_limit = std::sqrt(2 * collision_dist * std::abs(trans_accel));
+        float rot_vel_limit = std::sqrt(2 * collision_dist * std::abs(rot_accel));
         
         if (vels[i].trans_vel <= trans_vel_limit && vels[i].rot_vel <= rot_vel_limit) {
             admissable_velocities.push_back(vels[i]);
@@ -106,10 +107,10 @@ std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<V
         float trans_accel = (vels[i].trans_vel - PreviousVel.trans_vel) / time_interval; 
         float rot_accel = (vels[i].rot_vel - PreviousVel.rot_vel) / time_interval; 
 
-        float trans_lower = vels[i].trans_vel - (trans_accel * time_interval);
-        float trans_upper = vels[i].trans_vel + (trans_accel * time_interval);
-        float rot_lower = vels[i].rot_vel - (rot_accel * time_interval);
-        float rot_upper = vels[i].rot_vel + (rot_accel * time_interval);
+        float trans_lower = vels[i].trans_vel - (std::abs(trans_accel) * time_interval);
+        float trans_upper = vels[i].trans_vel + (std::abs(trans_accel) * time_interval);
+        float rot_lower = vels[i].rot_vel - (std::abs(rot_accel) * time_interval);
+        float rot_upper = vels[i].rot_vel + (std::abs(rot_accel) * time_interval);
 
         if (vels[i].trans_vel >= (trans_lower) && vels[i].trans_vel <= (trans_upper) 
             && vels[i].rot_vel >= (rot_lower) && vels[i].rot_vel <= (rot_upper)) {
@@ -120,6 +121,7 @@ std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<V
     }
 
     std::cout << "Number of Within Dynamic Window: " << within_window.size() << std::endl;
+    std::cout << std::endl;
 
     return within_window;
 }

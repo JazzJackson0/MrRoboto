@@ -121,16 +121,15 @@ class PoseGraphOptSLAM {
 
 		/**
 		 * @brief Takes 2 point clouds and determines the amount of overlap between them.
-		 * 			This is done by calculating the mean of each point cloud and returning
-		 * 			the euclidean distance between those two mean points.
+		 * 			Done by calculating the center point (using mean) of each 360 point cloud and returning
+		 * 			the euclidean distance between them.
 		 * 
-		 * 			Not sure how robust this is but it seems like a good enough way to check for overlap
 		 * 
-		 * @param landmarks_a point cloud a
-		 * @param landmarks_b point cloud b
+		 * @param cloud_a point cloud a
+		 * @param cloud_b point cloud b
 		 * @return float - The overlap distance.
 		 */
-		float Calculate_Overlap(PointCloud landmarks_a, PointCloud landmarks_b);
+		float Calculate_Overlap(PointCloud cloud_a, PointCloud cloud_b);
 
 
 		/**

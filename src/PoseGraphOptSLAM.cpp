@@ -136,7 +136,7 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 	return map_structure;
 }
 
-float PoseGraphOptSLAM::Calculate_Overlap(PointCloud landmarks_a, PointCloud landmarks_b) {
+float PoseGraphOptSLAM::Calculate_Overlap(PointCloud cloud_a, PointCloud cloud_b) {
 
 	float mean_ax = 0.0;
 	float mean_ay = 0.0;
@@ -144,20 +144,20 @@ float PoseGraphOptSLAM::Calculate_Overlap(PointCloud landmarks_a, PointCloud lan
 	float mean_by = 0.0;
 
 	// Calculate the mean of each point cloud
-	for (int i = 0; i < landmarks_a.points.size(); i++) {
-		mean_ax += landmarks_a.points[i](0);
-		mean_ay += landmarks_a.points[i](1);
+	for (int i = 0; i < cloud_a.points.size(); i++) {
+		mean_ax += cloud_a.points[i](0);
+		mean_ay += cloud_a.points[i](1);
 	}
-	mean_ax /= landmarks_a.points.size();
-	mean_ay /= landmarks_a.points.size();
+	mean_ax /= cloud_a.points.size();
+	mean_ay /= cloud_a.points.size();
 
  
-	for (int i = 0; i < landmarks_b.points.size(); i++) {
-		mean_bx += landmarks_b.points[i](0);
-		mean_by += landmarks_b.points[i](1);
+	for (int i = 0; i < cloud_b.points.size(); i++) {
+		mean_bx += cloud_b.points[i](0);
+		mean_by += cloud_b.points[i](1);
 	}
-	mean_bx /= landmarks_b.points.size();
-	mean_by /= landmarks_b.points.size();
+	mean_bx /= cloud_b.points.size();
+	mean_by /= cloud_b.points.size();
 
 	return (float) std::abs(sqrt((mean_ax - mean_bx)*(mean_ax - mean_bx) + (mean_ay - mean_by)*(mean_ay - mean_by)));
 }
@@ -233,39 +233,28 @@ void PoseGraphOptSLAM::AddPoseToGraph(Pose pose, PoseEdge edge) {
 bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 
 	// Search Graph in given radius to find possible loop closure (Excluding the n most recently added poses)
-	std::vector<Pose> closure_candidates;
-	std::vector<int> closure_candidate_ids;
+	int closest_vertex_idx = -1;
 	
 	// No Loop Closure Happening
-	if (Pose_Graph.Get_NumOfVertices() <= NRecentPoses) {
-		
-		return false; 
-	}
+	if (Pose_Graph.Get_NumOfVertices() <= NRecentPoses) { return false; }
 
 	// Loop Closure Process Start-------------------------------------------------------------------------------
 	for (int i = 0; i < Pose_Graph.Get_NumOfVertices() - NRecentPoses; i++) {
 
-		// Calculate Distance
 		Pose p = Pose_Graph.Get_Vertex(i);
-		if (sqrt(((p.pose[0] - PreviousPose.pose[0]) * (p.pose[0] - PreviousPose.pose[0])) + 
-			((p.pose[1] - PreviousPose.pose[1]) * (p.pose[1] - PreviousPose.pose[1]))) 
-			< ClosureDistance) {
 
-			closure_candidates.push_back(p);
-			closure_candidate_ids.push_back(i);
-		}
-	}
+		float dist = sqrt(((p.pose[0] - PreviousPose.pose[0]) * (p.pose[0] - PreviousPose.pose[0])) + 
+			((p.pose[1] - PreviousPose.pose[1]) * (p.pose[1] - PreviousPose.pose[1])));
+		float min_dist = std::numeric_limits<float>::max();
 
-	// Connect to the Closest out of those that are found in the radius.
-	double closest = 1000000000000;
-	int closest_vertex_idx = -1;
-	for (int i = 0; i < closure_candidates.size(); i++) {
-
-		if (sqrt(((closure_candidates[i].pose[0] - PreviousPose.pose[0]) * (closure_candidates[i].pose[0] - PreviousPose.pose[0])) + 
-			((closure_candidates[i].pose[1] - PreviousPose.pose[1]) * (closure_candidates[i].pose[1] - PreviousPose.pose[1]))) 
-			< closest) {
-				
-				closest_vertex_idx = closure_candidate_ids[i];
+		// If node is within valid loop closure Radius
+		if (dist < ClosureDistance) {
+			
+			// Track the closest of all nodes in range.
+			if (dist < min_dist) {
+				min_dist = dist;
+				closest_vertex_idx = i;
+			}
 		}
 	}
 
@@ -448,7 +437,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		Add Pose & Edge to Graph if the amount of overlap is low enough*/
 	else if (Calculate_Overlap(PreviousLandmarks, current_landmarks) > OverlapTolerance) {
 
-		 // Dimensions of the scan cloud data
+		// Dimensions of the scan cloud data
 		RotationTranslation rot_trans = icp.RunICP_SVD(PreviousLandmarks, current_landmarks); 
 		MatrixXf R = rot_trans.rotation_matrix;
 		VectorXf t = rot_trans.translation_vector;

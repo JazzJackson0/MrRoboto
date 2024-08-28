@@ -335,7 +335,7 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
     std::vector<astar::Cell> Uncovered;
     astar::Cell **MapOfCells = Init_MatrixOfCells();
     
-    // MArk the starting node as "Uncovered" and "Visited"
+    // Mark the starting node as "Uncovered" and "Visited"
     astar::Cell start;
     start.x = Start[0];
     start.y = Start[1];
@@ -363,12 +363,7 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
 
             Get_AdjacentCellCoordinates(cell.x, cell.y, x_adjacent, y_adjacent, i);
 
-            if (!isValid(x_adjacent, y_adjacent)) { continue; }
-
-            if (isBlocked(x_adjacent, y_adjacent)) { continue; }
-
-            // Already Visited
-            if ((Visited[x_adjacent][y_adjacent])) { continue; }
+            if (!isValid(x_adjacent, y_adjacent) || isBlocked(x_adjacent, y_adjacent) || (Visited[x_adjacent][y_adjacent])) { continue; }
 
             // If the Goal has been reached
             if (isGoalReached(x_adjacent, y_adjacent)) {
@@ -376,13 +371,6 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
                 MapOfCells[x_adjacent][y_adjacent].parentX = cell.x;
                 MapOfCells[x_adjacent][y_adjacent].parentY = cell.y;
                 PathTrace(MapOfCells);
-                
-                // Tests
-                // std::cout << std::endl;
-                // std::cout << "Path:" << std::endl;
-                // for (int i = 0; i < ThePath.size(); i++) {
-                //     std::cout << ThePath[i].transpose() << std::endl;
-                // }
 
                 return ThePath;
             }

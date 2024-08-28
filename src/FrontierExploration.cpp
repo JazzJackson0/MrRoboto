@@ -177,12 +177,14 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
 
         VectorXi point = MapQueue.front();
         MapQueue.pop();
+        // std::cout << "Viewing Point: " << point.transpose() << std::endl;
 
         if (Get_CellStatus(point, MAP_STATUS) == xCLOSED) { continue; }
 
         if (isFrontierPoint(point)) {
             std::vector<VectorXi> new_frontier = Extract_Frontier2D(point);
             frontiers.push_back(new_frontier);
+            // std::cout << "NEW FRONTIER POINT FOUND!!" << std::endl; 
         }
 
         // Direction vectors for 8-connected neighbors
@@ -197,7 +199,7 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
             neighbor << neighborx, neighbory;
 
             // Check bounds
-            if (isValid(neighbory, neighborx)) {
+            if (!isValid(neighbory, neighborx)) {
                 continue;
             }
 
@@ -205,6 +207,7 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
             if (Get_CellStatus(neighbor, MAP_STATUS) == xNONE && Has_OpenSpaceNeighbor(neighbor)) {
                 Update_CellStatus(neighbor, MAP_STATUS, xOPEN);
                 MapQueue.push(neighbor);
+                // std::cout << "Pushing Neighbor: " << neighbor.transpose() << std::endl;
             }
         }
         Update_CellStatus(point, MAP_STATUS, xCLOSED);
@@ -242,7 +245,7 @@ std::vector<VectorXi> FrontierExplorer::Extract_Frontier2D(VectorXi frontier_pt)
                 neighbor << neighborx, neighbory;
 
                 // Check bounds
-                if (isValid(neighbory, neighborx)) {
+                if (!isValid(neighbory, neighborx)) {
                     continue;
                 }
 
@@ -286,7 +289,6 @@ void FrontierExplorer::Load_MAP(Eigen::Tensor<float, 2> map) {
 VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
 
     std::vector<std::vector<VectorXi>> frontiers = Detect_WavefrontFrontier(robot_pose);
-    // std::cout << Map << std::endl;
     
     // Decide on frontier to visit----------
     // TODO: Currently only takes into account closest frontier, not mix between closest and largest
@@ -302,9 +304,9 @@ VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
         }
     }
 
-    std::cout << "Returning Frontier Point!" << std::endl;
-    std::cout << "Robot Pose: " << robot_pose.transpose() << std::endl;
-    std::cout << "Closest Frontier: " << closest_centroid.transpose() << std::endl;
+    // std::cout << "Number of Frontiers: " << frontiers.size() << std::endl;
+    // std::cout << "Returning Frontier Point!" << std::endl;
+    std::cout << "Closest Frontier Found!: " << closest_centroid.transpose() << std::endl;
     return closest_centroid;
 }
 

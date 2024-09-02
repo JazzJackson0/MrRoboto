@@ -49,10 +49,12 @@ float DynamicWindowApproach::velocity(float trans_vel) {
     float dist = std::sqrt(std::pow((RobotPos[0] - Goal[0]), 2) + std::pow((RobotPos[1] - Goal[1]), 2));
     float v_norm = std::abs(trans_vel);
 
+    // Higher cost for faster vels
     if (dist > dist_nearing_goal) {
         return v_norm / MaxTransVel;
     }
 
+    // Higher cost for slower vels
     return 1 - (v_norm / MaxTransVel);
 }
 
@@ -103,14 +105,12 @@ std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::
 std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<Velocities> vels) {
 
     std::vector<Velocities> within_window;
-    for (int i = 0; i < vels.size(); i++) {
-        float trans_accel = (vels[i].trans_vel - PreviousVel.trans_vel) / time_interval; 
-        float rot_accel = (vels[i].rot_vel - PreviousVel.rot_vel) / time_interval; 
+    float trans_lower = current_trans_vel - (std::abs(trans_accel_max) * time_interval);
+    float trans_upper = current_trans_vel + (std::abs(trans_accel_max) * time_interval);
+    float rot_lower = current_rot_vel - (std::abs(rot_accel_max) * time_interval);
+    float rot_upper = current_rot_vel + (std::abs(rot_accel_max) * time_interval);
 
-        float trans_lower = vels[i].trans_vel - (std::abs(trans_accel) * time_interval);
-        float trans_upper = vels[i].trans_vel + (std::abs(trans_accel) * time_interval);
-        float rot_lower = vels[i].rot_vel - (std::abs(rot_accel) * time_interval);
-        float rot_upper = vels[i].rot_vel + (std::abs(rot_accel) * time_interval);
+    for (int i = 0; i < vels.size(); i++) {
 
         if (vels[i].trans_vel >= (trans_lower) && vels[i].trans_vel <= (trans_upper) 
             && vels[i].rot_vel >= (rot_lower) && vels[i].rot_vel <= (rot_upper)) {
@@ -212,13 +212,21 @@ void DynamicWindowApproach::Set_RotationalVelocityLimits(float min_vel, float ma
     }
 }
 
+void DynamicWindowApproach::Set_MaxAccelerations(float _trans_accel_max, float _rot_accel_max) {
+
+    trans_accel_max = _trans_accel_max;
+    rot_accel_max = _rot_accel_max;
+}
+
 void DynamicWindowApproach::Set_Goal(VectorXf goal) {
 
     Goal = goal;
 }
 
-VectorXf DynamicWindowApproach::Run(VectorXf robot_pos, PointCloud point_cloud) {
+VectorXf DynamicWindowApproach::Run(VectorXf robot_pos, PointCloud point_cloud, VectorXf current_vels) {
 
+    current_trans_vel = current_vels[0];
+    current_rot_vel = current_vels[1];
     RobotPos = robot_pos;
     Cloud = point_cloud.points;
     return Optimize(SearchSpace());

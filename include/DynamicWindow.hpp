@@ -34,6 +34,10 @@ class DynamicWindowApproach {
         float MinRotVel;
         float MaxRotVel;
         float RotVelInterval;
+        float current_trans_vel;
+        float current_rot_vel;
+        float trans_accel_max;
+        float rot_accel_max;
 
         /**
          * @brief 
@@ -158,6 +162,14 @@ class DynamicWindowApproach {
         /**
          * @brief 
          * 
+         * @param _trans_accel_max 
+         * @param _rot_accel_max 
+         */
+        void Set_MaxAccelerations(float _trans_accel_max, float _rot_accel_max);
+
+        /**
+         * @brief 
+         * 
          * @param goal 
          */
         void Set_Goal(VectorXf goal);
@@ -167,7 +179,8 @@ class DynamicWindowApproach {
          * 
          * @param robot_pos 
          * @param point_cloud 
+         * @param current_vels
          * @return VectorXf 
          */
-        VectorXf Run(VectorXf robot_pos, PointCloud point_cloud);
+        VectorXf Run(VectorXf robot_pos, PointCloud point_cloud, VectorXf current_vels);
 };

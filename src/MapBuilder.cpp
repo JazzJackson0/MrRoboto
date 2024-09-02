@@ -25,11 +25,10 @@ void MapBuilder::Update_3DMapDimensions(int m, int n, int p) {
     P = p;
 }
 
-
-
 void MapBuilder::Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filename, int filetype, int max_value) {
 
-    map_file.open(filename, std::ios::out | std::ios::trunc);
+    // map_file.open(filename, std::ios::out | std::ios::trunc);
+    map_file.open(filename, std::ios::out | std::ios::binary); // truncation is implicit here
     
     if (map_file.is_open()) {
 
@@ -68,11 +67,39 @@ void MapBuilder::Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filena
 
                 for (int j = 0; j < N; j++) {
 
-                    if (tensor(i, j) > 0.5) { map_file << "0 "; }
-                    else if (tensor(i, j) < 0.5) { map_file << std::to_string(max_value) + " "; }
-                    else { map_file << std::to_string(max_value / 2) + " ";; }        
+                    // ASCI Raster Format (P2)
+                    // if (tensor(i, j) > 0.5) { map_file << "0 "; }
+                    // else if (tensor(i, j) < 0.5) { map_file << std::to_string(max_value) + " "; }
+                    // else { map_file << std::to_string(max_value / 2) + " "; }
+
+                    // Binary Raster Format    
+                    if (max_value <= 256) { // 8-Bit Data
+                        uint8_t pixel = static_cast<uint8_t>(max_value / 2);  
+                        if (tensor(i, j) > 0.5) { 
+                            pixel = static_cast<uint8_t>(0); 
+
+                        }
+                        else if (tensor(i, j) < 0.5) { 
+                            pixel = static_cast<uint8_t>(max_value); 
+                        }    
+
+                        map_file.write(reinterpret_cast<char*>(&pixel), sizeof(pixel));
+                    }
+
+                    else { // 16-Bit Data
+                        uint16_t pixel = static_cast<uint16_t>(max_value / 2);  
+                        if (tensor(i, j) > 0.5) { 
+                            pixel = static_cast<uint16_t>(0); 
+
+                        }
+                        else if (tensor(i, j) < 0.5) { 
+                            pixel = static_cast<uint16_t>(max_value); 
+                        }    
+
+                        map_file.write(reinterpret_cast<char*>(&pixel), sizeof(pixel));
+                    }
                 }
-                map_file << std::endl;
+                // map_file << std::endl; // Not necessary for binary format
             }
         }
         

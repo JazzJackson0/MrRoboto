@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <cstdint>
 #include </usr/include/eigen3/Eigen/Dense>
 #include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "utils.hpp"

@@ -135,8 +135,6 @@ void Robot::FindFrontier() {
 
     while (1) {
 
-        std::cout << "Inside While Loop. About to Find Frontier." << std::endl;
-
         std::unique_lock<std::mutex> map_lock(map_mutex);
         Eigen::Tensor<float, 2> map = current_map;
         map_lock.unlock();
@@ -152,7 +150,10 @@ void Robot::FindFrontier() {
         
         map_builder->Apply_InflationLayer(map, 5); // Create Cost Map
         frontier_explorer->Load_MAP(map);
+
         // std::cout << map << std::endl;
+        // std::cout << std::endl;
+
         VectorXi frontier_goal = frontier_explorer->FindFrontier(pos);
         std::vector<VectorXf> waypoints = path_util->SmoothPath(path_util->SamplePath(CreatePath(A_STAR, map, pos, frontier_goal)));
         FollowLocalPath(waypoints, map, cloud, flt_pos);
@@ -186,12 +187,14 @@ std::vector<VectorXi> Robot::CreatePath(int algorithm, Eigen::Tensor<float, 2> m
 
 void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos) {
 
-    VectorXf odom_vels = odom->Get_NewVelocities();
-
     for (int i = 0; i < smooth_waypoints.size(); i++) {
 
         d_window->Set_Goal(smooth_waypoints[i]);
-        VectorXf vels = d_window->Run(pos, cloud);
+
+        std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
+        VectorXf odom_vels = odom->Get_NewVelocities();
+        odom_lock.unlock();
+        VectorXf vels = d_window->Run(pos, cloud, odom_vels);
 
         float setpoint_vel_r = (2 * vels[0] + vels[1] * trackwidth) / (2 * wheel_radius);
         float setpoint_vel_l = (2 * vels[0] - vels[1] * trackwidth) / (2 * wheel_radius);
@@ -230,8 +233,9 @@ void Robot::RunSLAM(int algorithm) {
         current_cloud = cloud;
         cloud_lock.unlock();
 
-        // TODO: Put odom behind mutex??
+        std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
         VectorXf odom_out = odom->Get_NewVelocities();
+        odom_lock.unlock();
         // ControlCommand ctrl;
         // ctrl.trans_vel = odom_out[0];
         // ctrl.rot_vel = odom_out[1];
@@ -265,8 +269,8 @@ void Robot::RunSLAM(int algorithm) {
             //-------------------------------------------------
 
             Eigen::Tensor<float, 2> new_map = slam2->Run(cloud, ctrl);
-            std::cout << current_map << std::endl;
-            std::cout << std::endl;
+            // std::cout << current_map << std::endl;
+            // std::cout << std::endl;
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
@@ -297,7 +301,10 @@ void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
         current_cloud = cloud;
         cloud_lock.unlock();
 
+        std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
         VectorXf odom_out = odom->Get_NewVelocities();
+        odom_lock.unlock();
+
         ControlCommand ctrl;
         ctrl.trans_vel = odom_out[0];
         ctrl.rot_vel = odom_out[1];
@@ -473,6 +480,7 @@ void Robot::RobotStart() {
     d_window = new DynamicWindowApproach(1, 0.04, 0.2, 0.1); 
     d_window->Set_TranslationalVelocityLimits(0.01, 1, 0.01); 
     d_window->Set_RotationalVelocityLimits(0.01, 0.5, 0.01); 
+    d_window->Set_MaxAccelerations(0.5, 0.5);
 
     // Setup PIDs
     pid_left = new PID(1, 1, 1, 1, 1); // Temporary garbage values

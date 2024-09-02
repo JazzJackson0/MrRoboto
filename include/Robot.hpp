@@ -50,6 +50,7 @@ namespace diffdrive {
             std::mutex scan_mutex;
             std::mutex map_mutex;
             std::mutex map_ready_mutex;
+            std::mutex odom_read_mutex;
 
             RPlidarDriver *lidar;
             // IChannel *_channel;

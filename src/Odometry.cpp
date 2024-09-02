@@ -23,12 +23,11 @@ void Odom::Set_Trackwidth(float robot_trackwidth) {
 }
 
 VectorXf Odom::Get_NewPosition() {
-
     VectorXf new_position(3);
-    int8_t *encoder_buffer;
+    int8_t *encoder_buffer = new int8_t[8];
     serial->I2CRead(serial_bus1, encoder_buffer, 8);
-    int32_t left = *encoder_buffer;
-    int32_t right = *(encoder_buffer + 4);
+    int32_t left = *((int32_t*)encoder_buffer);
+    int32_t right = *((int32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
     // right_distance = (float)right;
     left_distance = *((float *)&left);
@@ -39,16 +38,22 @@ VectorXf Odom::Get_NewPosition() {
     VectorXf P(2);
     P << previous_pose[0] - r_center * std::cos(previous_pose[2]), previous_pose[0] - r_center * std::sin(previous_pose[2]);
     new_position << P[0] + r_center * std::cos(phi + previous_pose[2]), P[1] + r_center * std::sin(phi + previous_pose[2]), phi + previous_pose[2];
+
+    delete encoder_buffer;
     return new_position;
 }
 
 VectorXf Odom::Get_NewVelocities() {
 
     VectorXf new_velocity(2);
-    int8_t *encoder_buffer;
+    int8_t *encoder_buffer = new int8_t[8];
+    std::cout << "What's Here???" << std::endl;
+    std::cout << encoder_buffer << std::endl;
     serial->I2CRead(serial_bus1, encoder_buffer, 8);
-    int32_t left = *encoder_buffer;
-    int32_t right = *(encoder_buffer + 4);
+    std::cout << encoder_buffer << std::endl;
+    std::cout << *encoder_buffer << std::endl;
+    int32_t left = *((int32_t*)encoder_buffer);
+    int32_t right = *((int32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
     // right_distance = (float)right;
     left_distance = *((float *)&left);
@@ -58,6 +63,7 @@ VectorXf Odom::Get_NewVelocities() {
     float r_center = trackwidth / 2;
     new_velocity << r_center/dt, phi/dt;
 
+    delete encoder_buffer;
     return new_velocity;
 }
 

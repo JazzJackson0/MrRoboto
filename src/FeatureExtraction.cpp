@@ -365,9 +365,7 @@ LineSegment FeatureExtractor::DetectSeedSegment() {
             if (dist2 > Epsillon) {
                 flag = false;
                 break;
-            }
-
-            
+            }  
         }
 
         if (flag) {
@@ -385,9 +383,9 @@ LineSegment FeatureExtractor::DetectSeedSegment() {
 LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
 
     // std::cout << "Growing Seed Segment---------------------------------------------" << std::endl;
-    
     int beginning_point_index = max(breakpoint_idx, seed_seg.start_idx - 1);
     int final_point_index = min(seed_seg.end_idx + 1, LaserPoints.size() - 1);
+    breakpoint_idx = min(final_point_index + 1, LaserPoints.size());
     GeneralFormLine refit;
     LineSegment error;
     error.err = 0;
@@ -455,16 +453,13 @@ LineSegment FeatureExtractor::GrowSeedSegment(LineSegment seed_seg) {
     // Validate Seed Segment
     int line_seg_point_num = seed_seg.points.size();
     float line_seg_len = Get_EuclideanDistance(seed_seg.points[seed_seg.start_idx], seed_seg.points[seed_seg.end_idx]);
-    // std::cout << "Line Seg Point Num: " << line_seg_point_num << " Min Seed Seg Num: " << MinSeedSegNum << std::endl;
-    // std::cout << "Line Seg Len: " << line_seg_len << " Min Line Seg Len: " << MinLineSegLen << std::endl;
 
+    // std::cout << "Line Seg Point Num: " << line_seg_point_num << " >= Min Seed Seg Num: " << MinSeedSegNum << "?" << std::endl;
+    // std::cout << "Line Seg Len: " << line_seg_len << " >= Min Line Seg Len: " << MinLineSegLen << "?" << std::endl;
     if (line_seg_point_num >= MinSeedSegNum && line_seg_len >= MinLineSegLen) {
 
-        breakpoint_idx = min(final_point_index + 1, LaserPoints.size());
-        std::cout << "New Breakpoint Index: " << breakpoint_idx << std::endl;
         seed_seg.slope_fit_line = General2SlopeInt(seed_seg.general_fit_line);
-        seed_seg.endpoints = Get_Endpoints(seed_seg, seed_seg.points[seed_seg.start_idx], seed_seg.points[seed_seg.end_idx]);
-        
+        seed_seg.endpoints = Get_Endpoints(seed_seg, seed_seg.points[seed_seg.start_idx], seed_seg.points[seed_seg.end_idx]);     
         // std::cout << "Endpoints: (" << seed_seg.endpoints[0].x << ", " <<  seed_seg.endpoints[0].y << ") (" 
         //     << seed_seg.endpoints[1].x << ", " <<  seed_seg.endpoints[1].y << ")" << std::endl;
         return seed_seg;
@@ -504,7 +499,6 @@ void FeatureExtractor::reset() {
     AllLandmarks.clear();
     NewLandmarks.clear();
     LaserPoints.clear();
-    //PredictedPoints.clear();
     SeedSegWindowSize = 10;
     MinLineSegLen = 0.001; // m (Very small length for test case)
     breakpoint_idx = 0;
@@ -543,32 +537,26 @@ std::vector<Landmark> FeatureExtractor::LandmarksFromScan(PointCloud current_sca
 
     while (breakpoint_idx < (LaserPoints.size() - MinSeedSegNum)) {
         
-        // std::cout << "Breakpoint: " << breakpoint_idx << "---> GOAL: " << LaserPoints.size() - MinSeedSegNum << std::endl;
         landmark = ValidationGate(GrowSeedSegment(DetectSeedSegment()));
 
         // If landmark is valid
         if (landmark.err == 0) {
 
-            std::cout << "Printing Landmark Points" << std::endl;
-            for (int i = 0; i < landmark.line_seg.points.size(); i++) {
-                std::cout << landmark.line_seg.points[i].x << ", " << landmark.line_seg.points[i].y << std::endl;
-            }
-            std::cout << "Landmark General Line: " << landmark.line_seg.general_fit_line.a << ", " 
-                << landmark.line_seg.general_fit_line.b << ", " << landmark.line_seg.general_fit_line.c << std::endl;
-            std::cout << "Landmark Slope Line: " << landmark.line_seg.slope_fit_line.m << ", " << landmark.line_seg.slope_fit_line.b << std::endl;
+            // std::cout << "Printing Landmark Points" << std::endl;
+            // for (int i = 0; i < landmark.line_seg.points.size(); i++) {
+            //     std::cout << landmark.line_seg.points[i].x << ", " << landmark.line_seg.points[i].y << std::endl;
+            // }
+            // std::cout << "Landmark General Line: " << landmark.line_seg.general_fit_line.a << ", " 
+            //     << landmark.line_seg.general_fit_line.b << ", " << landmark.line_seg.general_fit_line.c << std::endl;
+            // std::cout << "Landmark Slope Line: " << landmark.line_seg.slope_fit_line.m << ", " << landmark.line_seg.slope_fit_line.b << std::endl;
             
             landmark.position = ClampPointOnLine(landmark.line_seg, OrthogProjectPoint2Line(landmark.line_seg, RobotPos));
             landmark.range = Get_EuclideanDistance(RobotPos, landmark.position);
             landmark.bearing = atan2(landmark.position.y, landmark.position.x) - RobotPos.angle;
             NewLandmarks.push_back(landmark);
             
-            std::cout << "Landmark Position: " << landmark.position.x << ", " << landmark.position.y << std::endl;
-            std::cout << std::endl;
-
-
-            // std::cout << "NEW LANDMARK!!!!!!!!!!!!" << std::endl;
-            // std::cout << "Position: " << landmark.position.x << ", " << landmark.position.y  << std::endl;
-            // std::cout << "Line: " << landmark.line.a << "A + " << landmark.line.b << "B + " << landmark.line.c << "C" << std::endl;
+            // std::cout << "Landmark Position: " << landmark.position.x << ", " << landmark.position.y << std::endl;
+            // std::cout << std::endl;
         }
     }
 

@@ -67,12 +67,10 @@ class FeatureExtractor {
         int SeedSegWindowSize;
         float Delta; // Distance (in meters) threshold from point position to predicted point position
         float Epsillon; // Distance (in meters) threshold from every potential segment point to the fitting line
-        std::vector<Point> LaserPoints;
-        std::vector<Point> SeedSeg;
-        //vector<Point> PredictedPoints;
+        float GapValue; // Acceptable distance between points
         Point RobotPos; // Current Robot Position
         int LandmarkIDs;
-        float GapValue; // Acceptable distance between points
+        std::vector<Point> LaserPoints;
         std::vector<Landmark> NewLandmarks;
         std::vector<Landmark> AllLandmarks;
         int breakpoint_idx;

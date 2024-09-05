@@ -31,8 +31,8 @@ void Robot::StartScanner() {
 void Robot::StopScanner() {
 
     lidar->stop();
+    // lidar->disconnect();
     lidar->stopMotor();
-    lidar->disconnect();
     RPlidarDriver::DisposeDriver(lidar);
 }
 
@@ -75,10 +75,15 @@ PointCloud Robot::GetCloud(int broadcast_state) {
         angle = ( (float) nodes[i].angle_z_q14 * 90.0f) / 16384.0f;
         rad = angle * M_PI / 180.f;
 
+        
+        std::unique_lock<std::mutex> pos_lock(pos_mutex);
+        VectorXf pos = current_pos;
+        pos_lock.unlock();
+
         // Get coordinate of ray.
-        int size = current_pos.rows();
-        float x = (current_pos[0] + (dist_cm * std::cos(rad)));
-        float y = (current_pos[1] + (dist_cm * std::sin(rad)));
+        int size = pos.rows();
+        float x = (pos[0] + (dist_cm * std::cos(rad)));
+        float y = (pos[1] + (dist_cm * std::sin(rad)));
 
         if (broadcast_state == NO_BROADCAST) {
 
@@ -205,6 +210,8 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         float right_wheel_duty_cycle = pid_right->PID_Update(setpoint_vel_r, current_vel_r);
         float left_wheel_duty_cycle = pid_left->PID_Update(setpoint_vel_l, current_vel_l);
 
+        std::cout << "PID Right OUT: " << right_wheel_duty_cycle << " PID Left OUT: " << left_wheel_duty_cycle << std::endl;
+
         // Motor Out
         uint32_t right_wheel_duty_cycle_temp = *((uint32_t*) (&right_wheel_duty_cycle));
         uint32_t left_wheel_duty_cycle_temp = *((uint32_t*) (&left_wheel_duty_cycle));
@@ -233,13 +240,6 @@ void Robot::RunSLAM(int algorithm) {
         current_cloud = cloud;
         cloud_lock.unlock();
 
-        std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        VectorXf odom_out = odom->Get_NewVelocities();
-        odom_lock.unlock();
-        // ControlCommand ctrl;
-        // ctrl.trans_vel = odom_out[0];
-        // ctrl.rot_vel = odom_out[1];
-
         if (algorithm == POSE_GRAPH) {
             
             Eigen::Tensor<float, 2> new_map = slam1->Run(cloud);
@@ -261,6 +261,13 @@ void Robot::RunSLAM(int algorithm) {
         }
         
         else if (algorithm == EKF) {
+
+            std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
+            VectorXf odom_out = odom->Get_NewVelocities();
+            odom_lock.unlock();
+            // ControlCommand ctrl;
+            // ctrl.trans_vel = odom_out[0];
+            // ctrl.rot_vel = odom_out[1];
 
             // TEMPORARY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ControlCommand ctrl;
@@ -376,14 +383,14 @@ Robot::Robot() {
     if(SL_IS_OK(res)) { 
     //if(SL_IS_OK(lidar->connect(_channel))) { 
         
-        lidar->stopMotor();
+        // lidar->stopMotor();
         //lidar->setMotorSpeed(0);
 
         // Display Device Info
         sl_lidar_response_device_info_t deviceInfo;
-        res = lidar->getDeviceInfo(deviceInfo);
+        auto res2 = lidar->getDeviceInfo(deviceInfo);
         
-        if(SL_IS_OK(res)) {
+        if(SL_IS_OK(res2)) {
             
             // printf("Model: %d, Firmware Version: %d.%d, Hardware Version: %d\n",
             // deviceInfo.model,
@@ -500,6 +507,7 @@ void Robot::RobotStop(std::string output_filename) {
     
     std::cout << "Shutting Down..." << std::endl;
     StopScanner();
+    // std::cout << "Scanner Stopped" << std::endl;
     delete map_builder;
     delete slam1;
     delete slam2;

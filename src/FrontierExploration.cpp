@@ -20,21 +20,6 @@ void FrontierExplorer::Build_CellStatusMap() {
     }
 }
 
-// void FrontierExplorer::Build_RecursionMap(RecursionPoint **&RecursionMap) {
-
-//     RecursionMap = new RecursionPoint*[M];
-//     for (int i = 0; i < M; i++) {
-//         RecursionMap[i] = new RecursionPoint[N];
-//     }
-//     for (int i = 0; i < M; i++) {
-//         for (int j = 0; j < N; j++) {
-
-//             RecursionPoint cell = RecursionPoint(false);
-//             RecursionMap[i][j] = cell;
-//         }
-//     }
-// }
-
 bool FrontierExplorer::isValid(int row, int col) {
     return (col >= 0) && (col < N) && 
         (row >= 0) && (row < M);
@@ -82,34 +67,6 @@ VectorXi FrontierExplorer::Get_Centroid(std::vector<VectorXi> frontier) {
     centroid << x_sum / (frontier.size()), y_sum / (frontier.size());
     return centroid;
 }
-
-// void FrontierExplorer::Get_AdjacentCells(VectorXi point, std::vector<VectorXi> &adjacents, RecursionPoint **RecursionMap) {
-
-//     adjacents.push_back(point);
-
-//     int row = point[1];
-//     int col = point[0]; 
-
-//     RecursionMap[row][col].added = true;
-
-//     int directions[8][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
-//                              {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
-
-
-//     for (auto& dir : directions) {
-//         int ncol = col + dir[0];
-//         int nrow = row + dir[1];
-
-//         VectorXi direction(2);
-//         direction << ncol, nrow;
-
-//         if (isValid(nrow, ncol) && isFrontierPoint(direction) && !RecursionMap[nrow][ncol].added) { 
-//             Get_AdjacentCells(direction, adjacents, RecursionMap); 
-//         }
-//     }
-//     return;
-// }
-
 
 int FrontierExplorer::Get_CellStatus(VectorXi point, int map_frontier) {
 

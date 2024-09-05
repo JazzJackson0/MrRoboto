@@ -64,6 +64,16 @@ Particle ParticleFilter::Move_Particle(int particle_idx, ControlCommand odom) {
 	updated_particle.pose = VectorXf::Zero(PoseDimensions);
 	float trans = odom.trans_vel;
 	float rot = odom.rot_vel;
+
+	if (rot == 0) {
+		updated_particle.pose[0] = ParticleSet[particle_idx].pose[0] + trans * cos(ParticleSet[particle_idx].pose[2]) * TimeInterval;
+		
+		updated_particle.pose[1] = ParticleSet[particle_idx].pose[0] + trans * sin(ParticleSet[particle_idx].pose[2]) * TimeInterval;
+		
+		updated_particle.pose[2] = 0;
+
+		return updated_particle;
+	}
 	
 	updated_particle.pose[0] = (ParticleSet[particle_idx].pose[0] + (-1*(trans / rot)) * sin(ParticleSet[particle_idx].pose[2]) 
 		+ (-1*(trans / rot)) * sin(ParticleSet[particle_idx].pose[2] + rot * TimeInterval) );

@@ -8,7 +8,7 @@ Odom::Odom(float robot_trackwidth, float time_step) : trackwidth(robot_trackwidt
     serial = new Serial();
 
     // I2C
-    serial_bus1 = serial->I2CInit(1, 0x0);
+    serial_bus1 = serial->I2CInit(1, 0x055);
     // serial_bus2 = serial->I2CInit(20, 0x0);
 
     // UART
@@ -47,11 +47,7 @@ VectorXf Odom::Get_NewVelocities() {
 
     VectorXf new_velocity(2);
     int8_t *encoder_buffer = new int8_t[8];
-    std::cout << "What's Here???" << std::endl;
-    std::cout << encoder_buffer << std::endl;
     serial->I2CRead(serial_bus1, encoder_buffer, 8);
-    std::cout << encoder_buffer << std::endl;
-    std::cout << *encoder_buffer << std::endl;
     int32_t left = *((int32_t*)encoder_buffer);
     int32_t right = *((int32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;

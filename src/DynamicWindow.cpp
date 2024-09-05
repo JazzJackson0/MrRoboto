@@ -75,7 +75,7 @@ std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
         }
     }
 
-    std::cout << "Number of Circular Trajectories: " << circular_trajectories.size() << std::endl;
+    // std::cout << "Number of Circular Trajectories: " << circular_trajectories.size() << std::endl;
 
     return circular_trajectories;
 }
@@ -97,7 +97,7 @@ std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::
         
     }
 
-    std::cout << "Number of Admissable Velocities: " << admissable_velocities.size() << std::endl;
+    // std::cout << "Number of Admissable Velocities: " << admissable_velocities.size() << std::endl;
 
     return admissable_velocities;
 }
@@ -120,8 +120,8 @@ std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<V
 
     }
 
-    std::cout << "Number of Within Dynamic Window: " << within_window.size() << std::endl;
-    std::cout << std::endl;
+    // std::cout << "Number of Within Dynamic Window: " << within_window.size() << std::endl;
+    // std::cout << std::endl;
 
     return within_window;
 }

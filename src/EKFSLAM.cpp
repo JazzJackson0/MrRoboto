@@ -623,9 +623,9 @@ Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, ControlCommand ctr
 
 
 	Prediction(ctrl);
-	std::cout << "Prediction Done." << std::endl;
+	// std::cout << "Prediction Done." << std::endl;
 	Correction(landmarks);
-	std::cout << "Correction Done." << std::endl;
+	// std::cout << "Correction Done." << std::endl;
 
 	return UpdateMap();
 }

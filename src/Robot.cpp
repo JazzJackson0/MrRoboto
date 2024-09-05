@@ -213,18 +213,20 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         std::cout << "PID Right OUT: " << right_wheel_duty_cycle << " PID Left OUT: " << left_wheel_duty_cycle << std::endl;
 
         // Motor Out
-        uint32_t right_wheel_duty_cycle_temp = *((uint32_t*) (&right_wheel_duty_cycle));
         uint32_t left_wheel_duty_cycle_temp = *((uint32_t*) (&left_wheel_duty_cycle));
-        char right_duty_cycle_buff[4] = {0};
-        char left_duty_cycle_buff[4] = {0};
-        for (int i = 0; i < 4; i++) {
+        uint32_t right_wheel_duty_cycle_temp = *((uint32_t*) (&right_wheel_duty_cycle));
+        char duty_cycle_buff[8] = {0};
+        for (int i = 0; i < 8; i++) {
 
-            right_duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + i);
-            left_duty_cycle_buff[i] = *((char*)&left_wheel_duty_cycle_temp + i);
-        }
-        
-        // serial->UARTWrite(serial_bus1, right_duty_cycle_buff, 4);
-        // serial->UARTWrite(serial_bus2, left_duty_cycle_buff, 4);
+            if (i < 4) {
+                duty_cycle_buff[i] = *((char*)&left_wheel_duty_cycle_temp + i);
+            }
+            else {
+                duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
+            }
+        }   
+        // TODO: Uncomment
+        // serial->UARTWrite(serial_bus, duty_cycle_buff, 8);
     }
 }
 
@@ -265,11 +267,13 @@ void Robot::RunSLAM(int algorithm) {
             std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
             VectorXf odom_out = odom->Get_NewVelocities();
             odom_lock.unlock();
+
+            // TODO: Uncomment
             // ControlCommand ctrl;
             // ctrl.trans_vel = odom_out[0];
             // ctrl.rot_vel = odom_out[1];
 
-            // TEMPORARY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // TODO: Remove [TEMPORARY] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ControlCommand ctrl;
             ctrl.trans_vel = 0.5;
             ctrl.rot_vel = 0.0;
@@ -450,9 +454,10 @@ void Robot::RobotStart() {
     map_data_available = false;
 
     StartScanner();
+
+    // TODO: Uncomment
     // serial = new Serial();
-    // serial_bus1 = serial->UARTInit(0); // Motor1 Out
-    // serial_bus2 = serial->UARTInit(1); // Motor2 Out
+    // serial_bus = serial->UARTInit(0); // PWM Values Out
 
     // Set Current Position
     current_pos = VectorXf::Zero(3);

@@ -225,8 +225,7 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
                 duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
             }
         }   
-        // TODO: Uncomment
-        // serial->UARTWrite(serial_bus, duty_cycle_buff, 8);
+        serial->UARTWrite(serial_bus, duty_cycle_buff, 8);
     }
 }
 
@@ -268,15 +267,14 @@ void Robot::RunSLAM(int algorithm) {
             VectorXf odom_out = odom->Get_NewVelocities();
             odom_lock.unlock();
 
-            // TODO: Uncomment
-            // ControlCommand ctrl;
-            // ctrl.trans_vel = odom_out[0];
-            // ctrl.rot_vel = odom_out[1];
-
-            // TODO: Remove [TEMPORARY] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ControlCommand ctrl;
-            ctrl.trans_vel = 0.5;
-            ctrl.rot_vel = 0.0;
+            ctrl.trans_vel = odom_out[0];
+            ctrl.rot_vel = odom_out[1];
+
+            // [TEMPORARY] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // ControlCommand ctrl;
+            // ctrl.trans_vel = 0.5;
+            // ctrl.rot_vel = 0.0;
             //-------------------------------------------------
 
             Eigen::Tensor<float, 2> new_map = slam2->Run(cloud, ctrl);
@@ -455,9 +453,9 @@ void Robot::RobotStart() {
 
     StartScanner();
 
-    // TODO: Uncomment
-    // serial = new Serial();
-    // serial_bus = serial->UARTInit(0); // PWM Values Out
+    // Setupe for PWM Out Values
+    serial = new Serial();
+    serial_bus = serial->UARTInit(0); 
 
     // Set Current Position
     current_pos = VectorXf::Zero(3);
@@ -495,12 +493,12 @@ void Robot::RobotStart() {
     d_window->Set_MaxAccelerations(0.5, 0.5);
 
     // Setup PIDs
-    pid_left = new PID(1, 1, 1, 1, 1); // Temporary garbage values
-    pid_right = new PID(1, 1, 1, 1, 1); // Temporary garbage values
-    pid_left->Set_Output_Limits(1, 1); // Temporary garbage values
-    pid_right->Set_Output_Limits(1, 1); // Temporary garbage values
+    pid_left = new PID(DIRECT, 1, 0.1, 0.01, 0.001); 
+    pid_right = new PID(DIRECT, 1, 0.1, 0.01, 0.001); 
+    pid_left->Set_Output_Limits(0, 1); 
+    pid_right->Set_Output_Limits(0, 1); 
 
-    odom = new Odom(1, 0.1); // Temporary garbage values 
+    odom = new Odom(1, 0.1);
 
     path_util = new PathUtil();
 }

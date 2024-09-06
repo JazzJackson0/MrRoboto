@@ -78,8 +78,7 @@ namespace diffdrive {
             bool physical_set;
 
             // Actuation
-            int8_t serial_bus1;
-            int8_t serial_bus2;
+            int8_t serial_bus;
 
             // Map
             int map_height;

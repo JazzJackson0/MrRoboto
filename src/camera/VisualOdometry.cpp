@@ -259,7 +259,7 @@ std::vector<cv::KeyPoint> StereoOdometry::Get_TileKeypoints(const cv::Mat &img_t
 
 std::pair<std::vector<cv::Point2f>, std::vector<cv::Point2f>> StereoOdometry::Track_Keypoints(const cv::Mat &img1, const cv::Mat &img2, 
         const std::vector<cv::KeyPoint> &keypoints1, 
-        float max_error = 4.0f) {
+        float max_error) {
 
     std::vector<cv::Point2f> tracked_points1, tracked_points2, valid_tracked_points1, valid_tracked_points2;
     std::vector<uchar> status;
@@ -356,7 +356,7 @@ std::tuple<cv::Mat, cv::Mat, cv::Mat, cv::Mat> StereoOdometry::Get_RightImageKey
     disparities.push_back(disp / 16.0f); // Normalize disparity
     int idx = disparities.size() - 1;
     cv::Mat l_r_disparities1 = disparities[idx - 1];
-    v::Mat l_r_disparities2 = disparities[idx];
+    cv::Mat l_r_disparities2 = disparities[idx];
 
     // 2. Get Disparity Maps & Mask
     cv::Mat disparity_map1 = Get_DisparityMap(feature_points1, l_r_disparities1, mask1);
@@ -425,60 +425,61 @@ bool StereoOdometry::StereoReprojectionResidual::operator()(const T* const param
 
     // }
     // 1. Get the Rotation & Translation
-    cv::Mat r = parameters(cv::Range(0, 3)).clone();
-    cv::Mat t = parameters(cv::Range(3, 6)).clone();
+    // cv::Mat r = parameters(cv::Range(0, 3)).clone();
+    // cv::Mat t = parameters(cv::Range(3, 6)).clone();
+
     // cv::Mat r(3, 1, CV_64F), t(3, 1, CV_64F);
     // for (int i = 0; i < 3; ++i) {
     //     r.at<double>(i) = static_cast<double>(parameters[i].a);
     //     t.at<double>(i) = static_cast<double>(parameters[i + 3].a);
     // }
-    cv::Mat R;
-    cv::Rodrigues(r, R);
+    // cv::Mat R;
+    // cv::Rodrigues(r, R);
 
-    // 2. Create Transformation matrix
-    cv::Mat Transformation(3, 4, CV_64F);
-    cv::hconcat(R, t, Transformation); 
+    // // 2. Create Transformation matrix
+    // cv::Mat Transformation(3, 4, CV_64F);
+    // cv::hconcat(R, t, Transformation); 
 
-    // 3. Homogenize the 3D points
-    cv::Mat homogeneous_points1, homogeneous_points2;
-    cv::Mat ones = cv::Mat::ones(points3D_1_.rows, 1, CV_64F);
-    cv::hconcat(points3D_1_, ones, homogeneous_points1);
-    cv::hconcat(points3D_2_, ones, homogeneous_points2);
+    // // 3. Homogenize the 3D points
+    // cv::Mat homogeneous_points1, homogeneous_points2;
+    // cv::Mat ones = cv::Mat::ones(points3D_1_.rows, 1, CV_64F);
+    // cv::hconcat(points3D_1_, ones, homogeneous_points1);
+    // cv::hconcat(points3D_2_, ones, homogeneous_points2);
 
-    // 4. Re-Project 3D points from [image 2] to 2D plane of [image 1]
-    cv::Mat feature_points1_prediction;
-    cv::Mat forward_projector = P_ref_left_ * Transformation; // Forward projection matrix
-    cv::Mat points3D_2_forward_projector = homogeneous_points2 * forward_projector.t();
-    cv::normalize(points3D_2_forward_projector.col(2), points3D_2_forward_projector);
-    feature_points1_prediction = points3D_2_forward_projector(cv::Range::all(), cv::Range(0, 2)).t();
+    // // 4. Re-Project 3D points from [image 2] to 2D plane of [image 1]
+    // cv::Mat feature_points1_prediction;
+    // cv::Mat forward_projector = P_ref_left_ * Transformation; // Forward projection matrix
+    // cv::Mat points3D_2_forward_projector = homogeneous_points2 * forward_projector.t();
+    // cv::normalize(points3D_2_forward_projector.col(2), points3D_2_forward_projector);
+    // feature_points1_prediction = points3D_2_forward_projector(cv::Range::all(), cv::Range(0, 2)).t();
 
-    // 5. Re-Project 3D points from [image 1] to 2D plane of [image 2]
-    cv::Mat feature_points2_prediction;
-    cv::Mat backward_projector = P_ref_left_ * Transformation.inv(); // Backward projection matrix
-    cv::Mat points3D_1_backward_projector = homogeneous_points1 * backward_projector.t();
-    cv::normalize(points3D_1_backward_projector.col(2), points3D_1_backward_projector);
-    feature_points2_prediction = points3D_1_backward_projector(cv::Range::all(), cv::Range(0, 2)).t();
+    // // 5. Re-Project 3D points from [image 1] to 2D plane of [image 2]
+    // cv::Mat feature_points2_prediction;
+    // cv::Mat backward_projector = P_ref_left_ * Transformation.inv(); // Backward projection matrix
+    // cv::Mat points3D_1_backward_projector = homogeneous_points1 * backward_projector.t();
+    // cv::normalize(points3D_1_backward_projector.col(2), points3D_1_backward_projector);
+    // feature_points2_prediction = points3D_1_backward_projector(cv::Range::all(), cv::Range(0, 2)).t();
 
-    // 6. Compute Reprojection Errors (residuals)
-    cv::Mat residuals_1 = feature_points1_prediction - feature_points1_.t();
-    cv::Mat residuals_2 = feature_points2_prediction - feature_points2_.t();
-    cv::Mat residuals;
-    cv::vconcat(residuals_1, residuals_2, residuals);
-    residuals = residuals.reshape(1, residuals.total());  // Flatten to a single vector
+    // // 6. Compute Reprojection Errors (residuals)
+    // cv::Mat residuals_1 = feature_points1_prediction - feature_points1_.t();
+    // cv::Mat residuals_2 = feature_points2_prediction - feature_points2_.t();
+    // cv::Mat residuals;
+    // cv::vconcat(residuals_1, residuals_2, residuals);
+    // residuals = residuals.reshape(1, residuals.total());  // Flatten to a single vector
 
-    // Convert to array format for Ceres solver 
-    for (int i = 0; i < residuals.total(); ++i) {
+    // // Convert to array format for Ceres solver 
+    // for (int i = 0; i < residuals.total(); ++i) {
 
-        // Residuals to Minimize
-        residuals_to_minimize[i] = static_cast<T>(residuals.at<double>(i));
-    }
+    //     // Residuals to Minimize
+    //     residuals_to_minimize[i] = static_cast<T>(residuals.at<double>(i));
+    // }
 
     return true;
 }
 
 
 cv::Mat StereoOdometry::Get_EstimatedPose(const std::vector<cv::Point2f>& feature_points1, const std::vector<cv::Point2f>& feature_points2,
-    const std::vector<cv::Point3f>& points3D_1, const std::vector<cv::Point3f>& points3D_2, int max_iter = 100) {
+    const std::vector<cv::Point3f>& points3D_1, const std::vector<cv::Point3f>& points3D_2, int max_iter) {
 
     int early_termination = 0;
     const int early_termination_threshold = 5;

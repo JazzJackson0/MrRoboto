@@ -63,6 +63,25 @@ VectorXf Odom::Get_NewVelocities() {
     return new_velocity;
 }
 
+// No true odometry calculation. Just raw imu reads.
+VectorXf Odom::Get_NewRawVelocities() {
+
+    VectorXf new_velocity(2);
+    int8_t *imu_buffer = new int8_t[16];
+    serial->I2CRead(serial_bus1, imu_buffer, 16);
+    int32_t rot_x = *((int32_t*)imu_buffer);
+    int32_t rot_y = *((int32_t*)imu_buffer + 4);
+    int32_t trans_x = *((int32_t*)(imu_buffer + 8));
+    int32_t trans_y = *((int32_t*)(imu_buffer + 12));
+
+    float rot = std::sqrt(std::pow(*((float *)&rot_x), 2) + std::pow(*((float *)&rot_y), 2));
+    float trans = std::sqrt(std::pow(*((float *)&trans_x), 2) + std::pow(*((float *)&trans_y), 2));
+    new_velocity << rot, trans;
+
+    delete imu_buffer;
+    return new_velocity;
+}
+
 
 
 

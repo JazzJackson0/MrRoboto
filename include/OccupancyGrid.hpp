@@ -62,12 +62,10 @@ class OccupancyGridMap {
 		 * @brief Returns the index of the beam in a scan that is closest in heading to a given bearing.
 		 *
 		 * @param scan Range Scan
-		 * @param range The range to compare each beam to.
-		 * @param bearing The bearing to compare each beam to.
-		 *
+		 * @param cell 
 		 * @return int - Index of beam with a bearing most similar to the bearing parameter
 		 */
-		int Get_MostSimilarBeam(std::vector<VectorXf> scan, float range, float bearing);
+		int Get_MostSimilarBeam(std::vector<VectorXf> scan, ogrid::Cell cell);
 
 
 	public:

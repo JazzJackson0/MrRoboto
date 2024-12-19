@@ -54,7 +54,7 @@ class Serial {
          * @brief Initialize the given pin and set its direction.
          * 
          * @param gpioNum 
-         * @param pinDirection Direction of Pin (IN or OUT)
+         * @param pinDirection Direction of Pin (PIN_IN or PIN_OUT)
          * @return ** int8_t - Returns 1 is successful, -1 if error occured.
          */
         int8_t PinInit(uint8_t gpioNum, int pinDirection);
@@ -117,7 +117,7 @@ class Serial {
          * @brief Set the state of a given pin.
          * 
          * @param gpioNum 
-         * @param pinState State of Pin (HIGH or LOW)
+         * @param pinState State of Pin (PIN_HIGH or PIN_LOW)
          * @return ** int8_t - Returns 1 is successful, -1 if error occured.
          */
         int8_t PinWrite(uint8_t gpioNum, uint8_t pinState);
@@ -185,5 +185,35 @@ class Serial {
          * @return int
          */
         int SPITransfer(int8_t spi_bus, int8_t *dataBytes, int len);
+
+        /**
+         * @brief 
+         * 
+         * @param chipNum 
+         * @param pwmNum 
+         * @param period 
+         * @param duty_cycle 
+         * @return int 
+         */
+        int PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t duty_cycle);
+
+        /**
+         * @brief 
+         * 
+         * @param chipNum 
+         * @param pwmNum 
+         * @return int 
+         */
+        int PWMDeInit(uint8_t chipNum, uint8_t pwmNum);
+
+        /**
+         * @brief 
+         * 
+         * @param chipNum 
+         * @param pwmNum 
+         * @param duty_cycle 
+         * @return int 
+         */
+        int PWMUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle);
 
 };

@@ -20,6 +20,16 @@ bool Robot::physical_params_set() {
     return physical_set;
 }
 
+void Robot::Callibrate_Camera(const std::string& images_path) {
+
+    calibrator->calibrateCamera(images_path);
+
+    calibrator->refineParameters();
+
+    double diagnosis = calibrator->diagnoseCalibration();
+    std::cout << diagnosis << std::endl;
+}
+
 void Robot::StartScanner() {
 
     lidar->startMotor();
@@ -134,6 +144,7 @@ std::vector<VectorXf> Robot::GetScan() {
 }
 
 
+
 void Robot::FindFrontier() {
 
     while (!map_ready());
@@ -197,7 +208,8 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         d_window->Set_Goal(smooth_waypoints[i]);
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        VectorXf odom_vels = odom->Get_NewVelocities();
+        // VectorXf odom_vels = odom->Get_NewVelocities();
+        VectorXf odom_vels = odom->Get_NewRawVelocities();
         odom_lock.unlock();
         VectorXf vels = d_window->Run(pos, cloud, odom_vels);
 
@@ -264,7 +276,8 @@ void Robot::RunSLAM(int algorithm) {
         else if (algorithm == EKF) {
 
             std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-            VectorXf odom_out = odom->Get_NewVelocities();
+            // VectorXf odom_out = odom->Get_NewVelocities();
+            VectorXf odom_out = odom->Get_NewRawVelocities();
             odom_lock.unlock();
 
             ControlCommand ctrl;
@@ -297,6 +310,72 @@ void Robot::RunSLAM(int algorithm) {
     }
 }
 
+
+
+cv::Mat Robot::RunVSLAM(bool stereo) {
+
+    // Monocular Camera
+    if (!stereo) {
+
+        // Open a video capture device (0 for the default webcam)
+        if (!cap.open(0)) {
+            std::cerr << "Error: Could not open video capture device." << std::endl;
+        }
+
+        while (true) {
+
+            cv::Mat frame;
+            cap >> frame;
+            if (frame.empty()) {
+                std::cerr << "Error: No frame captured." << std::endl;
+                break;  // Exit if no frame is captured
+            }
+
+            v_slam->RunMono(frame);
+
+            // Exit on 'q' key press
+            if (cv::waitKey(1) == 'q') {
+                break;
+            }    
+        }
+        cap.release();
+        cv::destroyAllWindows();
+    }
+    
+
+    // Stereo Camera
+    else {
+        if (!cap_left.open(0) || !cap_right.open(1)) {
+            std::cerr << "Error: Could not open video capture device(s)." << std::endl;
+            //return -1;
+        }
+
+        while (true) {
+            // Capture frame-by-frame
+            cv::Mat frame_left, frame_right;
+            cap_left >> frame_left;
+            cap_right >> frame_right;
+            if (frame_left.empty() || frame_right.empty()) {
+                std::cerr << "Error: No frame captured." << std::endl;
+                break;  // Exit if no frames are captured
+            }
+
+            v_slam->RunStereo(frame_left, frame_right);
+
+            // Exit on 'q' key press
+            if (cv::waitKey(1) == 'q') {
+                break;
+            }
+        }
+
+        cap_left.release();
+        cap_right.release();
+        cv::destroyAllWindows();
+    }
+}
+
+
+
 // Should probably add some way to recognize when you are localized and stopping pfilter process.
 void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
 
@@ -311,7 +390,8 @@ void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        VectorXf odom_out = odom->Get_NewVelocities();
+        // VectorXf odom_out = odom->Get_NewVelocities();
+        VectorXf odom_out = odom->Get_NewRawVelocities();
         odom_lock.unlock();
 
         ControlCommand ctrl;
@@ -470,6 +550,9 @@ void Robot::RobotStart() {
     // Setup SLAM 2
     slam2 = new EKFSlam(3, 2);
     slam2->SetInitialState(current_pos, 0.01, 0.001);
+
+    // Setup SLAM 3
+    v_slam = new vSLAM();
 
     // Setup Mapping
     og_map = new OccupancyGridMap(500, 500, 0.01, 2 * M_PI, 6);

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <string>
 #include <fstream>
+#include <opencv2/opencv.hpp>
 #include </usr/include/eigen3/Eigen/Dense>
 #include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "rplidar.h"
@@ -22,6 +23,8 @@
 #include "Odometry.hpp"
 #include "Serial.hpp"
 #include "PathUtil.hpp"
+#include "camera/Calibration.hpp"
+#include "camera/VSLAM.hpp"
 #define POSE_GRAPH 0
 #define EKF 1
 #define A_STAR 2
@@ -84,6 +87,13 @@ namespace diffdrive {
             int map_height;
             int map_width;
             bool map_set;
+
+            // Camera
+            CameraCalibrator *calibrator;
+            vSLAM *v_slam;
+            cv::VideoCapture cap;
+            cv::VideoCapture cap_left;
+            cv::VideoCapture cap_right;
             
 
             bool map_ready();
@@ -103,6 +113,12 @@ namespace diffdrive {
              * @return false 
              */
             bool physical_params_set();
+
+            /**
+             * @brief 
+             * 
+             */
+            void Callibrate_Camera(const std::string& images_path);
 
             /**
              * @brief 
@@ -130,12 +146,14 @@ namespace diffdrive {
              */
             PointCloud GetCloud(int broadcast_state); 
 
+
             /**
              * @brief 
              * 
              * @return std::vector<VectorXf> 
              */
             std::vector<VectorXf> GetScan();
+
 
             /**
              * @brief Overloaded version of public CreatePath function
@@ -157,6 +175,9 @@ namespace diffdrive {
 
 
             void RunSLAM(int algorithm);
+
+
+            cv::Mat RunVSLAM(bool stereo);
 
 
             void RunLocalizer(Eigen::Tensor<float, 2> map);

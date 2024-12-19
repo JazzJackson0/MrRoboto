@@ -28,6 +28,8 @@ class Odom {
         VectorXf Get_NewPosition();
 
         VectorXf Get_NewVelocities();
+
+        VectorXf Get_NewRawVelocities();
 };
 
 

@@ -114,7 +114,7 @@ std::tuple<cv::Mat, std::vector<cv::Mat>, std::vector<cv::Mat>> CameraCalibrator
 
     if (objpoints_3D.empty() || imgpoints_2D.empty()) {
         std::cerr << "Error: No object points or image points collected." << std::endl;
-        return;
+        //return;
     }
 
     // Calibrate

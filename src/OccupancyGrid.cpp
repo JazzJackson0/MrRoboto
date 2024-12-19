@@ -11,7 +11,8 @@ float OccupancyGridMap::InverseSensorModel(ogrid::Cell cell, std::vector<VectorX
 
 	float cell_range = sqrt(pow((cell.x - Pose[0]), 2) + pow((cell.y - Pose[1]), 2));
 	float cell_bearing = atan2( (cell.y - Pose[1]), (cell.x - Pose[0]) ) - Pose[2];
-	int k = Get_MostSimilarBeam(beams, cell_range, cell_bearing);
+	
+	int k = Get_MostSimilarBeam(beams, cell);
 
 	if (k < 0) { return LogOdds(0.0); }
 
@@ -44,15 +45,18 @@ float OccupancyGridMap::InverseSensorModel(ogrid::Cell cell, std::vector<VectorX
 }
 
 
-int OccupancyGridMap::Get_MostSimilarBeam(std::vector<VectorXf> scan, float range, float bearing) {
+int OccupancyGridMap::Get_MostSimilarBeam(std::vector<VectorXf> scan, ogrid::Cell cell) {
 	
+	float cell_range = sqrt(pow((cell.x - Pose[0]), 2) + pow((cell.y - Pose[1]), 2));
+	float cell_bearing = atan2( (cell.y - Pose[1]), (cell.x - Pose[0]) ) - Pose[2];
+
 	float min_heading = std::numeric_limits<float>::max();
 	int index = -1;
 	for (int i = 0; i < scan.size(); i++) {
 
 		float heading = 0.f;
-		float range_diff = abs(scan[i][0] - range);
-		float angle_diff = abs(scan[i][1] - bearing);
+		float range_diff = abs(scan[i][0] - cell_range);
+		float angle_diff = abs(scan[i][1] - cell_bearing);
 		heading += range_diff;
 		heading += angle_diff;
 

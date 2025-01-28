@@ -24,10 +24,10 @@ void Odom::Set_Trackwidth(float robot_trackwidth) {
 
 VectorXf Odom::Get_NewPosition() {
     VectorXf new_position(3);
-    int8_t *encoder_buffer = new int8_t[8];
+    uint8_t *encoder_buffer = new uint8_t[8];
     serial->I2CRead(serial_bus1, encoder_buffer, 8);
-    int32_t left = *((int32_t*)encoder_buffer);
-    int32_t right = *((int32_t*)(encoder_buffer + 4));
+    uint32_t left = *((uint32_t*)encoder_buffer);
+    uint32_t right = *((uint32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
     // right_distance = (float)right;
     left_distance = *((float *)&left);
@@ -46,10 +46,10 @@ VectorXf Odom::Get_NewPosition() {
 VectorXf Odom::Get_NewVelocities() {
 
     VectorXf new_velocity(2);
-    int8_t *encoder_buffer = new int8_t[8];
+    uint8_t *encoder_buffer = new uint8_t[8];
     serial->I2CRead(serial_bus1, encoder_buffer, 8);
-    int32_t left = *((int32_t*)encoder_buffer);
-    int32_t right = *((int32_t*)(encoder_buffer + 4));
+    uint32_t left = *((uint32_t*)encoder_buffer);
+    uint32_t right = *((uint32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
     // right_distance = (float)right;
     left_distance = *((float *)&left);
@@ -67,16 +67,24 @@ VectorXf Odom::Get_NewVelocities() {
 VectorXf Odom::Get_NewRawVelocities() {
 
     VectorXf new_velocity(2);
-    int8_t *imu_buffer = new int8_t[16];
+    uint8_t *imu_buffer = new uint8_t[16];
     serial->I2CRead(serial_bus1, imu_buffer, 16);
-    int32_t rot_x = *((int32_t*)imu_buffer);
-    int32_t rot_y = *((int32_t*)imu_buffer + 4);
-    int32_t trans_x = *((int32_t*)(imu_buffer + 8));
-    int32_t trans_y = *((int32_t*)(imu_buffer + 12));
+
+    std::cout << "Raw IMU BUFFER: " << *imu_buffer << std::endl;
+
+    uint32_t rot_x = *((uint32_t*)imu_buffer);
+    uint32_t rot_y = *((uint32_t*)(imu_buffer + 4));
+    uint32_t trans_x = *((uint32_t*)(imu_buffer + 8));
+    uint32_t trans_y = *((uint32_t*)(imu_buffer + 12));
+
+    std::cout << "Raw IMU VALUES: " << rot_x << ", " << rot_y << ", " << trans_x << ", " << trans_y << std::endl;
 
     float rot = std::sqrt(std::pow(*((float *)&rot_x), 2) + std::pow(*((float *)&rot_y), 2));
     float trans = std::sqrt(std::pow(*((float *)&trans_x), 2) + std::pow(*((float *)&trans_y), 2));
     new_velocity << rot, trans;
+
+    // Test 
+    std::cout << "OOOOOOOOOODDDDDDDOOOOOOOOMMMMMMMMM FROM IMU!!!!!!!!!!!!!!!: " << rot << ", " << trans << std::endl;
 
     delete imu_buffer;
     return new_velocity;

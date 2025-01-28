@@ -448,7 +448,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		// std::cout << result.transpose() << "\n";
 		// //--------------------------------------------------------------------
 		
-		std::cout << R.rows() << " & " << t.rows() << "\n"; // Test
+		// std::cout << R.rows() << " & " << t.rows() << "\n"; // Test
 		
 		PreviousLandmarks = current_landmarks;
 		pose.pose[0] = t[0];
@@ -473,7 +473,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 
 void PoseGraphOptSLAM::Optimize() {
 	
-	std::cout << "Optimizing" << std::endl;
+	// std::cout << "Optimizing" << std::endl;
 	UpdateStateVector();
 	VectorXf StateVectorIncrement;
 	StateVectorIncrement = VectorXf::Ones(CurrentPoses_n * PoseDimensions);
@@ -605,7 +605,7 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 	
 	if (FrontEnd(current_landmarks)) {
 		Optimize();
-		std::cout << "Uhh... Sending MAP" << std::endl;
+		// std::cout << "Uhh... Sending MAP" << std::endl;
 		return UpdateMap();
 	}
 		

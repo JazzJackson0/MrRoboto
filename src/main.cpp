@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     mr_roboto->Set_MapDimensions(1000, 1000);
     mr_roboto->Set_PhysicalParameters(0.3, 0.05);
 
-    mr_roboto->MapAndLocalize(EKF);
+    mr_roboto->MapAndLocalize(POSE_GRAPH);
     // mr_roboto->MapEnv();
     // mr_roboto->Localize("../tests/map2.pbm");
 

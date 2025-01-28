@@ -218,7 +218,7 @@ int8_t Serial::UARTRead(int uart, char* data, int datalen) {
 }
 
 
-int8_t Serial::I2CWrite(int8_t &i2c_bus, int8_t *dataBytes, int byteNum) {
+int8_t Serial::I2CWrite(int8_t &i2c_bus, uint8_t *dataBytes, int byteNum) {
     
     if(write(i2c_bus, dataBytes, byteNum) != byteNum){
         std::cerr << "Failed to write" << std::endl;
@@ -228,7 +228,7 @@ int8_t Serial::I2CWrite(int8_t &i2c_bus, int8_t *dataBytes, int byteNum) {
 }
 
 
-int8_t Serial::I2CRead(int8_t &i2c_bus, int8_t *dataBytes, int byteNum) {
+int8_t Serial::I2CRead(int8_t &i2c_bus, uint8_t *dataBytes, int byteNum) {
 
     if (read(i2c_bus, dataBytes, byteNum) != byteNum) {
         std::cerr << "Failed to read" << std::endl;

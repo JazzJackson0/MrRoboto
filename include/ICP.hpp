@@ -5,9 +5,9 @@
 #include <utility>
 #include <limits>
 
-#include </usr/include/eigen3/Eigen/Dense>
-#include </usr/include/eigen3/Eigen/SVD>
-#include </usr/include/eigen3/Eigen/QR>
+#include <Eigen/Dense>
+#include <Eigen/SVD>
+#include <Eigen/QR>
 
 #include <cppad/cppad.hpp>
 #include "kd_tree.hpp"

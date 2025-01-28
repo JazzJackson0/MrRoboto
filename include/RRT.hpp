@@ -7,8 +7,8 @@
 #include <vector>
 #include <list>
 #include <stack>
-#include </usr/include/eigen3/Eigen/Dense>
-#include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include <Eigen/Dense>
+#include "unsupported/Eigen/CXX11/Tensor"
 #include "Graph.hpp"
 using std::make_pair;
 using namespace Eigen;

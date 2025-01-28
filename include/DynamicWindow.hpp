@@ -3,7 +3,7 @@
 #include <cmath>
 #include <limits>
 #include <vector>
-#include </usr/include/eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "utils.hpp"
 using namespace Eigen;
 

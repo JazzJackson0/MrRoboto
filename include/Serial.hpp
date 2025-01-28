@@ -161,7 +161,7 @@ class Serial {
          * @param byteNum Number of bytes to write
          * @return int 
          */
-        int8_t I2CWrite(int8_t &i2c_bus, int8_t *dataBytes, int byteNum);
+        int8_t I2CWrite(int8_t &i2c_bus, uint8_t *dataBytes, int byteNum);
 
 
         /**
@@ -172,7 +172,7 @@ class Serial {
          * @param byteNum Number of bytes to read
          * @return int 
          */
-        int8_t I2CRead(int8_t &i2c_bus, int8_t *dataBytes, int byteNum);
+        int8_t I2CRead(int8_t &i2c_bus, uint8_t *dataBytes, int byteNum);
 
 
         /**

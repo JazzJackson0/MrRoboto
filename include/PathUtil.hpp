@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include </usr/include/eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "MapBuilder.hpp"
 using namespace Eigen;
 

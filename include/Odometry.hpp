@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <cmath>
-#include </usr/include/eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "Serial.hpp"
 using namespace Eigen;
 

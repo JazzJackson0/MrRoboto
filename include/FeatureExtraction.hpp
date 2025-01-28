@@ -3,8 +3,8 @@
 #include <cmath>
 #include <vector>
 #include <limits>
-#include </usr/include/eigen3/Eigen/Dense>
-#include </usr/include/eigen3/Eigen/src/Core/Matrix.h>
+#include <Eigen/Dense>
+#include <Eigen/src/Core/Matrix.h>
 
 #include "utils.hpp"
 

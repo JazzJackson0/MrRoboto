@@ -6,8 +6,8 @@
 #include <vector>
 #include <cmath>
 #include "utils.hpp"
-#include </usr/include/eigen3/Eigen/Dense>
-#include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include <Eigen/Dense>
+#include "unsupported/Eigen/CXX11/Tensor"
 using std::vector;
 using std::pair;
 using std::make_pair;

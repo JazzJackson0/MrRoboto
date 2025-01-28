@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include </usr/include/eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 using std::vector;
 using namespace::Eigen;

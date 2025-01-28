@@ -6,8 +6,8 @@
 #include <queue>
 #include <cfloat>
 #include <vector>
-#include </usr/include/eigen3/Eigen/Dense>
-#include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include <Eigen/Dense>
+#include "unsupported/Eigen/CXX11/Tensor"
 using std::pair;
 using std::stack;
 using std::make_pair;

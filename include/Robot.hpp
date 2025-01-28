@@ -7,8 +7,8 @@
 #include <string>
 #include <fstream>
 #include <opencv2/opencv.hpp>
-#include </usr/include/eigen3/Eigen/Dense>
-#include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include <Eigen/Dense>
+#include "unsupported/Eigen/CXX11/Tensor"
 #include "rplidar.h"
 #include "MapBuilder.hpp"
 #include "PoseGraphOptSLAM.hpp"
@@ -89,11 +89,11 @@ namespace diffdrive {
             bool map_set;
 
             // Camera
-            CameraCalibrator *calibrator;
-            vSLAM *v_slam;
-            cv::VideoCapture cap;
-            cv::VideoCapture cap_left;
-            cv::VideoCapture cap_right;
+            // CameraCalibrator *calibrator;
+            // vSLAM *v_slam;
+            // cv::VideoCapture cap;
+            // cv::VideoCapture cap_left;
+            // cv::VideoCapture cap_right;
             
 
             bool map_ready();
@@ -118,7 +118,7 @@ namespace diffdrive {
              * @brief 
              * 
              */
-            void Callibrate_Camera(const std::string& images_path);
+            // void Callibrate_Camera(const std::string& images_path);
 
             /**
              * @brief 
@@ -177,7 +177,7 @@ namespace diffdrive {
             void RunSLAM(int algorithm);
 
 
-            cv::Mat RunVSLAM(bool stereo);
+            // cv::Mat RunVSLAM(bool stereo);
 
 
             void RunLocalizer(Eigen::Tensor<float, 2> map);

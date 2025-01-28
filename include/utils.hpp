@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 #include <regex>
-#include </usr/include/eigen3/Eigen/Dense>
-#include </usr/include/eigen3/Eigen/src/Core/Matrix.h>
+#include <Eigen/Dense>
+#include <Eigen/src/Core/Matrix.h>
 
 using std::pair;
 using namespace Eigen;

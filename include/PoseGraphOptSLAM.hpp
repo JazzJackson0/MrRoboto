@@ -9,16 +9,16 @@
 
 #include <cppad/cppad.hpp>
 #include <cppad/utility/sparse2eigen.hpp>
-#include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include "unsupported/Eigen/CXX11/Tensor"
 //#include <cppad/core/sparse_jac.hpp>
 //#include <cppad/utility/sparse_rc.hpp>
 //#include <cppad/utility/sparse_rcv.hpp>
 
 
-//#include <eigen3/Eigen/Sparse>
-//#include <eigen3/Eigen/Cholesky>
-//#include <eigen3/Eigen/Dense>
-//#include <eigen3/Eigen/src/Core/util/Constants.h>
+//#include <Eigen/Sparse>
+//#include <Eigen/Cholesky>
+//#include <Eigen/Dense>
+//#include <Eigen/src/Core/util/Constants.h>
 
 #include "Graph.hpp"
 #include "ICP.hpp"

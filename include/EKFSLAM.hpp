@@ -4,9 +4,9 @@
 #include <queue>
 #include <cmath>
 
-#include </usr/include/eigen3/Eigen/Dense>
-#include </usr/include/eigen3/Eigen/src/Core/Matrix.h>
-#include "/usr/include/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include <Eigen/Dense>
+#include <Eigen/src/Core/Matrix.h>
+#include "unsupported/Eigen/CXX11/Tensor"
 #include <cppad/cppad.hpp>
 
 #include "FeatureExtraction.hpp"

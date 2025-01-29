@@ -6,25 +6,13 @@
 #include <bits/c++config.h>
 #include <cmath>
 #include <limits>
-
 #include <cppad/cppad.hpp>
 #include <cppad/utility/sparse2eigen.hpp>
 #include "unsupported/Eigen/CXX11/Tensor"
-//#include <cppad/core/sparse_jac.hpp>
-//#include <cppad/utility/sparse_rc.hpp>
-//#include <cppad/utility/sparse_rcv.hpp>
-
-
-//#include <Eigen/Sparse>
-//#include <Eigen/Cholesky>
-//#include <Eigen/Dense>
-//#include <Eigen/src/Core/util/Constants.h>
-
 #include "Graph.hpp"
 #include "ICP.hpp"
 #include "MapBuilder.hpp"
 #include "utils.hpp"
-
 
 using namespace CppAD;
 using namespace Eigen;

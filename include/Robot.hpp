@@ -89,11 +89,11 @@ namespace diffdrive {
             bool map_set;
 
             // Camera
-            // CameraCalibrator *calibrator;
-            // vSLAM *v_slam;
-            // cv::VideoCapture cap;
-            // cv::VideoCapture cap_left;
-            // cv::VideoCapture cap_right;
+            CameraCalibrator *calibrator;
+            vSLAM *v_slam;
+            cv::VideoCapture cap;
+            cv::VideoCapture cap_left;
+            cv::VideoCapture cap_right;
             
 
             bool map_ready();

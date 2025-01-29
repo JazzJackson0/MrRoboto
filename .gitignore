@@ -3,5 +3,4 @@ docs/*.xlsx
 build/*
 sdk/
 temp/
-tests/graphicsTest.py
-tests/log-*
+tests/*

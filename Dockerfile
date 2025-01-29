@@ -21,13 +21,21 @@ RUN apt-get update && apt-get install -y \
     libopencv-dev \
     && apt-get clean
 
-# Install Ceres Solver
+# Install Google Test & Ceres Solver
 RUN apt-get update && apt-get install -y \
     libgoogle-glog-dev \
+    libabsl-dev \
     libgflags-dev \
     libatlas-base-dev \
     libsuitesparse-dev \
     && apt-get clean \
+    && git clone https://github.com/google/googletest.git \
+    && cd googletest \
+    && mkdir build && cd build \
+    && cmake .. -DBUILD_GMOCK=ON \
+    && make -j$(nproc) \
+    && make install \
+    && cd ../../ && rm -rf googletest \
     && git clone --recurse-submodules https://github.com/ceres-solver/ceres-solver \
     && cd ceres-solver \
     && mkdir build && cd build \

@@ -34,6 +34,8 @@ class Serial {
         uint32_t speed;
         uint8_t bits; 
 
+        static struct termios default_terminal_settings;
+
     public:
 
         /**
@@ -67,6 +69,12 @@ class Serial {
          * @return int8_t 
          */
         int8_t UARTInit(uint8_t uartNum);
+
+        /**
+         * @brief Restore terminal settings when the program ends
+         * 
+         */
+        static void RestoreTerminal();
 
         /**
          * @brief 

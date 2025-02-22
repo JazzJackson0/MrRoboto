@@ -1,5 +1,7 @@
 #include "../include/Serial.hpp"
 
+struct termios Serial::default_terminal_settings; // Define static variable
+
 Serial::Serial() {
     buffer_size = 255;
 }
@@ -40,35 +42,56 @@ int8_t Serial::UARTInit(uint8_t uartNum) {
     struct termios settings; // Serial settings
     int uart;
 
-    // char path[buffer_size];
-    // snprintf(path, sizeof(path), "/dev/serial.%d", uartNum);
-
     std::string path = "/dev/serial" + std::to_string(uartNum);
     const char *raw_path = path.c_str();
     
-    if(uart = open(raw_path, O_RDWR | O_NDELAY, O_NOCTTY) < 0) {
+    if((uart = open(raw_path, O_RDWR | O_NDELAY, O_NOCTTY)) < 0) {
         std::cerr << "Unable to open file. Cannot initialize serial/uart-" << std::to_string(uartNum) << std::endl;
         return -1;
     }
-	
-    // Get Serial Port Settings
-	// tcgetattr(uart, &settings);
 
-    // Set Serial Port Settings
-    //cfsetspeed(&settings, B9600);
-    settings.c_cflag = B9600 | CS8 | CLOCAL | CREAD; // Baudrate | Size(Bits) | Ignore Modem Status | Set Receiver
-    settings.c_iflag = IGNPAR; // Input Flags -> Ignore Parity Errors
-    settings.c_oflag = 0; // Ouptut flags
-    settings.c_lflag = 0; // Local flags
+    // Retrieve & Save current tty terminal settings for uart device
+    if (tcgetattr(uart, &default_terminal_settings) != 0) {
+        std::cerr << "Failed to get UART attributes." << std::endl;
+        close(uart);
+        return -1;
+    }
+
+    // Register function to restore terminal settings at exit
+    atexit(RestoreTerminal);
+
+    // Set Baudrate
+    // cfsetspeed(&settings, B9600);
+
+    // Update Serial Port Settings
+    settings = default_terminal_settings;
+    settings.c_cflag = B9600 | CS8 | CLOCAL | CREAD; // Control Modes: Baudrate | Size(Bits) | Ignore Modem Status | Dont ignore Received data
+    settings.c_iflag = IGNPAR; // Input Modes: Ignore Parity Errors
+    settings.c_oflag = 0; // Ouptut Modes: None
+    settings.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Local Modes: Disable canonical mode & echo
+        // canonical mode - (line buffering and special character processing)
+        // Echo - Echoes typed characters back to the terminal
+        // Echoe - Echoes the erase character (like backspace) as a space+backspace
+        // Isig - Enables signal characters (Ctrl+C, Ctrl+Z, etc.)
+
 
     // Apply Serial Port Settings
-    tcflush(uart, TCIFLUSH); // TCIFLUSH: Flush the INPUT buffer
-    tcsetattr(uart, TCSANOW, &settings); // TCSANOW: Apply settings immediately
+    tcflush(uart, TCIFLUSH); // TCIFLUSH: Flush uart's input-data buffer
+    if (tcsetattr(uart, TCSANOW, &settings) != 0) { // TCSANOW: Apply settings immediately
+        std::cerr << "Failed to set UART attributes." << std::endl;
+        close(uart);
+        return -1;
+    }
 
     return uart;
 }
 
-void UARTDeInit(uint8_t uartNum) {
+
+void Serial::RestoreTerminal() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &default_terminal_settings);
+}
+
+void Serial::UARTDeInit(uint8_t uartNum) {
 
     close(uartNum);
 }

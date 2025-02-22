@@ -1,6 +1,7 @@
+#include <iostream>
 #include <signal.h>
 #include <stdlib.h>
-#include <stdio.h>
+// #include <stdio.h>
 #include <unistd.h>
 #include "../include/Robot.hpp"
 
@@ -31,7 +32,10 @@ int main(int argc, char* argv[]) {
     mr_roboto->MapAndLocalize(POSE_GRAPH);
     // mr_roboto->MapEnv();
     // mr_roboto->Localize("../tests/map2.pbm");
-
     
     return 0;
+
+    
+
+    // return 0;
 }

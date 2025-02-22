@@ -118,7 +118,7 @@ namespace diffdrive {
              * @brief 
              * 
              */
-            // void Callibrate_Camera(const std::string& images_path);
+            void Callibrate_Camera(const std::string& images_path);
 
             /**
              * @brief 
@@ -177,7 +177,7 @@ namespace diffdrive {
             void RunSLAM(int algorithm);
 
 
-            // cv::Mat RunVSLAM(bool stereo);
+            cv::Mat RunVSLAM(bool stereo);
 
 
             void RunLocalizer(Eigen::Tensor<float, 2> map);

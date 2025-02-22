@@ -1,6 +1,7 @@
 docs/*.png
 docs/*.xlsx
 build/*
+build2/*
 sdk/
 temp/
 tests/*

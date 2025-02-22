@@ -20,15 +20,15 @@ bool Robot::physical_params_set() {
     return physical_set;
 }
 
-// void Robot::Callibrate_Camera(const std::string& images_path) {
+void Robot::Callibrate_Camera(const std::string& images_path) {
 
-//     calibrator->calibrateCamera(images_path);
+    calibrator->calibrateCamera(images_path);
 
-//     calibrator->refineParameters();
+    calibrator->refineParameters();
 
-//     double diagnosis = calibrator->diagnoseCalibration();
-//     std::cout << diagnosis << std::endl;
-// }
+    double diagnosis = calibrator->diagnoseCalibration();
+    std::cout << diagnosis << std::endl;
+}
 
 void Robot::StartScanner() {
 
@@ -53,11 +53,11 @@ void Robot::RawScan() {
 
     // Scan Failed
     if (IS_FAIL(res))
-        std::cout << "Failed to get scan data" << "\n";
+        std::cout << "Failed to get scan data" << std::endl;
 
     // Scan Success
     else {
-        std::cout << "Scan Success" << "\n"; 
+        std::cout << "Scan Success" << std::endl; 
     }
 }
 
@@ -103,7 +103,7 @@ PointCloud Robot::GetCloud(int broadcast_state) {
         }
         
         else if (broadcast_state == BROADCAST) {
-            std::cout << x * 100 << ", " << y * 100 << "\n"; // Convert point from m to cm
+            std::cout << x * 100 << ", " << y * 100 << std::endl; // Convert point from m to cm
         }
     }
 
@@ -315,67 +315,67 @@ void Robot::RunSLAM(int algorithm) {
 
 
 
-// cv::Mat Robot::RunVSLAM(bool stereo) {
+cv::Mat Robot::RunVSLAM(bool stereo) {
 
-//     // Monocular Camera
-//     if (!stereo) {
+    // Monocular Camera
+    if (!stereo) {
 
-//         // Open a video capture device (0 for the default webcam)
-//         if (!cap.open(0)) {
-//             std::cerr << "Error: Could not open video capture device." << std::endl;
-//         }
+        // Open a video capture device (0 for the default webcam)
+        if (!cap.open(0)) {
+            std::cerr << "Error: Could not open video capture device." << std::endl;
+        }
 
-//         while (true) {
+        while (true) {
 
-//             cv::Mat frame;
-//             cap >> frame;
-//             if (frame.empty()) {
-//                 std::cerr << "Error: No frame captured." << std::endl;
-//                 break;  // Exit if no frame is captured
-//             }
+            cv::Mat frame;
+            cap >> frame;
+            if (frame.empty()) {
+                std::cerr << "Error: No frame captured." << std::endl;
+                break;  // Exit if no frame is captured
+            }
 
-//             v_slam->RunMono(frame);
+            v_slam->RunMono(frame);
 
-//             // Exit on 'q' key press
-//             if (cv::waitKey(1) == 'q') {
-//                 break;
-//             }    
-//         }
-//         cap.release();
-//         cv::destroyAllWindows();
-//     }
+            // Exit on 'q' key press
+            if (cv::waitKey(1) == 'q') {
+                break;
+            }    
+        }
+        cap.release();
+        cv::destroyAllWindows();
+    }
     
 
-//     // Stereo Camera
-//     else {
-//         if (!cap_left.open(0) || !cap_right.open(1)) {
-//             std::cerr << "Error: Could not open video capture device(s)." << std::endl;
-//             //return -1;
-//         }
+    // Stereo Camera
+    else {
+        if (!cap_left.open(0) || !cap_right.open(1)) {
+            std::cerr << "Error: Could not open video capture device(s)." << std::endl;
+            //return -1;
+        }
 
-//         while (true) {
-//             // Capture frame-by-frame
-//             cv::Mat frame_left, frame_right;
-//             cap_left >> frame_left;
-//             cap_right >> frame_right;
-//             if (frame_left.empty() || frame_right.empty()) {
-//                 std::cerr << "Error: No frame captured." << std::endl;
-//                 break;  // Exit if no frames are captured
-//             }
+        while (true) {
+            // Capture frame-by-frame
+            cv::Mat frame_left, frame_right;
+            cap_left >> frame_left;
+            cap_right >> frame_right;
+            if (frame_left.empty() || frame_right.empty()) {
+                std::cerr << "Error: No frame captured." << std::endl;
+                break;  // Exit if no frames are captured
+            }
 
-//             v_slam->RunStereo(frame_left, frame_right);
+            v_slam->RunStereo(frame_left, frame_right);
 
-//             // Exit on 'q' key press
-//             if (cv::waitKey(1) == 'q') {
-//                 break;
-//             }
-//         }
+            // Exit on 'q' key press
+            if (cv::waitKey(1) == 'q') {
+                break;
+            }
+        }
 
-//         cap_left.release();
-//         cap_right.release();
-//         cv::destroyAllWindows();
-//     }
-// }
+        cap_left.release();
+        cap_right.release();
+        cv::destroyAllWindows();
+    }
+}
 
 
 
@@ -527,7 +527,7 @@ void Robot::Set_MapDimensions(int height, int width) {
 }
 
 void Robot::RobotStart() {
-    
+
     std::cout << "Starting Robot..." << std::endl;
 
     map_set = false;
@@ -542,9 +542,10 @@ void Robot::RobotStart() {
 
     // Set Current Position
     current_pos = VectorXf::Zero(3);
-
+    
     // Setup Map Builder
     map_builder = new MapBuilder(800, 800);
+
 
     // Setup SLAM 1
     slam1 = new PoseGraphOptSLAM(500, 3, 0.01);
@@ -555,7 +556,7 @@ void Robot::RobotStart() {
     slam2->SetInitialState(current_pos, 0.01, 0.001);
 
     // Setup SLAM 3
-    // v_slam = new vSLAM();
+    v_slam = new vSLAM();
 
     // Setup Mapping
     og_map = new OccupancyGridMap(500, 500, 0.01, 2 * M_PI, 6);
@@ -600,7 +601,7 @@ void Robot::RobotStop(std::string output_filename) {
     delete map_builder;
     delete slam1;
     delete slam2;
-    // delete v_slam;
+    delete v_slam;
     delete og_map;
     delete pfilter;
     delete astar_path;

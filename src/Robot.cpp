@@ -240,7 +240,9 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
                 duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
             }
         }   
-        serial->UARTWrite(serial_bus, duty_cycle_buff, 8);
+
+        char buffer[8] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8}; // TEMP TEST DATA
+        serial->UARTWrite(UART_NUM, buffer, 8);
     }
 }
 
@@ -538,7 +540,7 @@ void Robot::RobotStart() {
 
     // Setupe for PWM Out Values
     serial = new Serial();
-    serial_bus = serial->UARTInit(0); 
+    serial->UARTInit(UART_NUM); 
 
     // Set Current Position
     current_pos = VectorXf::Zero(3);
@@ -598,6 +600,8 @@ void Robot::RobotStop(std::string output_filename) {
     std::cout << "Shutting Down..." << std::endl;
     StopScanner();
     // std::cout << "Scanner Stopped" << std::endl;
+    Serial::RestoreTerminal();
+    delete serial;
     delete map_builder;
     delete slam1;
     delete slam2;

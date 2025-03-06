@@ -32,6 +32,7 @@
 #define RRT_STAR 4
 #define BROADCAST 5
 #define NO_BROADCAST 6
+#define UART_NUM 0
 
 using namespace rp::standalone::rplidar;
 

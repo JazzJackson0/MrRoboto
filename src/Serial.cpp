@@ -1,6 +1,8 @@
 #include "../include/Serial.hpp"
 
-struct termios Serial::default_terminal_settings; // Define static variable
+// Allocate memory for static vars
+std::unordered_map<int, struct termios> Serial::default_terminal_settings;
+std::unordered_map<int, int> Serial::uart_buses;
 
 Serial::Serial() {
     buffer_size = 255;
@@ -20,9 +22,7 @@ int8_t Serial::PinInit(uint8_t gpioNum, int pinDirection) {
     // snprintf(path, sizeof(path), GPIO_PATH"/gpio%d/direction", gpioNum);
 
     std::string path = "/sys/class/gpio" + std::to_string(gpioNum) + "/direction";
-    const char *raw_path = path.c_str();
-
-    file = fopen(raw_path, "w");
+    file = fopen(path.c_str(), "w");
 
     if (file == ((void*)0)) {
         std::cerr << "Unable to open file. Cannot initialize pin " << std::to_string(gpioNum) << std::endl;
@@ -39,61 +39,62 @@ int8_t Serial::PinInit(uint8_t gpioNum, int pinDirection) {
 
 int8_t Serial::UARTInit(uint8_t uartNum) {
   
-    struct termios settings; // Serial settings
-    int uart;
+    struct termios settings; // termios: A general API for configuring the I/O characteristics of character devices, including both terminals and UARTs
 
     std::string path = "/dev/serial" + std::to_string(uartNum);
-    const char *raw_path = path.c_str();
-    
-    if((uart = open(raw_path, O_RDWR | O_NDELAY, O_NOCTTY)) < 0) {
+    if((uart_buses[uartNum] = open(path.c_str(), O_RDWR | O_NDELAY, O_NOCTTY)) < 0) {
         std::cerr << "Unable to open file. Cannot initialize serial/uart-" << std::to_string(uartNum) << std::endl;
         return -1;
     }
 
     // Retrieve & Save current tty terminal settings for uart device
-    if (tcgetattr(uart, &default_terminal_settings) != 0) {
+    if (tcgetattr(uart_buses[uartNum], &default_terminal_settings[uartNum]) != 0) {
         std::cerr << "Failed to get UART attributes." << std::endl;
-        close(uart);
+        close(uart_buses[uartNum]);
         return -1;
     }
 
     // Register function to restore terminal settings at exit
     atexit(RestoreTerminal);
 
-    // Set Baudrate
-    // cfsetspeed(&settings, B9600);
-
-    // Update Serial Port Settings
-    settings = default_terminal_settings;
-    settings.c_cflag = B9600 | CS8 | CLOCAL | CREAD; // Control Modes: Baudrate | Size(Bits) | Ignore Modem Status | Dont ignore Received data
+    cfsetspeed(&settings, B9600); // Baudrate
+    settings.c_cflag &= ~PARENB;  // No parity bit
+    settings.c_cflag &= ~CSTOPB;  // 1 stop bit
+    settings.c_cflag &= ~CSIZE;   // Clear Data Size bits
+    settings.c_cflag |= CS8;      // Set Data Size: 8 data bits
+    settings.c_cflag |= (CLOCAL | CREAD); // Ignore Modem Status | Dont ignore Received data
     settings.c_iflag = IGNPAR; // Input Modes: Ignore Parity Errors
-    settings.c_oflag = 0; // Ouptut Modes: None
+    settings.c_oflag &= ~OPOST; // Set raw output mode (disable pre-processing)
     settings.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Local Modes: Disable canonical mode & echo
-        // canonical mode - (line buffering and special character processing)
+        // Canonical Mode - (line buffering and special character processing)
+            // Non-Canonical Mode: Raw data without line editing or special character processing
         // Echo - Echoes typed characters back to the terminal
         // Echoe - Echoes the erase character (like backspace) as a space+backspace
         // Isig - Enables signal characters (Ctrl+C, Ctrl+Z, etc.)
 
 
     // Apply Serial Port Settings
-    tcflush(uart, TCIFLUSH); // TCIFLUSH: Flush uart's input-data buffer
-    if (tcsetattr(uart, TCSANOW, &settings) != 0) { // TCSANOW: Apply settings immediately
+    tcflush(uart_buses[uartNum], TCIFLUSH); // TCIFLUSH: Flush uart's input-data buffer
+    if (tcsetattr(uart_buses[uartNum], TCSANOW, &settings) != 0) { // TCSANOW: Apply settings immediately
         std::cerr << "Failed to set UART attributes." << std::endl;
-        close(uart);
+        close(uart_buses[uartNum]);
         return -1;
     }
 
-    return uart;
+    return 1;
 }
 
 
 void Serial::RestoreTerminal() {
-    tcsetattr(STDIN_FILENO, TCSANOW, &default_terminal_settings);
+
+    for (const auto [uart_num, fd] : uart_buses) {
+        tcsetattr(fd, TCSANOW, &default_terminal_settings[uart_num]);
+    }   
 }
 
 void Serial::UARTDeInit(uint8_t uartNum) {
 
-    close(uartNum);
+    close(uart_buses[uartNum]);
 }
 
 
@@ -102,27 +103,27 @@ int8_t Serial::I2CInit(uint8_t i2cNum, uint8_t slaveAddress) {
     // char path[20];
     // snprintf(path, sizeof(path), "/dev/i2c-%d", i2cNum);
     std::string path = "/dev/i2c-" + std::to_string(i2cNum);
-    const char *raw_path = path.c_str();
-    int8_t i2c_bus = open(raw_path, O_RDWR);
+    i2c_buses[i2cNum] = open(path.c_str(), O_RDWR);
 
-    if(i2c_bus < 0) {
-        std::cerr << "Unable to open file. Cannot initialize i2c-" << std::to_string(i2cNum) << std::endl;
+    if(i2c_buses[i2cNum] < 0) {
+        std::cerr << "Unable to open I2C bus. Cannot initialize i2c-" << std::to_string(i2cNum) << "(" <<strerror(errno) << ")" << std::endl;
         return -1;
     }
 	
 	// Setup I2C Bus
-	if (ioctl(i2c_bus, I2C_SLAVE, slaveAddress) < 0) {
-		std::cerr << "Failed to connect to I2C Bus" << std::endl;
-        close(i2c_bus);
+	if (ioctl(i2c_buses[i2cNum], I2C_SLAVE, slaveAddress) < 0) {
+		std::cerr << "Failed to connect to I2C device at slave address 0x" << std::hex << (int)slaveAddress 
+            << "(" <<strerror(errno) << ")" << std::endl;
+        close(i2c_buses[i2cNum]);
         return -1;
 	}
 
-    return i2c_bus;
+    return 1;
 }
 
-void I2CDeInit(uint8_t i2cNum) {
+void Serial::I2CDeInit(uint8_t i2cNum) {
 
-    close(i2cNum);
+    close(i2c_buses[i2cNum]);
 }
 
 int8_t Serial::SPIInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint8_t spi_bits) {
@@ -130,45 +131,42 @@ int8_t Serial::SPIInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint
     mode = spi_mode;
     speed = speed_hz;
     bits = spi_bits;
-    int spi_bus;
 
     // char path[buffer_size];
     // snprintf(path, sizeof(path), "/dev/spidev0.%d", spiNum);
-
     std::string path = "/dev/spidev0." + std::to_string(spiNum);
-    const char *raw_path = path.c_str();
     
-    if(spi_bus = open(raw_path, O_RDWR) < 0) {
+    if(spi_buses[spiNum] = open(path.c_str(), O_RDWR) < 0) {
         std::cerr << "Unable to open file. Cannot initialize spi-" << std::to_string(spiNum) << std::endl;
         return -1;
     }
 	
     // Setup the SPI Bus----------------------------------------------
-	if (ioctl(spi_bus, SPI_IOC_WR_MODE, &mode) < 0) {
+	if (ioctl(spi_buses[spiNum], SPI_IOC_WR_MODE, &mode) < 0) {
 		std::cerr << "Failed to set SPI Mode" << std::endl;
-        close(spi_bus);
+        close(spi_buses[spiNum]);
         return -1;
 	}
 
-    if (ioctl(spi_bus, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+    if (ioctl(spi_buses[spiNum], SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
 		std::cerr << "Failed to set SPI Mode" << std::endl;
-        close(spi_bus);
+        close(spi_buses[spiNum]);
         return -1;
 	}
 
-    if (ioctl(spi_bus, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0) {
+    if (ioctl(spi_buses[spiNum], SPI_IOC_WR_BITS_PER_WORD, &bits) < 0) {
 		std::cerr << "Failed to set SPI Mode" << std::endl;
-        close(spi_bus);
+        close(spi_buses[spiNum]);
         return -1;
 	}
 
-    return spi_bus;
+    return 1;
 }
 
 
-void SPIDeInit(uint8_t spiNum) {
+void Serial::SPIDeInit(uint8_t spiNum) {
 
-    close(spiNum);
+    close(spi_buses[spiNum]);
 }
 
 
@@ -180,8 +178,7 @@ int8_t Serial::PinWrite(uint8_t gpioNum, uint8_t pinState) {
     // snprintf(path, sizeof(path), GPIO_PATH"/gpio%d/value", gpioNum);
 
     std::string path = "/gpio" + std::to_string(gpioNum) + "/value";
-    const char *raw_path = path.c_str();
-    file = fopen(raw_path, "w");
+    file = fopen(path.c_str(), "w");
 
     if (file == ((void*)0)) {
         std::cerr << "Unable to open file. Cannot set state of pin " << std::to_string(gpioNum) << std::endl;
@@ -205,8 +202,7 @@ int8_t Serial::PinRead(uint8_t gpioNum) {
     // char path[buffer_size];
     // snprintf(path, sizeof(path), GPIO_PATH"/gpio%d/value", gpioNum);
     std::string path = "/gpio" + std::to_string(gpioNum) + "/value";
-    const char *raw_path = path.c_str();
-    file = fopen(raw_path, "r");
+    file = fopen(path.c_str(), "r");
 
     if (file == ((void*)0)) {
         std::cerr << "Unable to open file. Cannot determine state of pin " << std::to_string(gpioNum) << std::endl;
@@ -221,9 +217,9 @@ int8_t Serial::PinRead(uint8_t gpioNum) {
 
 
 
-int8_t Serial::UARTWrite(int uart, char* data, int datalen) {
+int8_t Serial::UARTWrite(uint8_t uartNum, char* data, int datalen) {
 
-    if(write(uart, data, datalen) != datalen){
+    if (write(uart_buses[uartNum], data, datalen) != datalen) {
         std::cerr << "Failed to write" << std::endl;
         return 0;
     }
@@ -231,9 +227,9 @@ int8_t Serial::UARTWrite(int uart, char* data, int datalen) {
 }
 
 
-int8_t Serial::UARTRead(int uart, char* data, int datalen) {
+int8_t Serial::UARTRead(uint8_t uartNum, char* data, int datalen) {
 
-    if(write(uart, data, datalen) != datalen){
+    if (write(uart_buses[uartNum], data, datalen) != datalen) {
         std::cerr << "Failed to write" << std::endl;
         return 0;
     }
@@ -241,28 +237,61 @@ int8_t Serial::UARTRead(int uart, char* data, int datalen) {
 }
 
 
-int8_t Serial::I2CWrite(int8_t &i2c_bus, uint8_t *dataBytes, int byteNum) {
+int8_t Serial::I2CWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     
-    if(write(i2c_bus, dataBytes, byteNum) != byteNum){
-        std::cerr << "Failed to write" << std::endl;
+    int bytesWritten = write(i2c_buses[i2cNum], dataBytes, byteNum);
+    
+    if (bytesWritten < 0) {
+        std::cerr << "Failed to write to I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
         return 0;
+    } 
+    else if (bytesWritten != byteNum) {
+        std::cerr << "Warning: Expected to write " << byteNum << " bytes. Only wrote " << bytesWritten << std::endl;
     }
+        
     return 1;
 }
 
 
-int8_t Serial::I2CRead(int8_t &i2c_bus, uint8_t *dataBytes, int byteNum) {
+int8_t Serial::I2CRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
 
-    if (read(i2c_bus, dataBytes, byteNum) != byteNum) {
-        std::cerr << "Failed to read" << std::endl;
+    int bytesRead = read(i2c_buses[i2cNum], dataBytes, byteNum);
+    
+    if (bytesRead < 0) {
+        std::cerr << "Failed to read from I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
         return 0;
+    } 
+    else if (bytesRead != byteNum) {
+        std::cerr << "Warning: Expected " << byteNum << " bytes but received " << bytesRead << std::endl;
     }
+        
     return 1;
+
+    // Interesting Alternate Version [using ioctrl] (Also Works)-------------------------------------------------
+    // struct i2c_rdwr_ioctl_data packets;
+    // struct i2c_msg messages[1];
+
+    // // i2c Transaction Settings
+    // messages[0].addr = 0x55;
+    // messages[0].flags = I2C_M_RD;  // Read operation
+    // messages[0].len = BUFFER_SIZE;
+    // messages[0].buf = dataBytes;
+
+    // packets.msgs = messages;
+    // packets.nmsgs = 1;
+
+    // if (ioctl(i2c_buses[i2cNum], I2C_RDWR, &packets) < 0) {
+    //     std::cerr << "I2C Bus Read failed: " << "(" <<strerror(errno) << ")" << std::endl;
+    //     close(i2c_buses[i2cNum]);
+    //     return -1;
+    // }
+
+    // return 1;
 }
 
 
 
-int Serial::SPITransfer(int8_t spi_bus, int8_t *dataBytes, int len) {
+int Serial::SPITransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
 
     struct spi_ioc_transfer spi_info[len];
 
@@ -280,9 +309,9 @@ int Serial::SPITransfer(int8_t spi_bus, int8_t *dataBytes, int len) {
     }
 
     // Transfer Data
-    if (ioctl(spi_bus, SPI_IOC_MESSAGE(len), spi_info) < 0) {
+    if (ioctl(spi_buses[spiNum], SPI_IOC_MESSAGE(len), spi_info) < 0) {
         std::cerr << "Failed transfer data over SPI" << std::endl;
-        close(spi_bus);
+        close(spi_buses[spiNum]);
         return -1;
     }
 
@@ -301,15 +330,11 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
     std::string pwm_enable = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm" + std::to_string(pwmNum) + "/enable";
     std::string pwm_period = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm" + std::to_string(pwmNum) + "/period";
     std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/dutycycle";
-    const char *raw_export_path = pwm_export.c_str();
-    const char *raw_enable_path = pwm_enable.c_str();
-    const char *raw_period_path = pwm_period.c_str();
-    const char *raw_dutycycle_path = pwm_dutycycle.c_str();
 
-    export_file = fopen(raw_export_path, "w");
-    enable_file = fopen(raw_enable_path, "w");
-    period_file = fopen(raw_period_path, "w");
-    dutycycle_file = fopen(raw_dutycycle_path, "w");
+    export_file = fopen(pwm_export.c_str(), "w");
+    enable_file = fopen(pwm_enable.c_str(), "w");
+    period_file = fopen(pwm_period.c_str(), "w");
+    dutycycle_file = fopen(pwm_dutycycle.c_str(), "w");
 
     if (export_file == ((void*)0)) {
         std::cerr << "Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
@@ -348,11 +373,9 @@ int Serial::PWMDeInit(uint8_t chipNum, uint8_t pwmNum) {
 
     FILE *unexport_file;
 
-
     std::string pwm_unexport = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/unexport";
-    const char *raw_unexport_path = pwm_unexport.c_str();
 
-    unexport_file = fopen(raw_unexport_path, "w");
+    unexport_file = fopen(pwm_unexport.c_str(), "w");
 
     if (unexport_file == ((void*)0)) {
         std::cerr << "Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
@@ -367,13 +390,10 @@ int Serial::PWMDeInit(uint8_t chipNum, uint8_t pwmNum) {
 }
 
 int Serial::PWMUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle) {
-
     
     FILE *dutycycle_file;
     std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/dutycycle";
-    const char *raw_dutycycle_path = pwm_dutycycle.c_str();
-    dutycycle_file = fopen(raw_dutycycle_path, "w");
-
+    dutycycle_file = fopen(pwm_dutycycle.c_str(), "w");
 
     if (dutycycle_file == ((void*)0)) {
         std::cerr << "Unable to open 'duty cycle' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;

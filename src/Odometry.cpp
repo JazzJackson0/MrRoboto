@@ -8,12 +8,12 @@ Odom::Odom(float robot_trackwidth, float time_step) : trackwidth(robot_trackwidt
     serial = new Serial();
 
     // I2C
-    serial_bus1 = serial->I2CInit(1, 0x055);
-    // serial_bus2 = serial->I2CInit(20, 0x0);
+    serial->I2CInit(I2C_NUM, I2C_SLAVE_ADDRS);
+    // serial->I2CInit(20, 0x0);
 
     // UART
-    // serial_bus1 = serial->UARTInit(0);
-    // serial_bus2 = serial->UARTInit(1);
+    // serial->UARTInit(0);
+    // serial->UARTInit(1);
 }
 
 
@@ -25,7 +25,7 @@ void Odom::Set_Trackwidth(float robot_trackwidth) {
 VectorXf Odom::Get_NewPosition() {
     VectorXf new_position(3);
     uint8_t *encoder_buffer = new uint8_t[8];
-    serial->I2CRead(serial_bus1, encoder_buffer, 8);
+    serial->I2CRead(I2C_NUM, encoder_buffer, 8);
     uint32_t left = *((uint32_t*)encoder_buffer);
     uint32_t right = *((uint32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
@@ -47,7 +47,7 @@ VectorXf Odom::Get_NewVelocities() {
 
     VectorXf new_velocity(2);
     uint8_t *encoder_buffer = new uint8_t[8];
-    serial->I2CRead(serial_bus1, encoder_buffer, 8);
+    serial->I2CRead(I2C_NUM, encoder_buffer, 8);
     uint32_t left = *((uint32_t*)encoder_buffer);
     uint32_t right = *((uint32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
@@ -68,16 +68,14 @@ VectorXf Odom::Get_NewRawVelocities() {
 
     VectorXf new_velocity(2);
     uint8_t *imu_buffer = new uint8_t[16];
-    serial->I2CRead(serial_bus1, imu_buffer, 16);
-
-    std::cout << "Raw IMU BUFFER: " << *imu_buffer << std::endl;
+    serial->I2CRead(I2C_NUM, imu_buffer, 16);
 
     uint32_t rot_x = *((uint32_t*)imu_buffer);
     uint32_t rot_y = *((uint32_t*)(imu_buffer + 4));
     uint32_t trans_x = *((uint32_t*)(imu_buffer + 8));
     uint32_t trans_y = *((uint32_t*)(imu_buffer + 12));
 
-    std::cout << "Raw IMU VALUES: " << rot_x << ", " << rot_y << ", " << trans_x << ", " << trans_y << std::endl;
+    // std::cout << "Raw IMU VALUES: " << rot_x << ", " << rot_y << ", " << trans_x << ", " << trans_y << std::endl;
 
     float rot = std::sqrt(std::pow(*((float *)&rot_x), 2) + std::pow(*((float *)&rot_y), 2));
     float trans = std::sqrt(std::pow(*((float *)&trans_x), 2) + std::pow(*((float *)&trans_y), 2));

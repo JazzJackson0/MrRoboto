@@ -5,6 +5,9 @@
 #include "Serial.hpp"
 using namespace Eigen;
 
+#define I2C_NUM 1
+#define I2C_SLAVE_ADDRS 0x55
+
 class Odom {
 
     private:

@@ -1,5 +1,6 @@
 docs/*.png
 docs/*.xlsx
+docs/*.md
 build/*
 build2/*
 sdk/

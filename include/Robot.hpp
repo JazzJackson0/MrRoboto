@@ -58,14 +58,14 @@
 #define P_FILTER_TIME_INTERVAL 0.01
 
 // Dynamic Window Parameters
-#define MIN_TRANS_VEL -200
-#define MAX_TRANS_VEL 200
-#define TRANS_VEL_INTERVAL 1
+#define MIN_TRANS_VEL -20
+#define MAX_TRANS_VEL 20
+#define TRANS_VEL_INTERVAL 0.1
 #define MAX_TRANS_ACCEL 1000
 
-#define MIN_ROT_VEL -100
-#define MAX_ROT_VEL 100
-#define ROT_VEL_INTERVAL 1
+#define MIN_ROT_VEL -10
+#define MAX_ROT_VEL 10
+#define ROT_VEL_INTERVAL 0.1
 #define MAX_ROT_ACCEL 1000
 
 #define HEADING_WEIGHT 0.04

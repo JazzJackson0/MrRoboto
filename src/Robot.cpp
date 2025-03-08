@@ -242,8 +242,7 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
             }
         }   
 
-        char buffer[8] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8}; // TEMP TEST DATA
-        serial->UARTWrite(UART_NUM, buffer, 8);
+        serial->UARTWrite(UART_NUM, duty_cycle_buff, 8);
     }
 }
 

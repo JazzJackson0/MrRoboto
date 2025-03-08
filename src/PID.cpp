@@ -101,7 +101,7 @@ float PID::PID_Update(float set_point, float measurement) {
 		current_measurement = measurement;
 		
         // Proportional Term
-		float current_error = set_point - current_measurement;
+		float current_error = abs(set_point - current_measurement);
 		float proportional_term = proportional_gain * current_error;
 		
         // Integral Term

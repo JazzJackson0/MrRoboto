@@ -11,7 +11,7 @@ PID::PID(int direction, float sample_time_ms, float kp, float ki, float kd){
     Set_PIDMode(AUTO);
     Integrator = 0;
     Differentiator = 0;
-    prev_time = (float) duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    prev_time =  std::chrono::duration<float, std::milli>(steady_clock::now().time_since_epoch()).count();
     output_data = 0;
     Set_Output_Limits(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
 }
@@ -91,8 +91,10 @@ float PID::PID_Update(float set_point, float measurement) {
         return -1.f;
     }
 	
-	float current_time = (float) duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	float current_time = std::chrono::duration<float, std::milli>(steady_clock::now().time_since_epoch()).count();
 	float dt = (current_time - prev_time);
+	// std::cout << "Current Time: [" << current_time << "] Prev Time: [" << prev_time << "] DT: " << dt << " DT(ms): " << dt_ms << std::endl;
+	// std::cout << "Output Data @ Start: " << output_data << std::endl;
 	
 	if (dt >= dt_ms) {
 		

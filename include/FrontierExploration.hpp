@@ -123,7 +123,6 @@ class FrontierExplorer {
         void Update_CellStatus(VectorXi point, int map_frontier, int status);
 
         
-
         /**
          * @brief 
          * 
@@ -132,6 +131,7 @@ class FrontierExplorer {
          */
         std::vector<std::vector<VectorXi>> Detect_WavefrontFrontier(VectorXi robot_index);
 
+        
         /**
          * @brief 
          * 

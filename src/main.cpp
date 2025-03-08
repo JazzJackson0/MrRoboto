@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include "../include/Robot.hpp"
 
+#define ROBOT_TRACKWIDTH 0.3
+#define ROBOT_WHEEL_RADIUS 0.05
+
 using namespace diffdrive;
 Robot *mr_roboto;
 
@@ -27,7 +30,7 @@ int main(int argc, char* argv[]) {
     mr_roboto = Robot::CreateRobot();
     mr_roboto->RobotStart();
     mr_roboto->Set_MapDimensions(1000, 1000);
-    mr_roboto->Set_PhysicalParameters(0.3, 0.05);
+    mr_roboto->Set_PhysicalParameters(ROBOT_TRACKWIDTH, ROBOT_WHEEL_RADIUS);
 
     mr_roboto->MapAndLocalize(POSE_GRAPH);
     // mr_roboto->MapEnv();

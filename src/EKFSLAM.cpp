@@ -558,8 +558,7 @@ EKFSlam::EKFSlam() { /*Default constructor*/ }
 
 EKFSlam::EKFSlam(int pose_dim, int landmark_dim) : PoseDimensions(pose_dim), LandmarkDimensions(landmark_dim) {
 
-		//feature_extractor = FeatureExtractor (0.005, 0.5, 0.15, 9);
-		feature_extractor = FeatureExtractor (1.0, 2.0, 0.15, 9);
+		feature_extractor = FeatureExtractor (DELTA, EPSILLON, GAP_VAL, MIN_SEED_SEG_NUM);
 		time_interval = 0.01;
 		SimilarityMargin = 0.01; // m
 		

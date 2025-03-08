@@ -34,6 +34,59 @@
 #define NO_BROADCAST 6
 #define UART_NUM 0
 
+// Pose Graph SLAM Parameters
+#define MAX_NODES 500
+#define POSE_DIMENSION 3
+#define GUESS_VARIATION 0.01
+#define N_RECENT_POSES 5
+#define LOOP_CLOSURE_DIST 1.0
+
+// EKF SLAM Parameters
+#define POSE_DIM 3
+#define LANDMARK_DIM 2
+#define PROCESS_UNCERTAINTY 0.01
+#define MEASUREMENT_UNCERTAINTY 0.001
+
+// Occupancy Grid MAp Parameters
+#define ALPHA 0.01
+#define BETA 2 * M_PI
+#define MAX_SCAN_RANGE 6
+
+// Particle Filter Parameters
+#define MAX_PARTICLES 200
+#define P_FILTER_POSE_DIM 3
+#define P_FILTER_TIME_INTERVAL 0.01
+
+// Dynamic Window Parameters
+#define MIN_TRANS_VEL -200
+#define MAX_TRANS_VEL 200
+#define TRANS_VEL_INTERVAL 1
+#define MAX_TRANS_ACCEL 1000
+
+#define MIN_ROT_VEL -100
+#define MAX_ROT_VEL 100
+#define ROT_VEL_INTERVAL 1
+#define MAX_ROT_ACCEL 1000
+
+#define HEADING_WEIGHT 0.04
+#define DISTANCE_WEIGHT 0.2
+#define VELOCITY_WEIGHT 0.1
+#define SMOOTHING_VAL 1
+
+// PID Parameters
+#define SAMPLE_TIME_MS 1
+#define KP 0.1
+#define KI 0.01 
+#define KD 0.001
+#define MIN_OUTPUT_VAL 0
+#define MAX_OUTPUT_VAL 1
+
+// Odometry Parameters
+#define ODOM_TRACKWIDTH 1
+#define ODOM_TIMESTEP 0.1
+
+
+
 using namespace rp::standalone::rplidar;
 
 namespace diffdrive {

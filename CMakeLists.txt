@@ -9,7 +9,8 @@ set(CMAKE_CXX_STANDARD 17)           # Specify C++17 standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)  # Make C++17 standard required
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
-# CMake having trouble finding Google Mock without this (Needed for Ceres build)-------------
+#-----------------------FOR ARM ARCHITECTURE COMPILATION-------------------------------------
+# CMake having trouble finding Google Mock without this (Needed for Ceres build)
 find_package(GTest REQUIRED CONFIG)
 include_directories(${GTEST_INCLUDE_DIRS})
     # Manually declare and import GMock libraries

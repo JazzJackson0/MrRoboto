@@ -13,6 +13,11 @@
 #include "MapBuilder.hpp"
 #include "utils.hpp"
 
+#define DELTA 1.0 // 0.005
+#define EPSILLON 2.0 // 0.5
+#define GAP_VAL 0.15
+#define MIN_SEED_SEG_NUM 9
+
 using namespace CppAD;
 using namespace Eigen;
 using std::vector;

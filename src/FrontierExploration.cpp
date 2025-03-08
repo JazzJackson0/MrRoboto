@@ -140,6 +140,7 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
 
         if (isFrontierPoint(point)) {
             std::vector<VectorXi> new_frontier = Extract_Frontier2D(point);
+            // std::cout << "Frontier of SIZE " << new_frontier.size() << " Created." << std::endl;
             frontiers.push_back(new_frontier);
             // std::cout << "NEW FRONTIER POINT FOUND!!" << std::endl; 
         }
@@ -246,6 +247,7 @@ void FrontierExplorer::Load_MAP(Eigen::Tensor<float, 2> map) {
 VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
 
     std::vector<std::vector<VectorXi>> frontiers = Detect_WavefrontFrontier(robot_pose);
+    // std::cout << Map << std::endl;
     
     // Decide on frontier to visit----------
     // TODO: Currently only takes into account closest frontier, not mix between closest and largest
@@ -261,9 +263,8 @@ VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
         }
     }
 
-    // std::cout << "Number of Frontiers: " << frontiers.size() << std::endl;
-    // std::cout << "Returning Frontier Point!" << std::endl;
-    std::cout << "Closest Frontier Found!: " << closest_centroid.transpose() << std::endl;
+    std::cout << "Start: " << robot_pose.transpose() << " -----------> Closest Frontier!: " << closest_centroid.transpose() 
+        << "     [# of Frontiers Found: " << frontiers.size() << "]" << std::endl;
     return closest_centroid;
 }
 

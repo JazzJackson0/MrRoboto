@@ -75,7 +75,8 @@ VectorXf Odom::Get_NewRawVelocities() {
     uint32_t trans_x = *((uint32_t*)(imu_buffer + 8));
     uint32_t trans_y = *((uint32_t*)(imu_buffer + 12));
 
-    // std::cout << "Raw IMU VALUES: " << rot_x << ", " << rot_y << ", " << trans_x << ", " << trans_y << std::endl;
+    std::cout << "Raw IMU VALUES: rot(" << *(float*)&rot_x << ", " << *(float*)&rot_y 
+        << "), trans(" << *(float*)&trans_x << ", " << *(float*)&trans_y << ")" << std::endl;
 
     float rot = std::sqrt(std::pow(*((float *)&rot_x), 2) + std::pow(*((float *)&rot_y), 2));
     float trans = std::sqrt(std::pow(*((float *)&trans_x), 2) + std::pow(*((float *)&trans_y), 2));

@@ -212,6 +212,7 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         VectorXf odom_vels = odom->Get_NewRawVelocities();
         odom_lock.unlock();
         VectorXf vels = d_window->Run(pos, cloud, odom_vels);
+        std::cout << "Best Local Velocities: " << vels.transpose() << std::endl;
 
         float setpoint_vel_r = (2 * vels[0] + vels[1] * trackwidth) / (2 * wheel_radius);
         float setpoint_vel_l = (2 * vels[0] - vels[1] * trackwidth) / (2 * wheel_radius);
@@ -263,16 +264,16 @@ void Robot::RunSLAM(int algorithm) {
             Eigen::Tensor<float, 2> new_map = slam1->Run(cloud);
             // std::cout << current_map << std::endl;
             // std::cout << std::endl;
+            
+            std::unique_lock<std::mutex> map_lock(map_mutex);
+            current_map = new_map;
+            map_lock.unlock();
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
                 map_data_available = true;
                 first_map = false;
             } 
-
-            std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = new_map;
-            map_lock.unlock();
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
             current_pos = slam1->BroadcastCurrentPose();  
@@ -550,21 +551,21 @@ void Robot::RobotStart() {
 
 
     // Setup SLAM 1
-    slam1 = new PoseGraphOptSLAM(500, 3, 0.01);
-    slam1->FrontEndInit(5, 1.f);
+    slam1 = new PoseGraphOptSLAM(MAX_NODES, POSE_DIMENSION, GUESS_VARIATION);
+    slam1->FrontEndInit(N_RECENT_POSES, LOOP_CLOSURE_DIST);
     
     // Setup SLAM 2
-    slam2 = new EKFSlam(3, 2);
-    slam2->SetInitialState(current_pos, 0.01, 0.001);
+    slam2 = new EKFSlam(POSE_DIM, LANDMARK_DIM);
+    slam2->SetInitialState(current_pos, PROCESS_UNCERTAINTY, MEASUREMENT_UNCERTAINTY);
 
     // Setup SLAM 3
     v_slam = new vSLAM();
 
     // Setup Mapping
-    og_map = new OccupancyGridMap(500, 500, 0.01, 2 * M_PI, 6);
+    og_map = new OccupancyGridMap(500, 500, ALPHA, BETA, MAX_SCAN_RANGE);
 
     // Setup Localization
-    pfilter = new ParticleFilter(200, 3, 0.01);
+    pfilter = new ParticleFilter(MAX_PARTICLES, P_FILTER_POSE_DIM, P_FILTER_TIME_INTERVAL);
     
     // Setup Path Planner 1
     astar_path = new A_Star();
@@ -576,18 +577,18 @@ void Robot::RobotStart() {
     frontier_explorer = new FrontierExplorer();
 
     //Setup Local Path Planning
-    d_window = new DynamicWindowApproach(1, 0.04, 0.2, 0.1); 
-    d_window->Set_TranslationalVelocityLimits(0.01, 1, 0.01); 
-    d_window->Set_RotationalVelocityLimits(0.01, 0.5, 0.01); 
-    d_window->Set_MaxAccelerations(0.5, 0.5);
+    d_window = new DynamicWindowApproach(SMOOTHING_VAL, HEADING_WEIGHT, DISTANCE_WEIGHT, VELOCITY_WEIGHT); 
+    d_window->Set_TranslationalVelocityLimits(MIN_TRANS_VEL, MAX_TRANS_VEL, TRANS_VEL_INTERVAL); 
+    d_window->Set_RotationalVelocityLimits(MIN_ROT_VEL, MAX_ROT_VEL, ROT_VEL_INTERVAL); 
+    d_window->Set_MaxAccelerations(MAX_TRANS_ACCEL, MAX_ROT_ACCEL);
 
     // Setup PIDs
-    pid_left = new PID(DIRECT, 1, 0.1, 0.01, 0.001); 
-    pid_right = new PID(DIRECT, 1, 0.1, 0.01, 0.001); 
-    pid_left->Set_Output_Limits(0, 1); 
-    pid_right->Set_Output_Limits(0, 1); 
+    pid_left = new PID(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
+    pid_right = new PID(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
+    pid_left->Set_Output_Limits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
+    pid_right->Set_Output_Limits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
 
-    odom = new Odom(1, 0.1);
+    odom = new Odom(ODOM_TRACKWIDTH, ODOM_TIMESTEP);
 
     path_util = new PathUtil();
 }

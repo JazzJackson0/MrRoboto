@@ -133,6 +133,7 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 		Pose_Graph.iterator_next();
 	}
 	propagateFreeSpace();
+	// std::cout << map_structure << std::endl;
 	return map_structure;
 }
 
@@ -583,13 +584,15 @@ PoseGraphOptSLAM::PoseGraphOptSLAM(int max_nodes, int pose_dimension, int guess_
 	OverlapTolerance = 0.1; // distance in meters
 	max_iterations = 100;
 	StateVector = VectorXf::Zero(0); // (Assuming a pose dimension of 3 [x, y, theta])
-	icp = ICP(2, 3);
+	icp = ICP(ICP_POSE_DIM, ICP_ERR_DIM);
 	MapBuilder map_builder();
 
 	std::vector<AD<float>> xs(PoseDimensions * 2);
 	std::vector<AD<float>> ys(PoseDimensions); 
 	X = xs;
 	Y = ys;
+
+	previous_graph_size = 0;
 }
 
 
@@ -606,6 +609,12 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 	if (FrontEnd(current_landmarks)) {
 		Optimize();
 		// std::cout << "Uhh... Sending MAP" << std::endl;
+		return UpdateMap();
+	}
+
+	// Update map if graph has new node
+	if (Pose_Graph.Get_NumOfVertices() > previous_graph_size) { 
+		previous_graph_size = Pose_Graph.Get_NumOfVertices();
 		return UpdateMap();
 	}
 		

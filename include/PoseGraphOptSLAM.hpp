@@ -14,6 +14,9 @@
 #include "MapBuilder.hpp"
 #include "utils.hpp"
 
+#define ICP_POSE_DIM 2
+#define ICP_ERR_DIM 3
+
 using namespace CppAD;
 using namespace Eigen;
 //using CppAD::AD;
@@ -79,6 +82,8 @@ class PoseGraphOptSLAM {
 		MapBuilder map_builder;
 		Eigen::Tensor<float, 2> map_structure;
 		const int VIEW_RANGE = 600; // cm
+
+		int previous_graph_size;
 	
 
 		/**

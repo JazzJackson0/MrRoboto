@@ -77,11 +77,12 @@ OccupancyGridMap::OccupancyGridMap(int m, int n, float alpha, float beta, float 
 
 Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMap(VectorXf pose, std::vector<VectorXf> scan) {
 
-	std::cout << "Number of Points Scanned: " << scan.size() << "\n";
+	auto start = std::chrono::high_resolution_clock::now();
 
 	Pose = map_builder.MapCoordinate_to_DataStructureIndex(pose.head<2>());
 	PoseAngle = pose[2];
 	
+	#pragma omp parallel for collapse(2)
 	for (int i = 0; i < M; i++) {
 		
 		for (int j = 0; j < N; j++) {
@@ -91,11 +92,11 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMap(VectorXf pose, std::vect
 			cell.y = j;
 			GridMap(i, j) += InverseSensorModel(cell, scan);
 		}
-
-		std::cout << "Map Row " << i + 1 << "/" << M << " Completed" << "\n";
 	}
 
-	std::cout << "Map Made!!!!" << std::endl;
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << "Map Made!!!!" << "\n";
+	std::cout << "Map Build Time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " sec" << std::endl;
 
 	return GridMap;
 }

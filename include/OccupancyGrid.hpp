@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 #include <Eigen/Dense>
+#include <omp.h>
+#include <chrono>
 #include "unsupported/Eigen/CXX11/Tensor"
 #include "utils.hpp"
 #include "MapBuilder.hpp"

@@ -5,7 +5,6 @@
 
 AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
     
-    
     if (R.cols() != 3 && R.rows() != 3) {
         std::cerr << "Rotation Matrix dimensions should be 3x3. Cannot convert to angle." << std::endl;
         VectorXf fail_axis(3);
@@ -19,7 +18,7 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
     VectorXf R_diff(3);
     R_diff << (R(2, 1) - R(1, 2)), (R(0, 2) - R(2, 0)), (R(1, 0) - R(0, 1));
 
-    float sinAngle = sqrt(1 - pow((R.trace() - 1 / 2), 2));
+    float sinAngle = sqrt(1 - ((R.trace() - 1 / 2) * (R.trace() - 1 / 2)));
     
 
     // Singularity
@@ -72,7 +71,6 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
 
 float RotationMatrix2D_to_Angle(MatrixXf R) {
     
-    
     if (R.cols() != 2 && R.rows() != 2) {
         std::cerr << "Rotation Matrix dimensions should be 2x2. Cannot convert to angle." << std::endl;
         return -1;
@@ -105,31 +103,16 @@ MatrixXf Angle_to_3DRotationMatrix(AngleAndAxis a_a) {
 }
 
 int gcd (int a, int b) {
-
-    if (b == 0)
-        return a;
-
-    else 
-        return gcd(b, a % b);
+    return (b == 0)? a : gcd(b, a % b);
 }
 
 int max(int a, int b) {
-
-    if (a > b)
-        return a;
-    
-    else
-        return b;
+    return (a > b)? a : b;
 }
 
 
-int min(int a, int b) {
-
-    if (a < b)
-        return a;
-    
-    else
-        return b;
+int min(int a, int b) { 
+    return (a < b)? a : b; 
 }
 
 std::vector<std::string> split(const std::string& s, std::string regx) {

@@ -1,30 +1,6 @@
 #include "../include/DynamicWindow.hpp"
 
 // Private---------------------------------------------------------------------------------------------------------------------------------
-
-VectorXf DynamicWindowApproach::Get_ClosestObstacle() {
-
-    float closest_dist = std::numeric_limits<float>::max();
-    float closest_idx = 0;
-
-    for (int i = 0; i < Cloud.size(); i++) {
-
-        float dist = std::sqrt(std::pow((RobotPos[0] - Cloud[i][0]), 2) + std::pow((RobotPos[1] - Cloud[i][1]), 2));
-        if (dist < closest_dist) {
-            closest_idx = i;
-        }
-    } 
-
-    // The result of this is Unknown
-    if (Cloud.size() == 0) {
-        VectorXf fail(2);
-        fail << RobotPos[0], RobotPos[1];
-        return fail;
-    }
-
-    return Cloud[closest_idx];
-}
-
 float DynamicWindowApproach::heading(float trans_vel, float rot_vel) {
 
     float goal_angle = std::atan2(Goal[1], Goal[0]);
@@ -38,15 +14,15 @@ float DynamicWindowApproach::distance(float trans_vel, float rot_vel) {
 
     float circle_trajectory_radius = trans_vel / rot_vel;
     float robot_angle = std::atan2(RobotPos[1], RobotPos[0]);
-    VectorXf obstacle = Get_ClosestObstacle();
-    float gamma = std::atan2(obstacle[1], obstacle[0]) - robot_angle;
+    float gamma = std::atan2(ClosestObstacle[1], ClosestObstacle[0]) - robot_angle;
 
     return std::abs(circle_trajectory_radius * gamma);
 }
 
 float DynamicWindowApproach::velocity(float trans_vel) {
 
-    float dist = std::sqrt(std::pow((RobotPos[0] - Goal[0]), 2) + std::pow((RobotPos[1] - Goal[1]), 2));
+    
+    float dist = std::hypot((RobotPos[0] - Goal[0]), (RobotPos[1] - Goal[1]));
     float v_norm = std::abs(trans_vel);
 
     // Higher cost for faster vels
@@ -82,12 +58,13 @@ std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
 
 std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::vector<Velocities> vels) {
 
-     std::vector<Velocities> admissable_velocities;
-     for (int i = 0; i < vels.size(); i++) {
+    float time_interval_inv = 1.0 / time_interval;
+    std::vector<Velocities> admissable_velocities;
+    for (int i = 0; i < vels.size(); i++) {
         
         // Determine Accelerations
-        float trans_accel = (vels[i].trans_vel - PreviousVel.trans_vel) / time_interval; 
-        float rot_accel = (vels[i].rot_vel - PreviousVel.rot_vel) / time_interval; 
+        float trans_accel = (vels[i].trans_vel - PreviousVel.trans_vel) * time_interval_inv; 
+        float rot_accel = (vels[i].rot_vel - PreviousVel.rot_vel) * time_interval_inv; 
 
         // Get Distance to closest obstacle
         float collision_dist = distance(vels[i].trans_vel, vels[i].rot_vel);
@@ -235,6 +212,31 @@ VectorXf DynamicWindowApproach::Run(VectorXf robot_pos, PointCloud point_cloud, 
     current_trans_vel = current_vels[0];
     current_rot_vel = current_vels[1];
     RobotPos = robot_pos;
-    Cloud = point_cloud.points;
+    Cloud = point_cloud;
+
+    // Determine Closest Obstacle
+    // auto start = std::chrono::high_resolution_clock::now();
+    float closest_dist = std::numeric_limits<float>::max();
+    float closest_idx = 0;
+
+    for (int i = 0; i < Cloud.points.size(); i++) {
+        
+        float dist = std::hypot((RobotPos[0] - Cloud.points[i][0]), (RobotPos[1] - Cloud.points[i][1]));
+        if (dist < closest_dist) {
+            closest_idx = i;
+        }
+    }
+    VectorXf temp(2);
+    temp << Cloud.points[closest_idx][0], Cloud.points[closest_idx][1];
+    ClosestObstacle = temp;
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::cout << "O(N) Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
+
+    // Using KD Tree is much slower for some reason*********************************
+    // start = std::chrono::high_resolution_clock::now();
+    // ClosestObstacle = Cloud.kd_tree.NearestNeighbor(RobotPos).data; // Get Closest Obstacle
+    // end = std::chrono::high_resolution_clock::now();
+    // std::cout << "O(LogN) Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
+
     return Optimize(SearchSpace());
 }

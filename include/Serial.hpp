@@ -18,7 +18,6 @@
 #define PIN_OUT 1
 #define PIN_LOW 0
 #define PIN_HIGH 1
-#define GPIO_PATH "/sys/class/gpio"
 
 class Serial {
 

@@ -65,6 +65,8 @@ void Robot::RawScan() {
 PointCloud Robot::GetCloud(int broadcast_state) {
 
     PointCloud cloud;
+    cloud.mean_x = 0.f;
+    cloud.mean_y = 0.f;
     int idx = 0;
     for (int i = 0; i < nodeCount; i += 1) {
 
@@ -100,12 +102,18 @@ PointCloud Robot::GetCloud(int broadcast_state) {
             point << x, y;
             cloud.points.push_back(point);
             cloud.weights.push_back((float)(nodes[i].quality >> 2)); // Echo Signal Strength 0 - 255
+            cloud.mean_x += x;
+            cloud.mean_y += y;
+            cloud.kd_tree.AddData(point, (float)(nodes[i].quality >> 2));
         }
         
         else if (broadcast_state == BROADCAST) {
             std::cout << x * 100 << ", " << y * 100 << std::endl; // Convert point from m to cm
         }
     }
+    cloud.mean_x /= cloud.points.size();
+    cloud.mean_y /= cloud.points.size();
+    cloud.kd_tree.buildKDTree();
 
     return cloud;
 }
@@ -160,7 +168,7 @@ void Robot::FindFrontier() {
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> pos_lock(map_mutex);
-        VectorXi pos = map_builder->MapCoordinate_to_DataStructureIndex(current_pos);
+        VectorXi pos = map_builder->MapCoordinate_to_DataStructureIndex(current_pos.head<2>());
         VectorXf flt_pos = current_pos;
         pos_lock.unlock();
         

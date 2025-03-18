@@ -23,7 +23,7 @@ std::vector<VectorXf> PathUtil::SmoothPath(std::vector<VectorXi> path) {
 
     // 1. Convert from matrix indexes to cartesian coordinates
     for (auto& point : path) {
-        smoothed_waypoints.push_back(map_builder->DataStructureIndex_to_MapCoordinate(point));
+        smoothed_waypoints.push_back(map_builder->DataStructureIndex_to_MapCoordinate(point.head<2>()));
     }
     
     // 2. Smooth Points

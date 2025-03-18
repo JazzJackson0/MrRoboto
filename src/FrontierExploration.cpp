@@ -256,7 +256,8 @@ VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
     for (int i = 0; i < frontiers.size(); i++) {
 
         VectorXi centroid = Get_Centroid(frontiers[i]);
-        float dist = std::sqrt(std::pow((centroid[0] - robot_pose[0]), 2) + std::pow((centroid[0] - robot_pose[0]), 2));
+        
+        float dist = std::hypot((centroid[0] - robot_pose[0]), (centroid[1] - robot_pose[1]));
         if (dist < closest_dist) {
             closest_dist = dist;
             closest_centroid = centroid;

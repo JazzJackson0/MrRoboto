@@ -75,15 +75,16 @@ VectorXf Odom::Get_NewRawVelocities() {
     uint32_t trans_x = *((uint32_t*)(imu_buffer + 8));
     uint32_t trans_y = *((uint32_t*)(imu_buffer + 12));
 
-    std::cout << "Raw IMU VALUES: rot(" << *(float*)&rot_x << ", " << *(float*)&rot_y 
-        << "), trans(" << *(float*)&trans_x << ", " << *(float*)&trans_y << ")" << std::endl;
+    // std::cout << "Raw IMU VALUES: rot(" << *(float*)&rot_x << ", " << *(float*)&rot_y 
+    //     << "), trans(" << *(float*)&trans_x << ", " << *(float*)&trans_y << ")" << std::endl;
 
-    float rot = std::sqrt(std::pow(*((float *)&rot_x), 2) + std::pow(*((float *)&rot_y), 2));
-    float trans = std::sqrt(std::pow(*((float *)&trans_x), 2) + std::pow(*((float *)&trans_y), 2));
+    
+    float rot = std::hypot(*((float *)&rot_x), *((float *)&rot_y));
+    float trans = std::hypot(*((float *)&trans_x), *((float *)&trans_y));
     new_velocity << rot, trans;
 
     // Test 
-    std::cout << "OOOOOOOOOODDDDDDDOOOOOOOOMMMMMMMMM FROM IMU!!!!!!!!!!!!!!!: " << rot << ", " << trans << std::endl;
+    // std::cout << "OOOOOOOOOODDDDDDDOOOOOOOOMMMMMMMMM FROM IMU!!!!!!!!!!!!!!!: " << rot << ", " << trans << std::endl;
 
     delete imu_buffer;
     return new_velocity;

@@ -4,7 +4,7 @@ void EKFSlam::propagateFreeSpace() {
 
 	int width = map_structure.dimension(1);
 	int height = map_structure.dimension(0);
-	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose);
+	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.head<2>());
     int x_robot = robot_index[0];
     int y_robot = robot_index[1];
 
@@ -32,7 +32,7 @@ void EKFSlam::propagateFreeSpace() {
             }
 
             // Check if within the robot's view range
-            if (std::sqrt(std::pow(nx - x_robot, 2) + std::pow(ny - y_robot, 2)) < VIEW_RANGE) {
+            if (std::hypot((nx - x_robot), (ny - y_robot)) < VIEW_RANGE) {
 
                 if (map_structure(ny, nx) == 0.5 && isVisible(nx, ny, x_robot, y_robot)) {
                     map_structure(ny, nx) = 0.0;
@@ -81,18 +81,19 @@ bool EKFSlam::isVisible(int x, int y, int x_robot, int y_robot) {
 Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 
 	// std::cout << "Previous Pose: " << PreviousPose << std::endl;
-	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose);
+	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.head<2>());
 	// std::cout << "Robot Index: " << robot_index.transpose() << std::endl;
 	int width = map_structure.dimension(1);
 	int height = map_structure.dimension(0);
+	VectorXf point(2);
+	VectorXi beam_index;
 
 	for (int i = 0; i < Correspondence.size(); i++) {
 
 		for (int j = 0; j < Correspondence[i].line_seg.points.size(); j++) {
 
-			VectorXf point(2);
 			point << Correspondence[i].line_seg.points[j].x, Correspondence[i].line_seg.points[j].y;
-			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point);
+			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 
 			if ((beam_index[0] >= 0 && beam_index[0] < width) && (beam_index[1] >= 0 && beam_index[1] < height)) {
 				map_structure(beam_index[1], beam_index[0]) = 1.f;
@@ -226,8 +227,8 @@ int EKFSlam::UpdateMapAndResize(Landmark landmark) {
 	if (StateVector.rows() > PoseDimensions) {
 
 		for (int i = PoseDimensions; i < StateVector.rows(); i += LandmarkDimensions) {
-
-			float dist = std::sqrt(std::pow((StateVector[i] - landmark.position.x), 2) + std::pow((StateVector[i + 1] - landmark.position.y), 2));
+			
+			float dist = std::hypot((StateVector[i] - landmark.position.x), (StateVector[i + 1] - landmark.position.y));
 			// If landmark point and map point are close enough to be virtually the same
 			if (dist <= SimilarityMargin) {
 				// Generic Formula for mapping State vector landmark to correct Correspondence index (Assumption: PoseDimensions >= LandmarkDimensions)
@@ -558,30 +559,30 @@ EKFSlam::EKFSlam() { /*Default constructor*/ }
 
 EKFSlam::EKFSlam(int pose_dim, int landmark_dim) : PoseDimensions(pose_dim), LandmarkDimensions(landmark_dim) {
 
-		feature_extractor = FeatureExtractor (DELTA, EPSILLON, GAP_VAL, MIN_SEED_SEG_NUM);
-		time_interval = 0.01;
-		SimilarityMargin = 0.01; // m
-		
-		NumOfLandmarks = 0;
-		PreviousPose = VectorXf::Zero(3);
-		MapBuilder map_builder();
-		
-		// Set Sizes of Domain & Range Space vectors
-		std::vector<AD<float>> x_g(PoseDimensions); // Number of variables to differentiate w.r.t
-		std::vector<AD<float>> y_g(PoseDimensions);
-		std::vector<AD<float>> x_h((PoseDimensions + LandmarkDimensions)); // Number of variables to differentiate w.r.t
-		std::vector<AD<float>> y_h(LandmarkDimensions);
-		Xg = x_g;
-		Yg = y_g;
-		Xh = x_h;
-		Yh = y_h;
+	feature_extractor = FeatureExtractor (DELTA, EPSILLON, GAP_VAL, MIN_SEED_SEG_NUM);
+	time_interval = 0.01;
+	SimilarityMargin = 0.01; // m
+	
+	NumOfLandmarks = 0;
+	PreviousPose = VectorXf::Zero(3);
+	MapBuilder map_builder();
+	
+	// Set Sizes of Domain & Range Space vectors
+	std::vector<AD<float>> x_g(PoseDimensions); // Number of variables to differentiate w.r.t
+	std::vector<AD<float>> y_g(PoseDimensions);
+	std::vector<AD<float>> x_h((PoseDimensions + LandmarkDimensions)); // Number of variables to differentiate w.r.t
+	std::vector<AD<float>> y_h(LandmarkDimensions);
+	Xg = x_g;
+	Yg = y_g;
+	Xh = x_h;
+	Yh = y_h;
 
-		// Set up Mapping Functions & Indentity
-		Build_MappingFunctions();
-		Build_Identity();
-		initial_state_set = false;
-		map_state_set = false;
-		non_linear = true;
+	// Set up Mapping Functions & Indentity
+	Build_MappingFunctions();
+	Build_Identity();
+	initial_state_set = false;
+	map_state_set = false;
+	non_linear = true;
 }
 
 

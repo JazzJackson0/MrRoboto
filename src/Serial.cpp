@@ -18,10 +18,22 @@ int8_t Serial::PinInit(uint8_t gpioNum, int pinDirection) {
 
     FILE *file;
 
+    // Need to EXPORT the pin for the device and it's files to become available
+    // FILE *export_file;
+    // std::string pin_export = "/sys/class/gpio/export";
+    // export_file = fopen(pin_export.c_str(), "w");
+    // if (export_file == ((void*)0)) {
+    //     std::cerr << "Unable to open 'export' file for pin " << std::to_string(gpioNum) << std::endl;
+    //     return -1;
+    // }
+    // fprintf(export_file, std::to_string(gpioNum).c_str());
+    // fclose(export_file);
+
     // char path[buffer_size];
     // snprintf(path, sizeof(path), GPIO_PATH"/gpio%d/direction", gpioNum);
 
-    std::string path = "/sys/class/gpio" + std::to_string(gpioNum) + "/direction";
+    // std::string path = "/sys/class/gpio/gpio" + std::to_string(gpioNum) + "/direction"; // Beaglebone
+    std::string path = "/sys/class/gpio/gpiochip" + std::to_string(gpioNum) + "/direction"; // Raspberry Pi
     file = fopen(path.c_str(), "w");
 
     if (file == ((void*)0)) {
@@ -177,7 +189,7 @@ int8_t Serial::PinWrite(uint8_t gpioNum, uint8_t pinState) {
     // char path[buffer_size];
     // snprintf(path, sizeof(path), GPIO_PATH"/gpio%d/value", gpioNum);
 
-    std::string path = "/gpio" + std::to_string(gpioNum) + "/value";
+    std::string path = "/sys/class/gpio/gpio" + std::to_string(gpioNum) + "/value";
     file = fopen(path.c_str(), "w");
 
     if (file == ((void*)0)) {
@@ -201,7 +213,7 @@ int8_t Serial::PinRead(uint8_t gpioNum) {
 
     // char path[buffer_size];
     // snprintf(path, sizeof(path), GPIO_PATH"/gpio%d/value", gpioNum);
-    std::string path = "/gpio" + std::to_string(gpioNum) + "/value";
+    std::string path = "/sys/class/gpio/gpio" + std::to_string(gpioNum) + "/value";
     file = fopen(path.c_str(), "r");
 
     if (file == ((void*)0)) {
@@ -321,7 +333,6 @@ int Serial::SPITransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
 
 int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t duty_cycle) {
 
-    FILE *export_file;
     FILE *enable_file;
     FILE *period_file;
     FILE *dutycycle_file;
@@ -329,17 +340,22 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
     std::string pwm_export = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/export";
     std::string pwm_enable = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm" + std::to_string(pwmNum) + "/enable";
     std::string pwm_period = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm" + std::to_string(pwmNum) + "/period";
-    std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/dutycycle";
+    std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/duty_cycle";
 
+    // Need to EXPORT the pwm device for its files (period, dutycycle) to become available
+    FILE *export_file;
     export_file = fopen(pwm_export.c_str(), "w");
-    enable_file = fopen(pwm_enable.c_str(), "w");
-    period_file = fopen(pwm_period.c_str(), "w");
-    dutycycle_file = fopen(pwm_dutycycle.c_str(), "w");
-
     if (export_file == ((void*)0)) {
         std::cerr << "Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
         return -1;
     }
+    fprintf(export_file, std::to_string(pwmNum).c_str());
+    fclose(export_file);
+
+    enable_file = fopen(pwm_enable.c_str(), "w");
+    period_file = fopen(pwm_period.c_str(), "w");
+    dutycycle_file = fopen(pwm_dutycycle.c_str(), "w");
+
 
     if (enable_file == ((void*)0)) {
         std::cerr << "Unable to open 'enable' file for chip " << std::to_string(chipNum) << std::endl;
@@ -352,16 +368,14 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
     }
 
     if (dutycycle_file == ((void*)0)) {
-        std::cerr << "Unable to open 'duty cycle' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
+        std::cerr << "Unable to open 'duty_cycle' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
         return -1;
     }
 
-    fprintf(export_file, "0");
     fprintf(enable_file, "1");
     fprintf(period_file, std::to_string(period).c_str());
     fprintf(dutycycle_file, std::to_string(duty_cycle).c_str());
-
-    fclose(export_file);
+ 
     fclose(enable_file);
     fclose(period_file);
     fclose(dutycycle_file);
@@ -371,20 +385,20 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
 
 int Serial::PWMDeInit(uint8_t chipNum, uint8_t pwmNum) {
 
-    FILE *unexport_file;
+    // FILE *unexport_file;
 
-    std::string pwm_unexport = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/unexport";
+    // std::string pwm_unexport = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/unexport";
 
-    unexport_file = fopen(pwm_unexport.c_str(), "w");
+    // unexport_file = fopen(pwm_unexport.c_str(), "w");
 
-    if (unexport_file == ((void*)0)) {
-        std::cerr << "Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
-        return -1;
-    }
+    // if (unexport_file == ((void*)0)) {
+    //     std::cerr << "Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
+    //     return -1;
+    // }
 
-    fprintf(unexport_file, "0");
+    // fprintf(unexport_file, "0");
 
-    fclose(unexport_file);
+    // fclose(unexport_file);
     return 1;
 
 }
@@ -392,11 +406,11 @@ int Serial::PWMDeInit(uint8_t chipNum, uint8_t pwmNum) {
 int Serial::PWMUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle) {
     
     FILE *dutycycle_file;
-    std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/dutycycle";
+    std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/duty_cycle";
     dutycycle_file = fopen(pwm_dutycycle.c_str(), "w");
 
     if (dutycycle_file == ((void*)0)) {
-        std::cerr << "Unable to open 'duty cycle' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
+        std::cerr << "Unable to open 'duty_cycle' file for chip " << std::to_string(chipNum) << " pwm " << std::to_string(pwmNum) << std::endl;
         return -1;
     }
 

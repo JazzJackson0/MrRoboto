@@ -6,6 +6,7 @@
 #include <regex>
 #include <Eigen/Dense>
 #include <Eigen/src/Core/Matrix.h>
+#include "kd_tree.hpp"
 
 using std::pair;
 using namespace Eigen;
@@ -14,6 +15,10 @@ using namespace Eigen;
 struct PointCloud {
 	std::vector<VectorXf> points;
 	std::vector<float> weights;
+	float mean_x;
+	float mean_y;
+	KDTree kd_tree;
+	PointCloud() : kd_tree(2) {}
 };
 
 struct RotationTranslation {

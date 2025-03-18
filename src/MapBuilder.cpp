@@ -2,7 +2,10 @@
 
 
 
-MapBuilder::MapBuilder() { /*Default Constructor*/ }
+MapBuilder::MapBuilder() { 
+    
+    P = -1;
+}
 
 MapBuilder::MapBuilder(int m, int n) : M(m), N(n) {
     P = -1;
@@ -15,6 +18,7 @@ void MapBuilder::Update_2DMapDimensions(int m, int n) {
 
     M = m;
     N = n;
+    P = -1;
 }
 
 
@@ -297,7 +301,7 @@ VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
 
     
     VectorXi index = VectorXi::Zero(2);
-    if (P <= 0) {index.resize(3);}
+    if (P > 0) {index.resize(3);}
 
     if (coordinate[0] >= (N / 2)) { coordinate[0] = (N / 2) - 1; }
     else if (coordinate[0] < -(N / 2)) { coordinate[0] = -(N / 2); }
@@ -307,7 +311,7 @@ VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
     index[0] = (int) round(coordinate[0] + (N / 2));
     index[1] = (int) round(coordinate[1] + (M / 2));
 
-    if (coordinate.rows() == 3) {
+    if (coordinate.rows() == 3 && P > 0) {
 
         index[2] = (int) round(coordinate[2] + (P / 2));
     }
@@ -319,7 +323,7 @@ VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
 VectorXf MapBuilder::DataStructureIndex_to_MapCoordinate(VectorXi index) {
 
     VectorXf coordinate = VectorXf::Zero(2);
-    if (P <= 0) {coordinate.resize(3);}
+    if (P > 0) {coordinate.resize(3);}
 
     coordinate[0] =  (float) (index[0] + (N / 2));
     coordinate[1] = (float) (index[1] + (M / 2));

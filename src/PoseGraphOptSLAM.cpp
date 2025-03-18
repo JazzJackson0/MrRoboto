@@ -4,7 +4,7 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
 
 	int width = map_structure.dimension(1);
 	int height = map_structure.dimension(0);
-	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose);
+	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose.head<2>());
     int x_robot = robot_index[0];
     int y_robot = robot_index[1];
 
@@ -32,7 +32,7 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
             }
 
             // Check if within the robot's view range
-            if (std::sqrt(std::pow(nx - x_robot, 2) + std::pow(ny - y_robot, 2)) < VIEW_RANGE) {
+            if (std::hypot((nx - x_robot), (ny - y_robot)) < VIEW_RANGE) {
 
                 if (map_structure(ny, nx) == 0.5 && isVisible(nx, ny, x_robot, y_robot)) {
                     map_structure(ny, nx) = 0.0;
@@ -81,9 +81,11 @@ bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
 
 Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 
-	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose);
+	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose.head<2>());
 	int width = map_structure.dimension(1);
 	int height = map_structure.dimension(0);
+	VectorXf point;
+	VectorXi beam_index;
 	
 	Pose_Graph.iterator_start();
 	while (Pose_Graph.iterator_hasNext()) {
@@ -92,10 +94,11 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 
 		for (int i = 0; i < pose.Landmarks.points.size(); i++) {
 			
-			VectorXf point = pose.Landmarks.points[i];
-			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point);
+			point = pose.Landmarks.points[i];
+			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 
 			if ((beam_index[0] >= 0 && beam_index[0] < width) && (beam_index[1] >= 0 && beam_index[1] < height)) {
+				
 				map_structure(beam_index[1], beam_index[0]) = 1.f;
 
 				// Estimate Free Space: Bresenham's line algorithm for ray-casting
@@ -139,28 +142,7 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 
 float PoseGraphOptSLAM::Calculate_Overlap(PointCloud cloud_a, PointCloud cloud_b) {
 
-	float mean_ax = 0.0;
-	float mean_ay = 0.0;
-	float mean_bx = 0.0;
-	float mean_by = 0.0;
-
-	// Calculate the mean of each point cloud
-	for (int i = 0; i < cloud_a.points.size(); i++) {
-		mean_ax += cloud_a.points[i](0);
-		mean_ay += cloud_a.points[i](1);
-	}
-	mean_ax /= cloud_a.points.size();
-	mean_ay /= cloud_a.points.size();
-
- 
-	for (int i = 0; i < cloud_b.points.size(); i++) {
-		mean_bx += cloud_b.points[i](0);
-		mean_by += cloud_b.points[i](1);
-	}
-	mean_bx /= cloud_b.points.size();
-	mean_by /= cloud_b.points.size();
-
-	return (float) std::abs(sqrt((mean_ax - mean_bx)*(mean_ax - mean_bx) + (mean_ay - mean_by)*(mean_ay - mean_by)));
+	return (float) std::abs(std::hypot((cloud_a.mean_x - cloud_b.mean_x), (cloud_a.mean_y - cloud_b.mean_y)));
 }
 
 
@@ -235,6 +217,8 @@ bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 
 	// Search Graph in given radius to find possible loop closure (Excluding the n most recently added poses)
 	int closest_vertex_idx = -1;
+	Pose p;
+	float dist;
 	
 	// No Loop Closure Happening
 	if (Pose_Graph.Get_NumOfVertices() <= NRecentPoses) { return false; }
@@ -243,18 +227,15 @@ bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 	float min_dist = std::numeric_limits<float>::max();
 	for (int i = 0; i < Pose_Graph.Get_NumOfVertices() - NRecentPoses; i++) {
 
-		Pose p = Pose_Graph.Get_Vertex(i);
-		float dist = sqrt(((p.pose[0] - PreviousPose.pose[0]) * (p.pose[0] - PreviousPose.pose[0])) + 
-			((p.pose[1] - PreviousPose.pose[1]) * (p.pose[1] - PreviousPose.pose[1])));
+		p = Pose_Graph.Get_Vertex(i);
 		
-		// If node is within valid loop closure Radius
-		if (dist < ClosureDistance) {
-			
-			// Track the closest of all nodes in range.
-			if (dist < min_dist) {
-				min_dist = dist;
-				closest_vertex_idx = i;
-			}
+		dist = std::hypot((p.pose[0] - PreviousPose.pose[0]), (p.pose[1] - PreviousPose.pose[1]));
+		
+		// If node is within valid loop closure Radius: Track the closest of all nodes in range.
+		if (dist < ClosureDistance && (dist < min_dist)) {
+
+			min_dist = dist;
+			closest_vertex_idx = i;
 		}
 	}
 
@@ -609,13 +590,25 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 	if (FrontEnd(current_landmarks)) {
 		Optimize();
 		// std::cout << "Uhh... Sending MAP" << std::endl;
-		return UpdateMap();
+		auto start = std::chrono::high_resolution_clock::now();
+		// return UpdateMap();
+		Eigen::Tensor<float, 2> temp_map = UpdateMap();
+		auto end = std::chrono::high_resolution_clock::now();
+    	std::cout << "Map Update Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us#########################################################################################" 
+			<< std::endl;
+		return temp_map;
 	}
 
 	// Update map if graph has new node
 	if (Pose_Graph.Get_NumOfVertices() > previous_graph_size) { 
 		previous_graph_size = Pose_Graph.Get_NumOfVertices();
-		return UpdateMap();
+		auto start = std::chrono::high_resolution_clock::now();
+		// return UpdateMap();
+		Eigen::Tensor<float, 2> temp_map = UpdateMap();
+		auto end = std::chrono::high_resolution_clock::now();
+    	std::cout << "Map Update Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us#########################################################################################" 
+			<< std::endl;
+		return temp_map;
 	}
 		
 	return map_structure;

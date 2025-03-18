@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include <vector>
+#include <chrono>
 #include <Eigen/Dense>
 #include "utils.hpp"
 using namespace Eigen;
@@ -20,7 +21,8 @@ class DynamicWindowApproach {
 
         VectorXf Goal;
         VectorXf RobotPos;
-        std::vector<VectorXf> Cloud;
+        VectorXf ClosestObstacle;
+        PointCloud Cloud;
         float dist_nearing_goal;
         float smoothing;
         float heading_weight;
@@ -39,12 +41,7 @@ class DynamicWindowApproach {
         float trans_accel_max;
         float rot_accel_max;
 
-        /**
-         * @brief 
-         * 
-         * @return VectorXf 
-         */
-        VectorXf Get_ClosestObstacle();
+        
 
         /**
          * @brief A measure of how much you are moving towards the goal. 

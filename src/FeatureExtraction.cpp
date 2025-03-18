@@ -4,14 +4,15 @@
 
 float FeatureExtractor::Get_EuclideanDistance(Point point_a, Point point_b) {
 
-    return sqrt(pow((point_b.x - point_a.x), 2) + pow((point_b.y - point_a.y), 2));
+    return hypot((point_b.x - point_a.x), (point_b.y - point_a.y));
+    
 }
 
 float FeatureExtractor::Get_Point2LineDistance(Point point, GeneralFormLine general_line) {
 
     return abs((general_line.a * point.x) + (general_line.b * point.y) + general_line.c) / 
-        sqrt((general_line.a * general_line.a) + general_line.b * general_line.b);
-
+        hypot(general_line.a, general_line.b);
+    
 }
 
 std::vector<Point> FeatureExtractor::Get_2PointsFromLine(int x1, int x2, SlopeInterceptLine slope_line) {
@@ -20,16 +21,14 @@ std::vector<Point> FeatureExtractor::Get_2PointsFromLine(int x1, int x2, SlopeIn
     Point point_a;
     Point point_b;
 
+    point_b.x = x2;
     point_a.x = x1;
     point_a.y = (slope_line.m * x1) + slope_line.b;
-    points.push_back(point_a);
-
-    point_b.x = x2;
     point_b.y = (slope_line.m * x2) + slope_line.b;
+    points.push_back(point_a);
     points.push_back(point_b);
 
     return points;
-
 }
 
 GeneralFormLine FeatureExtractor::SlopeInt2General(SlopeInterceptLine slope_line) {
@@ -113,7 +112,6 @@ Point FeatureExtractor::AD2Position(float dist, float angle) {
     point.x = RobotPos.x + (dist * cos(angle));
     point.y = RobotPos.y + (dist * sin(angle));
     point.angle = angle;
-
     return point;
 }
 
@@ -216,7 +214,7 @@ GeneralFormLine FeatureExtractor::ODRFit(std::vector<Point> laser_points) {
     else {
 
         // General Line Output  
-        float  slope_m = sYY - sXX + sqrt(pow((sYY - sXX), 2) + (4 * (sXY * sXY))) / (2 * sXY);
+        float  slope_m = sYY - sXX + sqrt(((sYY - sXX) * (sYY - sXX)) + (4 * (sXY * sXY))) / (2 * sXY);
         float intercept_b = mY - (slope_m * mX);
         // float norm_factor = (intercept_b >= 0.0? 1.0 : -1.0) * sqrt((slope_m * slope_m) + 1);
 
@@ -227,7 +225,6 @@ GeneralFormLine FeatureExtractor::ODRFit(std::vector<Point> laser_points) {
         // std::cout << "Slope Fit Line: " << slope_m << ", " << intercept_b << std::endl;
         // std::cout << std::endl;
     }
-
 
     return fit_line;
 }
@@ -269,12 +266,10 @@ Point FeatureExtractor::ClampPointOnLine(LineSegment line, Point point) {
 
     // Clamp projected point to within range of seed segment.
     Point clamped_point;
-    VectorXf segment_direction(2);
-    segment_direction << line.endpoints[1].x - line.endpoints[0].x, line.endpoints[1].y - line.endpoints[0].y; 
-    VectorXf endpoint1_to_projp(2);
-    VectorXf endpoint2_to_projp(2);
-    endpoint1_to_projp << point.x - line.endpoints[0].x, point.y - line.endpoints[0].y; 
-    endpoint2_to_projp << point.x - line.endpoints[1].x, point.y - line.endpoints[1].y; 
+    VectorXf segment_direction(2); segment_direction << line.endpoints[1].x - line.endpoints[0].x, line.endpoints[1].y - line.endpoints[0].y; 
+    VectorXf endpoint1_to_projp(2); endpoint1_to_projp << point.x - line.endpoints[0].x, point.y - line.endpoints[0].y; 
+    VectorXf endpoint2_to_projp(2); endpoint2_to_projp << point.x - line.endpoints[1].x, point.y - line.endpoints[1].y; 
+    
     float d_dot_d = segment_direction.dot(segment_direction);
     float t1 = endpoint1_to_projp.dot(segment_direction) / d_dot_d;
     float t2 = endpoint2_to_projp.dot(segment_direction) / d_dot_d;
@@ -295,7 +290,7 @@ Point FeatureExtractor::ClampPointOnLine(LineSegment line, Point point) {
 
 void FeatureExtractor::CheckOverlap() {
 
-    float overlap_threshold = 0.5; // Just made up some bullshit number
+    float overlap_threshold = 0.5; // Just made up some random number
     bool match = false;
 
     for (int i = 0; i < NewLandmarks.size(); i++) {

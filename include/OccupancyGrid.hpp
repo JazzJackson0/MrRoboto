@@ -23,10 +23,9 @@ struct Cell {
 class OccupancyGridMap {
 
 	private:
-		Eigen::Tensor<float, 2> InitialGridMap;
 		Eigen::Tensor<float, 2> GridMap;
-		Eigen::Tensor<float, 2>PreviousGridMap;
 		VectorXi Pose; // Current pose of the robot
+		float PoseAngle;
 		int M;
 		int N;
 		float Alpha; // Width of Cell
@@ -42,7 +41,7 @@ class OccupancyGridMap {
 		 *
 		 *	@return float - Log Odds Value 
 		 */
-		float LogOdds(float x);
+		inline float LogOdds(float x);
 
 		
 		/**
@@ -61,11 +60,13 @@ class OccupancyGridMap {
 		/**
 		 * @brief Returns the index of the beam in a scan that is closest in heading to a given bearing.
 		 *
-		 * @param scan Range Scan
+		 * @param beams Range Scan
 		 * @param cell 
+		 * @param call_range 
+		 * @param cell_bearing 
 		 * @return int - Index of beam with a bearing most similar to the bearing parameter
 		 */
-		int Get_MostSimilarBeam(std::vector<VectorXf> scan, ogrid::Cell cell);
+		int Get_MostSimilarBeam(std::vector<VectorXf> beams, ogrid::Cell cell, float cell_range, float cell_bearing);
 
 
 	public:

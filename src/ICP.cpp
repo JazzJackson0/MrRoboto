@@ -16,29 +16,19 @@ float ICP::Get_RootMeanSquaredError(PointCloud RefPointSet, PointCloud NewPointS
 
 float ICP::Get_EuclideanDistance(VectorXf p, VectorXf q) {
 
-	float dist = 0.f;
-	for (int i = 0; i < p.rows(); i++) {
-
-		dist += pow(p[i] - q[i], 2);
-	}
-
-	return sqrt(dist);
+	return (p - q).norm();
 }
 
 VectorXf ICP::Get_CenterOfMass(PointCloud p_cloud) {
 
-	float total_weight = 0.0;
 	VectorXf center_mass(PoseDimension);
 	center_mass = VectorXf::Zero(PoseDimension);
-
-	for (int i = 0; i < p_cloud.weights.size(); i++) {
-
-		total_weight += p_cloud.weights[i];
-	}
+	float total_weight = std::accumulate(p_cloud.weights.begin(), p_cloud.weights.end(), 0.f);
+	float total_weight_inv = 1.0 / total_weight;
 
 	for (int i = 0; i < p_cloud.points.size(); i++) {
 
-		center_mass += (p_cloud.points[i] * p_cloud.weights[i]) / total_weight;
+		center_mass += (p_cloud.points[i] * p_cloud.weights[i]) * total_weight_inv;
 	}
 
 	return center_mass;
@@ -66,38 +56,43 @@ pair<PointCloud, PointCloud>  ICP::Calculate_Correspondences(PointCloud RefPoint
 	int ref_size = RefPointCloud.points.size();
 	//int new_size = NewPointCloud.points.size();
 	PointCloud PointSet_New;
-	struct Node* tree = kd_tree.build_tree(NewPointCloud.points);
 
 	// Loop through all points in Reference Point Cloud
+	
 	for (int i = 0; i < ref_size; i++) {
-		
 		// Get a Point for comparison with New Cloud
 		VectorXf ref_point = RefPointCloud.points[i]; 
 
 		// ---------------------------Basic n^2 method not using kd tree---------------------------------------------------
+		// auto start = std::chrono::high_resolution_clock::now();
 		// float min_dist = std::numeric_limits<float>::max();
 		// int corresponding_indx = -1;
 
 		// // Loop through all points in New Point Cloud
-		// for (int j = 0; j < new_size; j++) {
+		// for (int j = 0; j < NewPointCloud.points.size(); j++) {
 			
 		// 	// Compare every point in New Point Cloud with Point from Reference.
 		// 	VectorXf new_point = NewPointCloud.points[j]; 
-		// 	float dist = std::sqrt( pow((ref_point[0] - new_point[0]), 2) + pow((ref_point[1] - new_point[1]), 2)
-		// 		+ pow((ref_point[2] - new_point[2]), 2) );
+		// 	float dist = std::hypot((ref_point[0] - new_point[0]), (ref_point[1] - new_point[1]));
 
 		// 	if (dist < min_dist) {
 		// 		min_dist = dist;
 		// 		corresponding_indx = j;
 		// 	}
 		// }
+		// auto end = std::chrono::high_resolution_clock::now();
+    	// std::cout << "ICP O(N) Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
 		//--------------------------------------------------------------------------------------------------------------
 
-		int corresponding_indx = kd_tree.get_nearest_neighbor(ref_point, tree, 0)->pos;
+		// start = std::chrono::high_resolution_clock::now();
+		Packet pt = NewPointCloud.kd_tree.NearestNeighbor(ref_point);
+		// end = std::chrono::high_resolution_clock::now();
+    	// std::cout << "ICP O(LogN) Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
 		
 		// Pull out the Point Set in B that corresponds directly with Point Cloud A
-		PointSet_New.points.push_back(NewPointCloud.points[corresponding_indx]);
-		PointSet_New.weights.push_back(NewPointCloud.weights[corresponding_indx]);
+		// std::cout << "Point in New Set: " << pt.data.transpose() << std::endl;
+		PointSet_New.points.push_back(pt.data);
+		PointSet_New.weights.push_back(pt.weight);
 	}
 
 	return std::make_pair(RefPointCloud, PointSet_New);
@@ -191,7 +186,6 @@ ICP::ICP(int pose_dim, int error_dim) : PoseDimension(pose_dim), ErrorDimension(
 	X = xs;
 	Y = ys;
 	min_convergence_thresh = 4; // Random value for now
-	kd_tree = KDTree(PoseDimension);
 }
 
 
@@ -209,13 +203,11 @@ RotationTranslation ICP::RunSVDAlign(PointCloud RefPointSet, PointCloud NewPoint
 	RotationTranslation transformation;
 	transformation.weight = 0.0;
 
-	if (RefPointSet.points.size() > NewPointSet.points.size()) {
+	if (RefPointSet.points.size() > NewPointSet.points.size()) 
 		cloud_size = RefPointSet.points.size();	
-	}
 
-	else {
+	else 
 		cloud_size = NewPointSet.points.size();
-	}
 	
 	// Calculate Centers of Mass & Weight Sums
 	TrueCenterMass = Get_CenterOfMass(RefPointSet);
@@ -346,11 +338,5 @@ VectorXf ICP::RunICP_LeastSquares(PointCloud RefPointCloud, PointCloud NewPointC
  *  - 
  *
  *  */
-
-
-
-
-
-
 
 

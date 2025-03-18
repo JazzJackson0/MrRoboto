@@ -2,7 +2,7 @@
 
 float ParticleFilter::Get_Range(VectorXf p1, VectorXf p2) {
 
-	return sqrt(((p2[0] - p1[0])*(p2[0] - p1[0])) + ((p2[1] - p1[1])*(p2[1] - p1[1])));
+	return hypot((p2[0] - p1[0]), (p2[1] - p1[1]));
 }
 
 float ParticleFilter::Get_Bearing(VectorXf p1, VectorXf p2) {
@@ -22,30 +22,31 @@ float ParticleFilter::Get_RandomBetween(float lowVal, float highVal) {
 float ParticleFilter::ProbabilityDensityFunction(float x, Distribution distribution) {
 	
 	return (1 / (distribution.std_dev * std::sqrt(2 * M_PI)) * 
-		std::exp(-0.5 * std::pow( (x - distribution.mean / distribution.std_dev), 2) ));
+		std::exp(-0.5 * ((x - distribution.mean / distribution.std_dev) * (x - distribution.mean / distribution.std_dev)) ));
 }
 
 
 PointCloud ParticleFilter::Get_FeaturePointsInRange(Particle particle) {
 
 	PointCloud points_in_range;
+	int left_bound = ((int)(particle.pose[0] - MaxBeamDist)) < 0? 0 : ((int)(particle.pose[0] - MaxBeamDist));
+	int right_bound = ((int)(particle.pose[0] + MaxBeamDist)) > MapWidth? MapWidth : ((int)(particle.pose[0] + MaxBeamDist));
+	int lower_bound = ((int)(particle.pose[1] - MaxBeamDist)) < 0? 0 : ((int)(particle.pose[0] - MaxBeamDist));
+	int upper_bound = ((int)(particle.pose[1] + MaxBeamDist)) > MapHeight? MapHeight : ((int)(particle.pose[1] + MaxBeamDist));
+	float half = 1.f / 2;
 	// Pseudo Scan: Check a given distance and width around the particle for feature point coordinates
-	for (int x = 0; x < MapWidth; x++) {
+	for (int x = left_bound; x < right_bound; x++) {
 
-		for (int y = 0; y < MapHeight; y++) {
+		for (int y = lower_bound; y < upper_bound; y++) {
 
 			int cell = Map(x, y);
 			if (cell > 0.0) {
 				
 				VectorXf map_feature(2);
 				map_feature << (float) x, (float) y;
-				float range = Get_Range(map_feature, particle.pose);
 				float bearing = Get_Bearing(map_feature, particle.pose);
 
-				if (range > MaxBeamDist)
-					continue;
-
-				if (bearing > particle.pose[2] + (AngularBeamWidth / 2) || bearing < particle.pose[2] - (AngularBeamWidth / 2))
+				if (bearing > particle.pose[2] + (AngularBeamWidth * half) || bearing < particle.pose[2] - (AngularBeamWidth * half))
 					continue;
 
 				points_in_range.points.push_back(map_feature);
@@ -64,8 +65,9 @@ Particle ParticleFilter::Move_Particle(int particle_idx, ControlCommand odom) {
 	updated_particle.pose = VectorXf::Zero(PoseDimensions);
 	float trans = odom.trans_vel;
 	float rot = odom.rot_vel;
+	float vel_quotient = trans / rot;
 
-	if (rot == 0) {
+	if (odom.rot_vel == 0) {
 		updated_particle.pose[0] = ParticleSet[particle_idx].pose[0] + trans * cos(ParticleSet[particle_idx].pose[2]) * TimeInterval;
 		
 		updated_particle.pose[1] = ParticleSet[particle_idx].pose[0] + trans * sin(ParticleSet[particle_idx].pose[2]) * TimeInterval;
@@ -75,11 +77,11 @@ Particle ParticleFilter::Move_Particle(int particle_idx, ControlCommand odom) {
 		return updated_particle;
 	}
 	
-	updated_particle.pose[0] = (ParticleSet[particle_idx].pose[0] + (-1*(trans / rot)) * sin(ParticleSet[particle_idx].pose[2]) 
-		+ (-1*(trans / rot)) * sin(ParticleSet[particle_idx].pose[2] + rot * TimeInterval) );
+	updated_particle.pose[0] = (ParticleSet[particle_idx].pose[0] + (-1*(vel_quotient)) * sin(ParticleSet[particle_idx].pose[2]) 
+		+ (-1*(vel_quotient)) * sin(ParticleSet[particle_idx].pose[2] + rot * TimeInterval) );
 	
-	updated_particle.pose[1] = (ParticleSet[particle_idx].pose[0] + (-1*(trans / rot)) * cos(ParticleSet[particle_idx].pose[2]) 
-		+ (-1*(trans / rot)) * cos(ParticleSet[particle_idx].pose[2] + rot * TimeInterval) );
+	updated_particle.pose[1] = (ParticleSet[particle_idx].pose[0] + (-1*(vel_quotient)) * cos(ParticleSet[particle_idx].pose[2]) 
+		+ (-1*(vel_quotient)) * cos(ParticleSet[particle_idx].pose[2] + rot * TimeInterval) );
 	
 	updated_particle.pose[2] = (ParticleSet[particle_idx].pose[0] + rot * TimeInterval);
 
@@ -206,20 +208,21 @@ void ParticleFilter::Resample() {
 	float rand = Get_RandomBetween(0.0, (1.f / (float) MaxParticles)); 
 	int index = 0;
 	float CumulativeDistro = ParticleSet[index].weight;
-	std::cout << "Starting Cumulative: " << CumulativeDistro << std::endl;
+	float max_particles_inv = 1.f / (float)MaxParticles;
+	// std::cout << "Starting Cumulative: " << CumulativeDistro << std::endl;
 
 	for (int m = 0; m < MaxParticles; m++) {
 		
-		float U = rand + ((float)m / (float)MaxParticles); // Increment U by 1/N
-		std::cout << "rand: " << (float) rand << std::endl;
-		std::cout << "U: " << (float) U << std::endl;
+		float U = rand + ((float)m * max_particles_inv); // Increment U by 1/N
+		// std::cout << "rand: " << (float) rand << std::endl;
+		// std::cout << "U: " << (float) U << std::endl;
 		
 		while (U > CumulativeDistro && index < MaxParticles - 1) {
 			
 			index++;
 			CumulativeDistro += ParticleSet[index].weight;
 			
-			std::cout << "New Cumulative: " << (float) CumulativeDistro << std::endl;
+			// std::cout << "New Cumulative: " << (float) CumulativeDistro << std::endl;
 		}
 
 		// std::cout << "Num of Particles: " << ParticleSet.size() << std::endl;
@@ -249,6 +252,7 @@ ParticleFilter::ParticleFilter(int max_particles, int pose_dimensions, float tim
 	bearing_coef = 2;
 
 	unsigned seed;
+	float max_particles_inv = 1.f / (float)MaxParticles;
 
 	// Uniformly Distribute Particles
 	std::uniform_real_distribution<float> u_distro_x(0.0, MapWidth + 1);
@@ -271,7 +275,7 @@ ParticleFilter::ParticleFilter(int max_particles, int pose_dimensions, float tim
   		random_engine.seed(seed);
 		particle.pose[0] = u_distro_th(random_engine); // theta
 		
-		particle.weight = 1 / MaxParticles; // weight
+		particle.weight = max_particles_inv; // weight
 		ParticleSet.push_back(particle);
 	}
 } 
@@ -293,6 +297,7 @@ void ParticleFilter::Run(PointCloud scan, ControlCommand odom) {
 
 	RunParticleFilter(scan, odom);
 	Resample();
+	std::cout << "Particle Filter Iteration" << std::endl;
 }
 
 

@@ -2,8 +2,6 @@
 
 void PoseGraphOptSLAM::propagateFreeSpace() {
 
-	int width = map_structure.dimension(1);
-	int height = map_structure.dimension(0);
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose.head<2>());
     int x_robot = robot_index[0];
     int y_robot = robot_index[1];
@@ -27,7 +25,7 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
             int ny = y + dir[1];
 
             // Check bounds
-            if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+            if (nx < 0 || nx >= map_width || ny < 0 || ny >= map_height) {
                 continue;
             }
 
@@ -80,10 +78,11 @@ bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
 
 
 Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
+	// Reset Map State to Default
+	map_structure = Eigen::Tensor<float, 2>(map_height, map_width);
+	map_structure.setConstant(0.5);
 
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose.head<2>());
-	int width = map_structure.dimension(1);
-	int height = map_structure.dimension(0);
 	VectorXf point;
 	VectorXi beam_index;
 	
@@ -96,41 +95,11 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 			
 			point = pose.Landmarks.points[i];
 			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
-
-			if ((beam_index[0] >= 0 && beam_index[0] < width) && (beam_index[1] >= 0 && beam_index[1] < height)) {
+			
+			// If Beam is within Map range
+			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height)) {
 				
 				map_structure(beam_index[1], beam_index[0]) = 1.f;
-
-				// Estimate Free Space: Bresenham's line algorithm for ray-casting
-				int dx = std::abs(beam_index[0] - robot_index[0]);
-				int dy = std::abs(beam_index[1] - robot_index[1]);
-				int sx = (robot_index[0] < beam_index[0]) ? 1 : -1;
-				int sy = (robot_index[1] < beam_index[1]) ? 1 : -1;
-				int err = dx - dy;
-
-				int x = robot_index[0];
-				int y = robot_index[1];
-
-				while (true) {
-
-					if (map_structure(y, x) == 0.5) { map_structure(y, x) = 0.0; }
-
-					if (map_structure(y, x) == 1.0) { break; }
-
-					// Stop once end of line is reached
-					if (x == beam_index[0] && y == beam_index[1]) { break; }
-
-					// Climb the slope between robot and beam point
-					int e2 = 2 * err;
-					if (e2 > -dy) {
-						err -= dy;
-						x += sx;
-					}
-					if (e2 < dx) {
-						err += dx;
-						y += sy;
-					}
-				}
 			}
 		}
 		Pose_Graph.iterator_next();
@@ -615,13 +584,13 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 }
 
 void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {
-	map_structure = Eigen::Tensor<float, 2>(height, width);
-	map_structure.setConstant(0.5);
+	map_height = height;
+	map_width = width;
 	map_builder.Update_2DMapDimensions(height, width);
 }
 
 VectorXf PoseGraphOptSLAM::BroadcastCurrentPose() {
-
+	std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ POSE: " << PreviousPose.pose.transpose() << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl; 
 	return PreviousPose.pose;
 }
 

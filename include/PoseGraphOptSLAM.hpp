@@ -85,6 +85,8 @@ class PoseGraphOptSLAM {
 		const int VIEW_RANGE = 600; // cm
 
 		int previous_graph_size;
+		int map_height;
+		int map_width;
 	
 
 		/**

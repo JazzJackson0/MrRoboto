@@ -77,6 +77,8 @@ class EKFSlam {
 		bool map_state_set;
 
 		bool non_linear;
+		int map_height;
+		int map_width;
 
 
 		/**

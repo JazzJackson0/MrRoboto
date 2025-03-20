@@ -37,6 +37,7 @@ class EKFSlam {
         FeatureExtractor feature_extractor;
 		MapBuilder map_builder;
 		Eigen::Tensor<float, 2> map_structure;
+		Eigen::Tensor<float, 2> map_structure_mask;
 		const int VIEW_RANGE = 600; // cm
 		
 		VectorXf StateVector; // The vector containing the current robot pose and all landmark positions.

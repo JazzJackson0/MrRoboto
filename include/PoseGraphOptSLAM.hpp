@@ -55,7 +55,6 @@ struct HbResults {
 
 
 class PoseGraphOptSLAM {
-
 	
 	private:
 
@@ -82,6 +81,7 @@ class PoseGraphOptSLAM {
 		ICP icp;
 		MapBuilder map_builder;
 		Eigen::Tensor<float, 2> map_structure;
+		Eigen::Tensor<float, 2> map_structure_mask;
 		const int VIEW_RANGE = 600; // cm
 
 		int previous_graph_size;

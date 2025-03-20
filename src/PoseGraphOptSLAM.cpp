@@ -31,8 +31,9 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
             // Check if within the robot's view range
             if (std::hypot((nx - x_robot), (ny - y_robot)) < VIEW_RANGE) {
 
-                if (map_structure(ny, nx) == 0.5 && isVisible(nx, ny, x_robot, y_robot)) {
-                    map_structure(ny, nx) = 0.0;
+                if (map_structure_mask(ny, nx) == 0.5 && isVisible(nx, ny, x_robot, y_robot)) {
+                    map_structure_mask(ny, nx) = 0.0;
+					if (map_structure(ny, nx) == 0.5) map_structure(ny, nx) = 0.0;
 					VectorXi new_index(2);
 					new_index << nx, ny;
                     q.push(new_index);
@@ -44,7 +45,7 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
 
 bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
     
-	if (map_structure(y, x) == 1.0) return false;
+	if (map_structure_mask(y, x) == 1.0) return false;
 
     // Bresenham's line algorithm for line of sight checking
     int dx = std::abs(x - x_robot);
@@ -61,7 +62,7 @@ bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
         if (x_curr == x && y_curr == y) return true;
 
 		// Line of sight blocked by obstacle
-        if (map_structure(y_curr, x_curr) == 1.0) return false;
+        if (map_structure_mask(y_curr, x_curr) == 1.0) return false;
 
         int e2 = 2 * err;
         if (e2 > -dy) {
@@ -77,9 +78,8 @@ bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
 
 
 Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
-	// Reset Map State to Default
-	map_structure = Eigen::Tensor<float, 2>(map_height, map_width);
-	map_structure.setConstant(0.5);
+	// Reset Map Mask to Default
+	map_structure_mask.setConstant(0.5);
 
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose.head<2>());
 	VectorXf point;
@@ -96,8 +96,10 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 			
 			// If Beam is within Map range
-			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height))
+			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height)) {
+				map_structure_mask(beam_index[1], beam_index[0]) = 1.f;
 				map_structure(beam_index[1], beam_index[0]) = 1.f;
+			}	
 		}
 		Pose_Graph.iterator_next();
 	}
@@ -573,6 +575,9 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {
 	map_height = height;
 	map_width = width;
+	map_structure_mask = Eigen::Tensor<float, 2>(height, width);
+	map_structure = Eigen::Tensor<float, 2>(height, width);
+	map_structure.setConstant(0.5);
 	map_builder.Update_2DMapDimensions(height, width);
 }
 

@@ -87,7 +87,7 @@ void PID::Set_Output_Limits(float min, float max) {
 float PID::PID_Update(float set_point, float measurement) {
 	
 	if (pid_mode == MANUAL) {
-        std::cout << "ERROR: Leave Manual Mode to start PID" << std::endl;
+        std::cerr << "ERROR: Leave Manual Mode to start PID" << std::endl;
         return -1.f;
     }
 	
@@ -116,6 +116,13 @@ float PID::PID_Update(float set_point, float measurement) {
 		
         // PID formula
 		output_data = proportional_term + Integrator + (derivative_gain * Differentiator);
+		// std::cout << "Current PID Stats++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+		// std::cout << "Error: " << current_error << "\n";
+		// std::cout << "Proportional Term: " << proportional_term << "\n";
+		// std::cout << "Integral Term: " << Integrator << "\n";
+		// std::cout << "Derrivative Term: " << (derivative_gain * Differentiator) << "\n";
+		// std::cout << "Output Before Clamp: " << output_data << "\n";
+		
 		if (output_data > max_output) 
             output_data = max_output;
 		else if (output_data < min_output) 

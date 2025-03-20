@@ -265,7 +265,7 @@ void KDTree::AddData(VectorXf point, float weight) {
 void KDTree::buildKDTree() {
 
     if (raw_points.empty()) {
-        std::cerr << "No data available to build tree" << std::endl;
+        std::cerr << "ERROR: No data available to build tree" << std::endl;
         return;
     }
     

@@ -52,22 +52,22 @@ bool A_Star::isGoalReached(int x, int y) {
 bool A_Star::isStartAndGoalValid() {
     
     if (!isValid(Start[0], Start[1])) {
-        std::cout << "Invalid Starting Coordinates." << std::endl;
+        std::cerr << "ERROR: Invalid Starting Coordinates." << std::endl;
         return false;
     }
 
     if (!isValid(Goal[0], Goal[1])) {
-        std::cout << "Invalid Goal Coordinates." << std::endl;
+        std::cerr << "ERROR: Invalid Goal Coordinates." << std::endl;
         return false;
     }
 
     if (isBlocked(Start[0], Start[1])) {
-        std::cout << "Start Coodrdinates Blocked." << std::endl;
+        std::cerr << "ERROR: Start Coodrdinates Blocked." << std::endl;
         return false;
     }
 
     if (isGoalReached(Start[0], Start[1])) {
-        std::cout << "Ummm... You're already there..." << std::endl;
+        std::cerr << "ERROR: Ummm... You're already there..." << std::endl;
         return false;
     }
 
@@ -244,7 +244,7 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
     Goal = goalCell;
     if (!isStartAndGoalValid()) { 
         ThePath.push_back(startCell);
-        std::cout << "Invalid Coordinates for START (" << startCell.transpose() << ") or GOAL (" << goalCell.transpose() << ")" << std::endl;
+        std::cerr << "ERROR: Invalid Coordinates for START (" << startCell.transpose() << ") or GOAL (" << goalCell.transpose() << ")" << std::endl;
         return ThePath; 
     }
 
@@ -325,7 +325,7 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
         } 
     } 
 
-    std::cout << "No viable path found." << std::endl;
+    std::cerr << "ERROR: No viable A* path found." << std::endl;
     ThePath.push_back(startCell);
     return ThePath;
 }

@@ -25,9 +25,8 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
             int ny = y + dir[1];
 
             // Check bounds
-            if (nx < 0 || nx >= map_width || ny < 0 || ny >= map_height) {
+            if (nx < 0 || nx >= map_width || ny < 0 || ny >= map_height)
                 continue;
-            }
 
             // Check if within the robot's view range
             if (std::hypot((nx - x_robot), (ny - y_robot)) < VIEW_RANGE) {
@@ -45,7 +44,7 @@ void PoseGraphOptSLAM::propagateFreeSpace() {
 
 bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
     
-	if (map_structure(y, x) == 1.0) { return false;	}
+	if (map_structure(y, x) == 1.0) return false;
 
     // Bresenham's line algorithm for line of sight checking
     int dx = std::abs(x - x_robot);
@@ -59,10 +58,10 @@ bool PoseGraphOptSLAM::isVisible(int x, int y, int x_robot, int y_robot) {
 
     while (true) {
 		// Clear line of sight
-        if (x_curr == x && y_curr == y) { return true; }
+        if (x_curr == x && y_curr == y) return true;
 
 		// Line of sight blocked by obstacle
-        if (map_structure(y_curr, x_curr) == 1.0) { return false; }
+        if (map_structure(y_curr, x_curr) == 1.0) return false;
 
         int e2 = 2 * err;
         if (e2 > -dy) {
@@ -97,10 +96,8 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 			
 			// If Beam is within Map range
-			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height)) {
-				
+			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height))
 				map_structure(beam_index[1], beam_index[0]) = 1.f;
-			}
 		}
 		Pose_Graph.iterator_next();
 	}
@@ -164,9 +161,8 @@ void PoseGraphOptSLAM::AddPoseToGraph(Pose pose, PoseEdge edge) {
 	bool connected = true;
 
 	//  If initial pose, graph starts as unconnected
-	if (Pose_Graph.Get_NumOfVertices() == 0) {
+	if (Pose_Graph.Get_NumOfVertices() == 0)
 		connected = false;
-	}
 		
 	// Else create new edge
 	else {
@@ -202,7 +198,6 @@ bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 		
 		// If node is within valid loop closure Radius: Track the closest of all nodes in range.
 		if (dist < ClosureDistance && (dist < min_dist)) {
-
 			min_dist = dist;
 			closest_vertex_idx = i;
 		}
@@ -248,10 +243,8 @@ VectorXf PoseGraphOptSLAM::GetErrorVector(VectorXf Pose_i, VectorXf Pose_j, Vect
 void PoseGraphOptSLAM::Build_ErrorFunction() {
 	
 	// Initialize each element in X as an Auto-Diff Object (Equivalent to a variable 'x')
-	for (size_t i = 0; i < (PoseDimensions * 2); i++) {
-		
+	for (size_t i = 0; i < (PoseDimensions * 2); i++)
 		X[i] = AD<float>(0);
-	}
 
 	// Declare variables as Independent Variables. And Start Recording (A Gradient Tape Process).
 		// Gradient Tape Process: Creates an Operation Sequence
@@ -296,7 +289,6 @@ HbResults PoseGraphOptSLAM::Build_LinearSystem(VectorXf pose_i, VectorXf pose_j,
 	
 	
 	// STEP 2: Compute the Jacobian of the Error Function ------------------------
-	
 	// Create vector of variables Jacobian will be calculated with respect to ( J(x) ).
 	// Holds the value of the corresponding Independent Variable's index.
 	// (e.g., 0 = X[0], 1 = X[1], etc.)
@@ -413,7 +405,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		//std::cout << pose.TransformationMatrix << "\n"; // Test
 	}
 
-	else { return false; }
+	else return false;
 
 	AddPoseToGraph(pose, edge);
 
@@ -479,12 +471,8 @@ void PoseGraphOptSLAM::Optimize() {
 		StateVector = StateVector + StateVectorIncrement;
 
 		iteration++;
-
 	}
-
-
 	ConvertStateVector();
-	
 }
 
 
@@ -515,7 +503,6 @@ void PoseGraphOptSLAM::ConvertStateVector() {
 			Pose_Graph.Update_EdgeData(i, j, edge);
 		}
 	}
-
 }
 
 

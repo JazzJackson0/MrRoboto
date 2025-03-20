@@ -120,7 +120,7 @@ VectorXf DynamicWindowApproach::Optimize(std::vector<Velocities> vels) {
     VectorXf best_vel(2);
 
     if (vels.size() == 0) {
-        std::cout << "No permissible velocities available" << std::endl;
+        std::cerr << "No permissible DWA velocities available" << std::endl;
         best_vel << 0, 0;
         return best_vel;
     }
@@ -167,12 +167,12 @@ void DynamicWindowApproach::Set_TranslationalVelocityLimits(float min_vel, float
     TransVelInterval = vel_interval;
 
     if (min_vel == 0) { 
-        std::cout << "Warning. Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
+        std::cerr << "WARNING: Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
         MinTransVel = 0.1;
     }
 
     if (max_vel == 0) { 
-        std::cout << "Warning. Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
+        std::cerr << "WARNING: Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
         MaxTransVel = 0.5;
     }
     
@@ -186,12 +186,12 @@ void DynamicWindowApproach::Set_RotationalVelocityLimits(float min_vel, float ma
     RotVelInterval = vel_interval;
 
     if (min_vel == 0) { 
-        std::cout << "Warning. Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
+        std::cerr << "WARNING: Min Velocity must be greater than 0. Setting min vel to 0.1" << std::endl; 
         MinRotVel = 0.1;
     }
 
     if (max_vel == 0) { 
-        std::cout << "Warning. Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
+        std::cerr << "WARNING: Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
         MaxRotVel = 0.5;
     }
 }

@@ -78,12 +78,15 @@
 #define KP 0.1
 #define KI 0.01 
 #define KD 0.001
-#define MIN_OUTPUT_VAL 0
-#define MAX_OUTPUT_VAL 1
+#define MIN_OUTPUT_VAL -100
+#define MAX_OUTPUT_VAL 100
+#define MAX_OUTOUT_VAL_INV (1 / MAX_OUTPUT_VAL)
 
 // Odometry Parameters
 #define ODOM_TRACKWIDTH 1
 #define ODOM_TIMESTEP 0.1
+
+#define MAX_WHEEL_VEL 30
 
 
 

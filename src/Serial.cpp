@@ -37,7 +37,7 @@ int8_t Serial::PinInit(uint8_t gpioNum, int pinDirection) {
     file = fopen(path.c_str(), "w");
 
     if (file == ((void*)0)) {
-        std::cerr << "Unable to open file. Cannot initialize pin " << std::to_string(gpioNum) << std::endl;
+        std::cerr << "ERROR: Unable to open file. Cannot initialize pin " << std::to_string(gpioNum) << std::endl;
         return -1;
     }
 
@@ -55,13 +55,13 @@ int8_t Serial::UARTInit(uint8_t uartNum) {
 
     std::string path = "/dev/serial" + std::to_string(uartNum);
     if((uart_buses[uartNum] = open(path.c_str(), O_RDWR | O_NDELAY, O_NOCTTY)) < 0) {
-        std::cerr << "Unable to open file. Cannot initialize serial/uart-" << std::to_string(uartNum) << std::endl;
+        std::cerr << "ERROR: Unable to open file. Cannot initialize serial/uart-" << std::to_string(uartNum) << std::endl;
         return -1;
     }
 
     // Retrieve & Save current tty terminal settings for uart device
     if (tcgetattr(uart_buses[uartNum], &default_terminal_settings[uartNum]) != 0) {
-        std::cerr << "Failed to get UART attributes." << std::endl;
+        std::cerr << "ERROR: Failed to get UART attributes." << std::endl;
         close(uart_buses[uartNum]);
         return -1;
     }
@@ -88,7 +88,7 @@ int8_t Serial::UARTInit(uint8_t uartNum) {
     // Apply Serial Port Settings
     tcflush(uart_buses[uartNum], TCIFLUSH); // TCIFLUSH: Flush uart's input-data buffer
     if (tcsetattr(uart_buses[uartNum], TCSANOW, &settings) != 0) { // TCSANOW: Apply settings immediately
-        std::cerr << "Failed to set UART attributes." << std::endl;
+        std::cerr << "ERROR: Failed to set UART attributes." << std::endl;
         close(uart_buses[uartNum]);
         return -1;
     }
@@ -118,13 +118,13 @@ int8_t Serial::I2CInit(uint8_t i2cNum, uint8_t slaveAddress) {
     i2c_buses[i2cNum] = open(path.c_str(), O_RDWR);
 
     if(i2c_buses[i2cNum] < 0) {
-        std::cerr << "Unable to open I2C bus. Cannot initialize i2c-" << std::to_string(i2cNum) << "(" <<strerror(errno) << ")" << std::endl;
+        std::cerr << "ERROR: Unable to open I2C bus. Cannot initialize i2c-" << std::to_string(i2cNum) << "(" <<strerror(errno) << ")" << std::endl;
         return -1;
     }
 	
 	// Setup I2C Bus
 	if (ioctl(i2c_buses[i2cNum], I2C_SLAVE, slaveAddress) < 0) {
-		std::cerr << "Failed to connect to I2C device at slave address 0x" << std::hex << (int)slaveAddress 
+		std::cerr << "ERROR: Failed to connect to I2C device at slave address 0x" << std::hex << (int)slaveAddress 
             << "(" <<strerror(errno) << ")" << std::endl;
         close(i2c_buses[i2cNum]);
         return -1;
@@ -149,25 +149,25 @@ int8_t Serial::SPIInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint
     std::string path = "/dev/spidev0." + std::to_string(spiNum);
     
     if(spi_buses[spiNum] = open(path.c_str(), O_RDWR) < 0) {
-        std::cerr << "Unable to open file. Cannot initialize spi-" << std::to_string(spiNum) << std::endl;
+        std::cerr << "ERROR: Unable to open file. Cannot initialize spi-" << std::to_string(spiNum) << std::endl;
         return -1;
     }
 	
     // Setup the SPI Bus----------------------------------------------
 	if (ioctl(spi_buses[spiNum], SPI_IOC_WR_MODE, &mode) < 0) {
-		std::cerr << "Failed to set SPI Mode" << std::endl;
+		std::cerr << "ERROR: Failed to set SPI Mode" << std::endl;
         close(spi_buses[spiNum]);
         return -1;
 	}
 
     if (ioctl(spi_buses[spiNum], SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
-		std::cerr << "Failed to set SPI Mode" << std::endl;
+		std::cerr << "ERROR: Failed to set SPI Mode" << std::endl;
         close(spi_buses[spiNum]);
         return -1;
 	}
 
     if (ioctl(spi_buses[spiNum], SPI_IOC_WR_BITS_PER_WORD, &bits) < 0) {
-		std::cerr << "Failed to set SPI Mode" << std::endl;
+		std::cerr << "ERROR: Failed to set SPI Mode" << std::endl;
         close(spi_buses[spiNum]);
         return -1;
 	}
@@ -193,11 +193,11 @@ int8_t Serial::PinWrite(uint8_t gpioNum, uint8_t pinState) {
     file = fopen(path.c_str(), "w");
 
     if (file == ((void*)0)) {
-        std::cerr << "Unable to open file. Cannot set state of pin " << std::to_string(gpioNum) << std::endl;
+        std::cerr << "ERROR: Unable to open file. Cannot set state of pin " << std::to_string(gpioNum) << std::endl;
         return -1;
     }
 
-    if (pinState != 1 && pinState != 0) { std::cerr << "Invalid Pin State. HIGH = 1, LOW = 0" << std::endl; }
+    if (pinState != 1 && pinState != 0) { std::cerr << "ERROR: Invalid Pin State. HIGH = 1, LOW = 0" << std::endl; }
     else { fprintf(file, "%d", pinState); }
 
     fclose(file);
@@ -217,7 +217,7 @@ int8_t Serial::PinRead(uint8_t gpioNum) {
     file = fopen(path.c_str(), "r");
 
     if (file == ((void*)0)) {
-        std::cerr << "Unable to open file. Cannot determine state of pin " << std::to_string(gpioNum) << std::endl;
+        std::cerr << "ERROR: Unable to open file. Cannot determine state of pin " << std::to_string(gpioNum) << std::endl;
         return -1;
     }
 
@@ -232,7 +232,7 @@ int8_t Serial::PinRead(uint8_t gpioNum) {
 int8_t Serial::UARTWrite(uint8_t uartNum, char* data, int datalen) {
 
     if (write(uart_buses[uartNum], data, datalen) != datalen) {
-        std::cerr << "Failed to write" << std::endl;
+        std::cerr << "ERROR: Failed to write" << std::endl;
         return 0;
     }
     return 1;
@@ -242,7 +242,7 @@ int8_t Serial::UARTWrite(uint8_t uartNum, char* data, int datalen) {
 int8_t Serial::UARTRead(uint8_t uartNum, char* data, int datalen) {
 
     if (write(uart_buses[uartNum], data, datalen) != datalen) {
-        std::cerr << "Failed to write" << std::endl;
+        std::cerr << "ERROR: Failed to write" << std::endl;
         return 0;
     }
     return 1;
@@ -254,11 +254,11 @@ int8_t Serial::I2CWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     int bytesWritten = write(i2c_buses[i2cNum], dataBytes, byteNum);
     
     if (bytesWritten < 0) {
-        std::cerr << "Failed to write to I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
+        std::cerr << "ERROR: Failed to write to I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
         return 0;
     } 
     else if (bytesWritten != byteNum) {
-        std::cerr << "Warning: Expected to write " << byteNum << " bytes. Only wrote " << bytesWritten << std::endl;
+        std::cerr << "WARNING: Expected to write " << byteNum << " bytes. Only wrote " << bytesWritten << std::endl;
     }
         
     return 1;
@@ -270,11 +270,11 @@ int8_t Serial::I2CRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     int bytesRead = read(i2c_buses[i2cNum], dataBytes, byteNum);
     
     if (bytesRead < 0) {
-        std::cerr << "Failed to read from I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
+        std::cerr << "ERROR: Failed to read from I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
         return 0;
     } 
     else if (bytesRead != byteNum) {
-        std::cerr << "Warning: Expected " << byteNum << " bytes but received " << bytesRead << std::endl;
+        std::cerr << "WARNING: Expected " << byteNum << " bytes but received " << bytesRead << std::endl;
     }
         
     return 1;
@@ -322,7 +322,7 @@ int Serial::SPITransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
 
     // Transfer Data
     if (ioctl(spi_buses[spiNum], SPI_IOC_MESSAGE(len), spi_info) < 0) {
-        std::cerr << "Failed transfer data over SPI" << std::endl;
+        std::cerr << "ERROR: Failed transfer data over SPI" << std::endl;
         close(spi_buses[spiNum]);
         return -1;
     }
@@ -346,7 +346,7 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
     FILE *export_file;
     export_file = fopen(pwm_export.c_str(), "w");
     if (export_file == ((void*)0)) {
-        std::cerr << "Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
+        std::cerr << "ERROR: Unable to open 'export' file for chip " << std::to_string(chipNum) << std::endl;
         return -1;
     }
     fprintf(export_file, std::to_string(pwmNum).c_str());
@@ -358,17 +358,17 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
 
 
     if (enable_file == ((void*)0)) {
-        std::cerr << "Unable to open 'enable' file for chip " << std::to_string(chipNum) << std::endl;
+        std::cerr << "ERROR: Unable to open 'enable' file for chip " << std::to_string(chipNum) << std::endl;
         return -1;
     }
 
     if (period_file == ((void*)0)) {
-        std::cerr << "Unable to open 'period' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
+        std::cerr << "ERROR: Unable to open 'period' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
         return -1;
     }
 
     if (dutycycle_file == ((void*)0)) {
-        std::cerr << "Unable to open 'duty_cycle' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
+        std::cerr << "ERROR: Unable to open 'duty_cycle' file for chip " << std::to_string(chipNum) << "pwm " << std::to_string(pwmNum) << std::endl;
         return -1;
     }
 
@@ -410,7 +410,7 @@ int Serial::PWMUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle) {
     dutycycle_file = fopen(pwm_dutycycle.c_str(), "w");
 
     if (dutycycle_file == ((void*)0)) {
-        std::cerr << "Unable to open 'duty_cycle' file for chip " << std::to_string(chipNum) << " pwm " << std::to_string(pwmNum) << std::endl;
+        std::cerr << "ERROR: Unable to open 'duty_cycle' file for chip " << std::to_string(chipNum) << " pwm " << std::to_string(pwmNum) << std::endl;
         return -1;
     }
 

@@ -50,7 +50,6 @@ int OccupancyGridMap::Get_MostSimilarBeam(std::vector<VectorXf> beams, ogrid::Ce
 		heading += abs(beams[i][1] - cell_bearing); // Angle Difference
 
 		if (heading < min_heading) { 
-			
 			min_heading = heading;
 			index = i;
 		}
@@ -77,7 +76,7 @@ OccupancyGridMap::OccupancyGridMap(int m, int n, float alpha, float beta, float 
 
 Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMap(VectorXf pose, std::vector<VectorXf> scan) {
 
-	auto start = std::chrono::high_resolution_clock::now();
+	// auto start = std::chrono::high_resolution_clock::now();
 
 	Pose = map_builder.MapCoordinate_to_DataStructureIndex(pose.head<2>());
 	PoseAngle = pose[2];
@@ -94,9 +93,9 @@ Eigen::Tensor<float, 2> OccupancyGridMap::UpdateGridMap(VectorXf pose, std::vect
 		}
 	}
 
-	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << "Map Made!!!!" << "\n";
-	std::cout << "Map Build Time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " sec" << std::endl;
+	// auto end = std::chrono::high_resolution_clock::now();
+	// std::cout << "Map Made!!!!" << "\n";
+	// std::cout << "Map Build Time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " sec" << std::endl;
 
 	return GridMap;
 }

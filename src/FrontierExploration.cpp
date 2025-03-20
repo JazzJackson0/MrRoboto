@@ -74,8 +74,7 @@ int FrontierExplorer::Get_CellStatus(VectorXi point, int map_frontier) {
     int col = point[0];
 
     if (!isValid(row, col)) {
-        std::cout << "Cell (" << row << ", "<< col << ") Out of Bounds [Cannot Find Frontier]" << std::endl;
-        std::cout << "M: " << M << " x  N: " << N << std::endl;
+        std::cerr << "ERROR: Cell (" << row << ", "<< col << ") Out of Bounds [Cannot Find Frontier]" << std::endl;
     }
     
     if (map_frontier == MAP_STATUS) 
@@ -94,8 +93,7 @@ void FrontierExplorer::Update_CellStatus(VectorXi point, int map_frontier, int s
     int col = point[0];
 
     if (!isValid(row, col)) {
-        std::cout << "Cell (" << row << ", "<< col << ") Out of Bounds [Cannot Find Frontier]" << std::endl;
-        std::cout << "M: " << M << " x  N: " << N << std::endl;
+        std::cerr << "ERROR: Cell (" << row << ", "<< col << ") Out of Bounds [Cannot Find Frontier]" << std::endl;
         return;
     }
     

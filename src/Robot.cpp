@@ -220,21 +220,20 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         VectorXf odom_vels = odom->Get_NewRawVelocities();
         odom_lock.unlock();
         VectorXf vels = d_window->Run(pos, cloud, odom_vels);
-        std::cout << "Best Local Velocities: " << vels.transpose() << std::endl;
-
-        float setpoint_vel_r = (2 * vels[0] + vels[1] * trackwidth) / (2 * wheel_radius);
-        float setpoint_vel_l = (2 * vels[0] - vels[1] * trackwidth) / (2 * wheel_radius);
-
+        
+        // Determine Wheel Angular Velocities (w_l & w_r)
         float current_vel_r = (2 * odom_vels[0] + odom_vels[1] * trackwidth) / (2 * wheel_radius);
         float current_vel_l = (2 * odom_vels[0] - odom_vels[1] * trackwidth) / (2 * wheel_radius);
-
-        std::cout << "CURENT VELOCITIES: Right-> " << current_vel_r << " Left-> " << current_vel_l << std::endl;
-        std::cout << "CURENT SETPOINTS: Right-> " << setpoint_vel_r << " Left-> " << setpoint_vel_l << std::endl;
-
+        float setpoint_vel_r = (2 * vels[0] + vels[1] * trackwidth) / (2 * wheel_radius);
+        float setpoint_vel_l = (2 * vels[0] - vels[1] * trackwidth) / (2 * wheel_radius);
         float right_wheel_duty_cycle = pid_right->PID_Update(setpoint_vel_r, current_vel_r);
         float left_wheel_duty_cycle = pid_left->PID_Update(setpoint_vel_l, current_vel_l);
 
-        std::cout << "PID Right OUT: " << right_wheel_duty_cycle << " PID Left OUT: " << left_wheel_duty_cycle << std::endl;
+        std::cout << "Current Velocities: " << odom_vels.transpose() << "\n";
+        std::cout << "Goal Velocities: " << vels.transpose() << "\n";
+        std::cout << "CURENT WHEEL SPEEDS: Right-> " << current_vel_r << " Left-> " << current_vel_l << "\n";
+        std::cout << "GOAL WHEEL SPEEDS: Right-> " << setpoint_vel_r << " Left-> " << setpoint_vel_l << "\n";
+        std::cout << "PID Right UPDATE SPEED: " << right_wheel_duty_cycle << " PID Left UPDATE SPEED: " << left_wheel_duty_cycle << std::endl;
 
         // Motor Out
         uint32_t left_wheel_duty_cycle_temp = *((uint32_t*) (&left_wheel_duty_cycle));
@@ -269,12 +268,13 @@ void Robot::RunSLAM(int algorithm) {
         if (algorithm == POSE_GRAPH) {
             
             Eigen::Tensor<float, 2> new_map = slam1->Run(cloud);
-            // std::cout << current_map << std::endl;
+            // std::cout << current_map << "\n";
             // std::cout << std::endl;
             
             std::unique_lock<std::mutex> map_lock(map_mutex);
             current_map = new_map;
             map_lock.unlock();
+
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
@@ -473,32 +473,51 @@ Robot::Robot() {
 
     // Create a LIDAR driver instance
     lidar = RPlidarDriver::CreateDriver();
-    auto res = lidar->connect("/dev/ttyUSB0", 115200);
+    std::string usb0 = "/dev/ttyUSB0";
+    std::string usb1 = "/dev/ttyUSB1";
+    std::string usb = usb0;
+    int attempts = 1;
 
-    if(SL_IS_OK(res)) { 
-    //if(SL_IS_OK(lidar->connect(_channel))) { 
+    while (attempts <= 2) {
         
-        // lidar->stopMotor();
-        //lidar->setMotorSpeed(0);
+        if (attempts > 1) fprintf(stderr, "Retrying...\n");   
 
-        // Display Device Info
-        sl_lidar_response_device_info_t deviceInfo;
-        auto res2 = lidar->getDeviceInfo(deviceInfo);
-        
-        if(SL_IS_OK(res2)) {
+        auto res = lidar->connect(usb.c_str(), 115200);
+
+        if(SL_IS_OK(res)) { 
+        //if(SL_IS_OK(lidar->connect(_channel))) { 
             
-            // printf("Model: %d, Firmware Version: %d.%d, Hardware Version: %d\n",
-            // deviceInfo.model,
-            // deviceInfo.firmware_version >> 8, deviceInfo.firmware_version & 0xffu,
-            // deviceInfo.hardware_version);
+            // lidar->stopMotor();
+            //lidar->setMotorSpeed(0);
+
+            // Display Device Info
+            sl_lidar_response_device_info_t deviceInfo;
+            auto res2 = lidar->getDeviceInfo(deviceInfo);
+            
+            if(SL_IS_OK(res2)) {
+                
+                // printf("Model: %d, Firmware Version: %d.%d, Hardware Version: %d\n",
+                // deviceInfo.model,
+                // deviceInfo.firmware_version >> 8, deviceInfo.firmware_version & 0xffu,
+                // deviceInfo.hardware_version);
+                attempts = 3;
+            }
+            
+            else {
+                fprintf(stderr, "Failed to get device information from LIDAR %08x\r\n", res);   
+                usb = usb1; 
+                attempts++; 
+            }
+                
         }
         
-        else 
-            fprintf(stderr, "Failed to get device information from LIDAR %08x\r\n", res);     
+        else {
+            fprintf(stderr, "Failed to connect to LIDAR %08x\r\n", res);
+            usb = usb1;  
+            attempts++; 
+        }
     }
     
-    else 
-        fprintf(stderr, "Failed to connect to LIDAR %08x\r\n", res);
 
     // Set Up NodeCount for Scan Data
     nodeCount = sizeof(nodes) / sizeof(sl_lidar_response_measurement_node_hq_t);

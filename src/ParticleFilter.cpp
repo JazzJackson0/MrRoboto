@@ -143,14 +143,14 @@ void ParticleFilter::Generate_ParticleWeight(PointCloud robot_pointcloud, Partic
 
 			// std::cout << "Weight: " << (float) weight << std::endl;
 
-			if (weight > beam_weight) { beam_weight = weight; }
+			if (weight > beam_weight) beam_weight = weight;
 
 		}
 
 		// Final Particle Weight
 		particle_weight += beam_weight;
 		// Normalize particle weight based on num of beams in scan
-		if (robot_pointcloud.points.size() > 0) { particle_weight /= robot_pointcloud.points.size(); }
+		if (robot_pointcloud.points.size() > 0) particle_weight /= robot_pointcloud.points.size();
 		// Square particle weight so the best particles are more likely ot be resampled.
 		particle_weight *= particle_weight;
 

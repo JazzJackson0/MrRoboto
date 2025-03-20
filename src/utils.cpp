@@ -6,7 +6,7 @@
 AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
     
     if (R.cols() != 3 && R.rows() != 3) {
-        std::cerr << "Rotation Matrix dimensions should be 3x3. Cannot convert to angle." << std::endl;
+        std::cerr << "ERROR: Rotation Matrix dimensions should be 3x3. Cannot convert to angle." << std::endl;
         VectorXf fail_axis(3);
         fail_axis << -1, -1, -1;
         float fail_angle = -1;
@@ -22,10 +22,8 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
     
 
     // Singularity
-    if (angle == 0.0) {
-
+    if (angle == 0.0)
         rot_axis << 0, 0, 1;
-    }
 
     // Singularity (angle is 180 or very close to it)
     else if (sinAngle == 1e-6) {
@@ -45,22 +43,18 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
         // Calculate the axis vector
         float v_a = 0.5 * sqrt(max(0, (1 + R(0, 0) - R(1, 1) - R(2, 2))));
 
-        if (largest == R(0, 0)) {
+        if (largest == R(0, 0))
             rot_axis << v_a, ((R(0, 1) + R(1, 0)) / (2 * v_a)), ((R(0, 2) + R(2, 0)) / (2 * v_a));
-        }
 
-        else if (largest == R(1, 1)) {
+        else if (largest == R(1, 1))
             rot_axis << ((R(0, 1) + R(1, 0)) / (-2 * v_a)), v_a, ((R(0, 2) + R(2, 0)) / (-2 * v_a));
-        }
 
-        else {
+        else
             rot_axis << ((R(0, 2) + R(2, 0)) / (-2 * v_a)), ((R(1, 2) + R(2, 1)) / (-2 * v_a)), v_a;
-        }
     }
 
-    else {
+    else
         rot_axis = (1 / (2 * sin(angle))) * R_diff;
-    }
 
     // Normalize
     rot_axis = rot_axis / (sqrt(rot_axis.dot(rot_axis)));
@@ -72,7 +66,7 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
 float RotationMatrix2D_to_Angle(MatrixXf R) {
     
     if (R.cols() != 2 && R.rows() != 2) {
-        std::cerr << "Rotation Matrix dimensions should be 2x2. Cannot convert to angle." << std::endl;
+        std::cerr << "ERROR: Rotation Matrix dimensions should be 2x2. Cannot convert to angle." << std::endl;
         return -1;
     }
 

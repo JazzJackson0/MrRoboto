@@ -203,7 +203,7 @@ GeneralFormLine FeatureExtractor::ODRFit(std::vector<Point> laser_points) {
 
         // Indefinite: sXX == sXY
         else {
-            std::cerr << "ODRFit Error: Indefinite Line" << std::endl;
+            std::cerr << "ODRFit ERROR: Indefinite Line" << std::endl;
             fit_line.err = 1;
             return fit_line;
         }

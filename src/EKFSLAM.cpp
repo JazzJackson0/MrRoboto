@@ -25,9 +25,8 @@ void EKFSlam::propagateFreeSpace() {
             int ny = y + dir[1];
 
             // Check bounds
-            if (nx < 0 || nx >= map_width || ny < 0 || ny >= map_height) {
+            if (nx < 0 || nx >= map_width || ny < 0 || ny >= map_height)
                 continue;
-            }
 
             // Check if within the robot's view range
             if (std::hypot((nx - x_robot), (ny - y_robot)) < VIEW_RANGE) {
@@ -45,7 +44,7 @@ void EKFSlam::propagateFreeSpace() {
 
 bool EKFSlam::isVisible(int x, int y, int x_robot, int y_robot) {
     
-	if (map_structure(y, x) == 1.0) { return false;	}
+	if (map_structure(y, x) == 1.0) return false;
 
     // Bresenham's line algorithm for line of sight checking
     int dx = std::abs(x - x_robot);
@@ -59,10 +58,10 @@ bool EKFSlam::isVisible(int x, int y, int x_robot, int y_robot) {
 
     while (true) {
 		// Clear line of sight
-        if (x_curr == x && y_curr == y) { return true; }
+        if (x_curr == x && y_curr == y) return true;
 
 		// Line of sight blocked by obstacle
-        if (map_structure(y_curr, x_curr) == 1.0) { return false; }
+        if (map_structure(y_curr, x_curr) == 1.0) return false;
 
         int e2 = 2 * err;
         if (e2 > -dy) {
@@ -570,13 +569,13 @@ void EKFSlam::SetInitialState(Eigen::VectorXf initial_position, float _process_u
 Eigen::Tensor<float, 2> EKFSlam::Run(PointCloud current_scan, ControlCommand ctrl) {
 	
 	if (!map_state_set) {
-		std::cerr << "Error: Map Dimensions have not been set for EKF. Cancelling..." << std::endl;
+		std::cerr << "ERROR: Map Dimensions have not been set for EKF. Cancelling..." << std::endl;
 		map_structure = Eigen::Tensor<float, 2>(1, 1);
 		return map_structure;
 	}
 	
 	if (!initial_state_set) {
-		std::cerr << "Error: Initial States have not been set for EKF. Cancelling..." << std::endl;
+		std::cerr << "ERROR: Initial States have not been set for EKF. Cancelling..." << std::endl;
 		return map_structure;
 
 	}

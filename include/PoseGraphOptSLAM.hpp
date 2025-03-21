@@ -10,6 +10,7 @@
 #include <cppad/cppad.hpp>
 #include <cppad/utility/sparse2eigen.hpp>
 #include "unsupported/Eigen/CXX11/Tensor"
+#include <omp.h>
 #include "Graph.hpp"
 #include "ICP.hpp"
 #include "MapBuilder.hpp"

@@ -83,20 +83,22 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 	// std::cout << "Previous Pose: " << PreviousPose << std::endl;
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.head<2>());
 	// std::cout << "Robot Index: " << robot_index.transpose() << std::endl;
-	VectorXf point(2);
-	VectorXi beam_index;
-
+	
+	#pragma omp parallel for collapse(2)
 	for (int i = 0; i < Correspondence.size(); i++) {
 
 		for (int j = 0; j < Correspondence[i].line_seg.points.size(); j++) {
-
-			point << Correspondence[i].line_seg.points[j].x, Correspondence[i].line_seg.points[j].y;
-			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
+			
+			VectorXf point{Correspondence[i].line_seg.points[j].x, Correspondence[i].line_seg.points[j].y};
+			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 
 			// If Beam is within Map range
 			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height)) {	
-				map_structure_mask(beam_index[1], beam_index[0]) = 1.f;
-				map_structure(beam_index[1], beam_index[0]) = 1.f;
+				#pragma omp critical 
+				{
+					map_structure_mask(beam_index[1], beam_index[0]) = 1.f;
+					map_structure(beam_index[1], beam_index[0]) = 1.f;
+				}
 			}
 		}
 	}

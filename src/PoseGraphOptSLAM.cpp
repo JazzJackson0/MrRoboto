@@ -82,23 +82,26 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::UpdateMap() {
 	map_structure_mask.setConstant(0.5);
 
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.pose.head<2>());
-	VectorXf point;
-	VectorXi beam_index;
+	// VectorXf point;
+	// VectorXi beam_index;
 	
 	Pose_Graph.iterator_start();
 	while (Pose_Graph.iterator_hasNext()) {
 
 		Pose pose = Pose_Graph.iterator_get_data();
-
+		#pragma omp parallel for
 		for (int i = 0; i < pose.Landmarks.points.size(); i++) {
 			
-			point = pose.Landmarks.points[i];
-			beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
+			VectorXf point = pose.Landmarks.points[i];
+			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 			
 			// If Beam is within Map range
 			if ((beam_index[0] >= 0 && beam_index[0] < map_width) && (beam_index[1] >= 0 && beam_index[1] < map_height)) {
-				map_structure_mask(beam_index[1], beam_index[0]) = 1.f;
-				map_structure(beam_index[1], beam_index[0]) = 1.f;
+				#pragma omp critical 
+				{
+					map_structure_mask(beam_index[1], beam_index[0]) = 1.f;
+					map_structure(beam_index[1], beam_index[0]) = 1.f;
+				}
 			}	
 		}
 		Pose_Graph.iterator_next();
@@ -147,7 +150,6 @@ void PoseGraphOptSLAM::UpdateStateVector() {
 			StateVector[stateVecIndex] = translation(j);
 			stateVecIndex++;
 		}
-			
 		
 		StateVector[stateVecIndex] = angle_axis.first;
 		stateVecIndex++;
@@ -188,7 +190,7 @@ bool PoseGraphOptSLAM::CheckForLoopClosure(Pose pose) {
 	float dist;
 	
 	// No Loop Closure Happening
-	if (Pose_Graph.Get_NumOfVertices() <= NRecentPoses) { return false; }
+	if (Pose_Graph.Get_NumOfVertices() <= NRecentPoses) return false;
 
 	// Loop Closure Process Start-------------------------------------------------------------------------------
 	float min_dist = std::numeric_limits<float>::max();
@@ -405,6 +407,8 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		pose.TransformationMatrix.topRightCorner(2, 1) = t;
 
 		//std::cout << pose.TransformationMatrix << "\n"; // Test
+		if (std::isnan(pose.pose[0]) || std::isnan(pose.pose[1]) || std::isinf(pose.pose[0]) || std::isinf(pose.pose[1]))
+			std::cerr << "ERROR: Bad Pose Data from ICP Front End: " << pose.pose.transpose() << "\n";
 	}
 
 	else return false;
@@ -552,8 +556,9 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 		// return UpdateMap();
 		Eigen::Tensor<float, 2> temp_map = UpdateMap();
 		auto end = std::chrono::high_resolution_clock::now();
-    	std::cout << "Map Update Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us#########################################################################################" 
+    	std::cout << "Map Update Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms#########################################################################################" 
 			<< std::endl;
+		std::cout << "NUM OF POSES: " << Pose_Graph.Get_NumOfVertices() << std::endl;
 		return temp_map;
 	}
 
@@ -564,8 +569,9 @@ Eigen::Tensor<float, 2> PoseGraphOptSLAM::Run(PointCloud current_landmarks) {
 		// return UpdateMap();
 		Eigen::Tensor<float, 2> temp_map = UpdateMap();
 		auto end = std::chrono::high_resolution_clock::now();
-    	std::cout << "Map Update Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us#########################################################################################" 
+    	std::cout << "Map Update Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms#########################################################################################" 
 			<< std::endl;
+		std::cout << "NUM OF POSES: " << Pose_Graph.Get_NumOfVertices() << std::endl;
 		return temp_map;
 	}
 		
@@ -582,7 +588,9 @@ void PoseGraphOptSLAM::Set_MapDimensions(int height, int width) {
 }
 
 VectorXf PoseGraphOptSLAM::BroadcastCurrentPose() {
-	std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ POSE: " << PreviousPose.pose.transpose() << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl; 
+	 
+	if (std::isnan(PreviousPose.pose[0]) || std::isnan(PreviousPose.pose[1]) || std::isinf(PreviousPose.pose[0]) || std::isinf(PreviousPose.pose[1]))
+		std::cerr << "ERROR: POSE: " << PreviousPose.pose.transpose() << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#########################@@@@@@@@@@@@@@@@@@@@" << std::endl;
 	return PreviousPose.pose;
 }
 

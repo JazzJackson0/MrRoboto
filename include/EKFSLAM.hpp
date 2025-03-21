@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <cmath>
+#include <omp.h>
 
 #include <Eigen/Dense>
 #include <Eigen/src/Core/Matrix.h>

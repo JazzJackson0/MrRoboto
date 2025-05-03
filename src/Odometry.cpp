@@ -84,7 +84,7 @@ VectorXf Odom::Get_NewRawVelocities() {
     new_velocity << rot, trans;
 
     // Test 
-    // std::cout << "OOOOOOOOOODDDDDDDOOOOOOOOMMMMMMMMM FROM IMU!!!!!!!!!!!!!!!: " << rot << ", " << trans << std::endl;
+    std::cout << "OOOOOOOOOODDDDDDDOOOOOOOOMMMMMMMMM FROM IMU!!!!!!!!!!!!!!!: " << rot << ", " << trans << std::endl;
 
     delete imu_buffer;
     return new_velocity;

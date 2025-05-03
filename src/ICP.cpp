@@ -5,10 +5,8 @@ float ICP::Get_RootMeanSquaredError(PointCloud RefPointSet, PointCloud NewPointS
 	float rms_error = 0.f;
 	int n = RefPointSet.points.size();
 
-	for (int i = 0; i < n; i++) {
-
+	for (int i = 0; i < n; i++)
 		rms_error += Get_EuclideanDistance(RefPointSet.points[i], NewPointSet.points[i]);
-	}
 
 	return sqrt(rms_error / n);
 	// TODO: Squaring the data once here and once in 'Get_EuclideanDistance' might be a problem, look into it.
@@ -26,10 +24,8 @@ VectorXf ICP::Get_CenterOfMass(PointCloud p_cloud) {
 	float total_weight = std::accumulate(p_cloud.weights.begin(), p_cloud.weights.end(), 0.f);
 	float total_weight_inv = 1.0 / total_weight;
 
-	for (int i = 0; i < p_cloud.points.size(); i++) {
-
+	for (int i = 0; i < p_cloud.points.size(); i++)
 		center_mass += (p_cloud.points[i] * p_cloud.weights[i]) * total_weight_inv;
-	}
 
 	return center_mass;
 }
@@ -112,10 +108,8 @@ VectorXf ICP::GetErrorVector(VectorXf x_param, VectorXf ReferencePoint, VectorXf
 void ICP::BuildErrorFunction(VectorXf ReferencePoint, VectorXf NewPoint) {
 	
 	// Initialize each element in X as an Auto-Diff Object (Equivalent to a variable x)
-	for (size_t i = 0; i < ErrorDimension; i++) {
-		
+	for (size_t i = 0; i < ErrorDimension; i++)
 		X[i] = AD<float>(0);
-	}
 
 	// Declare variables as Independent Variables. And Start Recording (A Gradient Tape Process).
 		// Gradient Tape Process: Creates an Operation Sequence
@@ -147,9 +141,8 @@ MatrixXf ICP::CalculateJacobian(VectorXf ReferencePoint, VectorXf NewPoint, Vect
 	// Holds the value of the corresponding Independent Variable's index.
 	// (e.g., 0 = X[0], 1 = X[1], etc.)
 	std::vector<float> WithRespectTo(ErrorDimension);
-	for (size_t i = 0; i < ErrorDimension; i++) {
+	for (size_t i = 0; i < ErrorDimension; i++)
 		WithRespectTo[i] = x_update[i];
-	}
 		
 	// Compute the Jacobian***********
 	std::vector<float> jac(PoseDimension * ErrorDimension);
@@ -161,10 +154,8 @@ MatrixXf ICP::CalculateJacobian(VectorXf ReferencePoint, VectorXf NewPoint, Vect
 	int k = 0;
 	for (int i = 0; i < Jac.rows(); i++) {
 
-		for (int j = 0; j < Jac.cols(); j++) {
-
+		for (int j = 0; j < Jac.cols(); j++)
 			Jac(i, j) = jac[j + k];
-		}
 
 		k += Jac.cols();	
 	}
@@ -262,27 +253,23 @@ RotationTranslation ICP::RunICP_SVD(PointCloud RefPointCloud, PointCloud NewPoin
 
 		// Use the new Transformation to Align the point cloud: x_n = R(x_n - x_0) + y_0
 		for (int i = 0; i < TransformedPointCloud.points.size(); i++)
-		TransformedPointCloud.points[i] = (transformation.rotation_matrix * 
-			(point_sets.second.points[i] - Get_CenterOfMass(point_sets.second))) + (Get_CenterOfMass(point_sets.first));
+			TransformedPointCloud.points[i] = (transformation.rotation_matrix * 
+				(point_sets.second.points[i] - Get_CenterOfMass(point_sets.second))) + (Get_CenterOfMass(point_sets.first));
 			
 
 		// Calculate the new Error between the point clouds (Just the difference between the newly rotated point set and the reference point set)
 		int cloud_idx = 0;
 		for (int i = 0; i < TransformedPointCloud.points.size() * PoseDimension; i += PoseDimension) {
 
-			for (int j = 0; j < PoseDimension; j++) {
-
+			for (int j = 0; j < PoseDimension; j++)
 				error(i + j) = (TransformedPointCloud.points[cloud_idx][j] - point_sets.first.points[cloud_idx][j]);
-			}
 			cloud_idx++;
 		}
 		
 		// Calculate the New Error Norm (Error for the whole cloud)
 		prev_error_norm = error_norm;
-		for (int i = 0; i < TransformedPointCloud.points.size() * PoseDimension; i++) {
-
+		for (int i = 0; i < TransformedPointCloud.points.size() * PoseDimension; i++)
 			error_norm += error(i) * error(i);
-		}
 		error_norm = sqrt(error_norm);
 	}	
 

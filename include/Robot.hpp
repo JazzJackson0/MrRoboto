@@ -6,6 +6,7 @@
 #include <cmath>
 #include <string>
 #include <fstream>
+#include <memory>
 #include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
 #include "unsupported/Eigen/CXX11/Tensor"
@@ -117,20 +118,20 @@ namespace diffdrive {
             sl_lidar_response_measurement_node_hq_t nodes[8192]; // List of nodes, each representing a Lidar Beam
             size_t nodeCount; // Number of Nodes (i.e. Lidar Beams)
 
-            MapBuilder *map_builder;
-            PoseGraphOptSLAM *slam1; // LATER: Make this a generic SLAM Interface that can also take EKF 
-            EKFSlam *slam2;
-            ParticleFilter *pfilter;
-            A_Star *astar_path;
-            RRT *rrt_path;
-            OccupancyGridMap *og_map;
-            DynamicWindowApproach *d_window;
-            FrontierExplorer *frontier_explorer;
-            PID *pid_right;
-            PID *pid_left;
-            Odom *odom;
-            Serial *serial;
-            PathUtil *path_util;
+            std::unique_ptr<MapBuilder> map_builder;
+            std::unique_ptr<PoseGraphOptSLAM> slam1; // LATER: Make this a generic SLAM Interface that can also take EKF 
+            std::unique_ptr<EKFSlam> slam2;
+            std::unique_ptr<ParticleFilter> pfilter;
+            std::unique_ptr<A_Star> astar_path;
+            std::unique_ptr<RRT> rrt_path;
+            std::unique_ptr<OccupancyGridMap> og_map;
+            std::unique_ptr<DynamicWindowApproach> d_window;
+            std::unique_ptr<FrontierExplorer> frontier_explorer;
+            std::unique_ptr<PID> pid_right;
+            std::unique_ptr<PID> pid_left;
+            std::unique_ptr<Odom> odom;
+            std::unique_ptr<Serial> serial;
+            std::unique_ptr<PathUtil> path_util;
 
             // Robot Physical Dimensions
             float trackwidth;

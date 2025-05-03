@@ -53,12 +53,11 @@ void Robot::RawScan() {
 
     // Scan Failed
     if (IS_FAIL(res))
-        std::cout << "Failed to get scan data" << std::endl;
+        std::cerr << "ERROR: Failed to get scan data" << std::endl;
 
     // Scan Success
-    else {
+    else
         std::cout << "Scan Success" << std::endl; 
-    }
 }
 
 
@@ -107,9 +106,8 @@ PointCloud Robot::GetCloud(int broadcast_state) {
             cloud.kd_tree.AddData(point, (float)(nodes[i].quality >> 2));
         }
         
-        else if (broadcast_state == BROADCAST) {
+        else if (broadcast_state == BROADCAST)
             std::cout << x * 100 << ", " << y * 100 << std::endl; // Convert point from m to cm
-        }
     }
     cloud.mean_x /= cloud.points.size();
     cloud.mean_y /= cloud.points.size();
@@ -211,6 +209,7 @@ std::vector<VectorXi> Robot::CreatePath(int algorithm, Eigen::Tensor<float, 2> m
 
 void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos) {
 
+    float wheel_radius_inv = 1 / wheel_radius;
     for (int i = 0; i < smooth_waypoints.size(); i++) {
 
         d_window->Set_Goal(smooth_waypoints[i]);
@@ -222,18 +221,18 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         VectorXf vels = d_window->Run(pos, cloud, odom_vels);
         
         // Determine Wheel Angular Velocities (w_l & w_r)
-        float current_vel_r = (2 * odom_vels[0] + odom_vels[1] * trackwidth) / (2 * wheel_radius);
-        float current_vel_l = (2 * odom_vels[0] - odom_vels[1] * trackwidth) / (2 * wheel_radius);
-        float setpoint_vel_r = (2 * vels[0] + vels[1] * trackwidth) / (2 * wheel_radius);
-        float setpoint_vel_l = (2 * vels[0] - vels[1] * trackwidth) / (2 * wheel_radius);
+        float current_vel_r = (odom_vels[0] + ((odom_vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
+        float current_vel_l = (odom_vels[0] - ((odom_vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
+        float setpoint_vel_r = (vels[0] + ((vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
+        float setpoint_vel_l = (vels[0] - ((vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
         float right_wheel_duty_cycle = pid_right->PID_Update(setpoint_vel_r, current_vel_r);
         float left_wheel_duty_cycle = pid_left->PID_Update(setpoint_vel_l, current_vel_l);
 
-        std::cout << "Current Velocities: " << odom_vels.transpose() << "\n";
-        std::cout << "Goal Velocities: " << vels.transpose() << "\n";
-        std::cout << "CURENT WHEEL SPEEDS: Right-> " << current_vel_r << " Left-> " << current_vel_l << "\n";
-        std::cout << "GOAL WHEEL SPEEDS: Right-> " << setpoint_vel_r << " Left-> " << setpoint_vel_l << "\n";
-        std::cout << "PID Right UPDATE SPEED: " << right_wheel_duty_cycle << " PID Left UPDATE SPEED: " << left_wheel_duty_cycle << std::endl;
+        // std::cout << "Current Velocities: " << odom_vels.transpose() << "\n";
+        // std::cout << "Goal Velocities: " << vels.transpose() << "\n";
+        // std::cout << "CURENT WHEEL SPEEDS: Right-> " << current_vel_r << " Left-> " << current_vel_l << "\n";
+        // std::cout << "GOAL WHEEL SPEEDS: Right-> " << setpoint_vel_r << " Left-> " << setpoint_vel_l << "\n";
+        // std::cout << "PID Right UPDATE SPEED: " << right_wheel_duty_cycle << " PID Left UPDATE SPEED: " << left_wheel_duty_cycle << std::endl;
 
         // Motor Out
         uint32_t left_wheel_duty_cycle_temp = *((uint32_t*) (&left_wheel_duty_cycle));
@@ -241,12 +240,11 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
         char duty_cycle_buff[8] = {0};
         for (int i = 0; i < 8; i++) {
 
-            if (i < 4) {
+            if (i < 4)
                 duty_cycle_buff[i] = *((char*)&left_wheel_duty_cycle_temp + i);
-            }
-            else {
+
+            else
                 duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
-            }
         }   
 
         serial->UARTWrite(UART_NUM, duty_cycle_buff, 8);
@@ -331,25 +329,23 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
     if (!stereo) {
 
         // Open a video capture device (0 for the default webcam)
-        if (!cap.open(0)) {
-            std::cerr << "Error: Could not open video capture device." << std::endl;
-        }
+        if (!cap.open(0))
+            std::cerr << "ERROR: Could not open video capture device.\n";
 
         while (true) {
 
             cv::Mat frame;
             cap >> frame;
             if (frame.empty()) {
-                std::cerr << "Error: No frame captured." << std::endl;
+                std::cerr << "ERROR: No frame captured.\n";
                 break;  // Exit if no frame is captured
             }
 
             v_slam->RunMono(frame);
 
             // Exit on 'q' key press
-            if (cv::waitKey(1) == 'q') {
-                break;
-            }    
+            if (cv::waitKey(1) == 'q')
+                break;   
         }
         cap.release();
         cv::destroyAllWindows();
@@ -358,10 +354,8 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
 
     // Stereo Camera
     else {
-        if (!cap_left.open(0) || !cap_right.open(1)) {
-            std::cerr << "Error: Could not open video capture device(s)." << std::endl;
-            //return -1;
-        }
+        if (!cap_left.open(0) || !cap_right.open(1))
+            std::cerr << "ERROR: Could not open video capture device(s).\n";
 
         while (true) {
             // Capture frame-by-frame
@@ -369,16 +363,15 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
             cap_left >> frame_left;
             cap_right >> frame_right;
             if (frame_left.empty() || frame_right.empty()) {
-                std::cerr << "Error: No frame captured." << std::endl;
+                std::cerr << "ERORR: No frame captured.\n";
                 break;  // Exit if no frames are captured
             }
 
             v_slam->RunStereo(frame_left, frame_right);
 
             // Exit on 'q' key press
-            if (cv::waitKey(1) == 'q') {
+            if (cv::waitKey(1) == 'q')
                 break;
-            }
         }
 
         cap_left.release();
@@ -393,7 +386,7 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
 void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
 
     pfilter->AddMap(map, 6, 2 * M_PI);
-    std::cout << "Map Added!!!" << std::endl;
+    std::cout << "Map Added!!!\n";
     while (1) {
         RawScan();
         PointCloud cloud = GetCloud(NO_BROADCAST);
@@ -457,7 +450,7 @@ void Robot::RunMapper() {
 void Robot::Save_Map(std::string output_filename) {
 
     if (!map_params_set()) {
-        std::cout << "No Map Available. Cancelling Save..." << std::endl;
+        std::cerr << "ERROR: No Map Available. Cancelling Save...\n";
         return;
     }
 
@@ -504,7 +497,7 @@ Robot::Robot() {
             }
             
             else {
-                fprintf(stderr, "Failed to get device information from LIDAR %08x\r\n", res);   
+                fprintf(stderr, "ERROR: Failed to get device information from LIDAR %08x\r\n", res);   
                 usb = usb1; 
                 attempts++; 
             }
@@ -512,7 +505,7 @@ Robot::Robot() {
         }
         
         else {
-            fprintf(stderr, "Failed to connect to LIDAR %08x\r\n", res);
+            fprintf(stderr, "ERROR: Failed to connect to LIDAR %08x\r\n", res);
             usb = usb1;  
             attempts++; 
         }
@@ -537,9 +530,9 @@ void Robot::Set_PhysicalParameters(float robot_trackwidth, float robot_wheel_rad
     wheel_radius = robot_wheel_radius;
     odom->Set_Trackwidth(trackwidth);
     physical_set = true;
-    std::cout << "Phyisical Parameters Set." << std::endl;
-    std::cout << "\tTrack Width: " << trackwidth << std::endl;
-    std::cout << "\tWheel Radius: " << wheel_radius << std::endl;
+    std::cout << "Phyisical Parameters Set.\n";
+    std::cout << "Track Width: " << trackwidth << "\n";
+    std::cout << "Wheel Radius: " << wheel_radius << "\n";
 }
 
 
@@ -566,95 +559,80 @@ void Robot::RobotStart() {
     StartScanner();
 
     // Setupe for PWM Out Values
-    serial = new Serial();
+    serial = std::make_unique<Serial>();
     serial->UARTInit(UART_NUM); 
 
     // Set Current Position
     current_pos = VectorXf::Zero(3);
     
     // Setup Map Builder
-    map_builder = new MapBuilder(800, 800);
+    map_builder = std::make_unique<MapBuilder>(800, 800);
 
 
     // Setup SLAM 1
-    slam1 = new PoseGraphOptSLAM(MAX_NODES, POSE_DIMENSION, GUESS_VARIATION);
+    slam1 = std::make_unique<PoseGraphOptSLAM>(MAX_NODES, POSE_DIMENSION, GUESS_VARIATION);
     slam1->FrontEndInit(N_RECENT_POSES, LOOP_CLOSURE_DIST);
     
     // Setup SLAM 2
-    slam2 = new EKFSlam(POSE_DIM, LANDMARK_DIM);
+    slam2 = std::make_unique<EKFSlam>(POSE_DIM, LANDMARK_DIM);
     slam2->SetInitialState(current_pos, PROCESS_UNCERTAINTY, MEASUREMENT_UNCERTAINTY);
 
     // Setup SLAM 3
-    v_slam = new vSLAM();
+    v_slam = std::make_unique<vSLAM>();
 
     // Setup Mapping
-    og_map = new OccupancyGridMap(500, 500, ALPHA, BETA, MAX_SCAN_RANGE);
+    og_map = std::make_unique<OccupancyGridMap>(500, 500, ALPHA, BETA, MAX_SCAN_RANGE);
 
     // Setup Localization
-    pfilter = new ParticleFilter(MAX_PARTICLES, P_FILTER_POSE_DIM, P_FILTER_TIME_INTERVAL);
+    pfilter = std::make_unique<ParticleFilter>(MAX_PARTICLES, P_FILTER_POSE_DIM, P_FILTER_TIME_INTERVAL);
     
     // Setup Path Planner 1
-    astar_path = new A_Star();
+    astar_path = std::make_unique<A_Star>();
 
     // Setup Path Planner 2
-    rrt_path = new RRT();  
+    rrt_path = std::make_unique<RRT>();  
 
     // Setup Frontier Exploration
-    frontier_explorer = new FrontierExplorer();
+    frontier_explorer = std::make_unique<FrontierExplorer>();
 
     //Setup Local Path Planning
-    d_window = new DynamicWindowApproach(SMOOTHING_VAL, HEADING_WEIGHT, DISTANCE_WEIGHT, VELOCITY_WEIGHT); 
+    d_window = std::make_unique<DynamicWindowApproach>(SMOOTHING_VAL, HEADING_WEIGHT, DISTANCE_WEIGHT, VELOCITY_WEIGHT); 
     d_window->Set_TranslationalVelocityLimits(MIN_TRANS_VEL, MAX_TRANS_VEL, TRANS_VEL_INTERVAL); 
     d_window->Set_RotationalVelocityLimits(MIN_ROT_VEL, MAX_ROT_VEL, ROT_VEL_INTERVAL); 
     d_window->Set_MaxAccelerations(MAX_TRANS_ACCEL, MAX_ROT_ACCEL);
 
     // Setup PIDs
-    pid_left = new PID(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
-    pid_right = new PID(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
+    pid_left = std::make_unique<PID>(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
+    pid_right = std::make_unique<PID>(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
     pid_left->Set_Output_Limits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
     pid_right->Set_Output_Limits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
 
-    odom = new Odom(ODOM_TRACKWIDTH, ODOM_TIMESTEP);
+    odom = std::make_unique<Odom>(ODOM_TRACKWIDTH, ODOM_TIMESTEP);
 
-    path_util = new PathUtil();
+    path_util = std::make_unique<PathUtil>();
 }
 
 void Robot::RobotStop(std::string output_filename) {
 
-    std::cout << "Saving Map..." << std::endl;
+    std::cout << "Saving Map...\n";
     Save_Map(output_filename);
     
     std::cout << "Shutting Down..." << std::endl;
     StopScanner();
     // std::cout << "Scanner Stopped" << std::endl;
     Serial::RestoreTerminal();
-    delete serial;
-    delete map_builder;
-    delete slam1;
-    delete slam2;
-    delete v_slam;
-    delete og_map;
-    delete pfilter;
-    delete astar_path;
-    delete rrt_path;
-    delete frontier_explorer;
-    delete d_window;
-    delete pid_left;
-    delete pid_right; 
-    delete odom;
-    delete path_util;
 }
 
 
 void Robot::MapEnv() {
 
     if (!map_params_set()) {
-        std::cout << "Map Size Parameters Not Set. Cancelling Mapping..." << std::endl;
+        std::cerr << "ERROR: Map Size Parameters Not Set. Cancelling Mapping...\n";
         return;
     }
 
     if (!physical_params_set()) {
-        std::cout << "Physical Robot Parameters Not Set. Cancelling Mapping..." << std::endl;
+        std::cerr << "ERROR: Physical Robot Parameters Not Set. Cancelling Mapping...\n";
         return;
     }
     std::thread mapping_thread(&diffdrive::Robot::RunMapper, this);
@@ -667,12 +645,12 @@ void Robot::MapEnv() {
 void Robot::Localize(std::string map_filename) {
 
     if (!map_params_set()) {
-        std::cout << "Map Size Parameters Not Set. Cancelling Localization..." << std::endl;
+        std::cerr << "ERROR: Map Size Parameters Not Set. Cancelling Localization...\n";
         return;
     }
 
     if (!physical_params_set()) {
-        std::cout << "Physical Robot Parameters Not Set. Cancelling Localization..." << std::endl;
+        std::cerr << "ERROR: Physical Robot Parameters Not Set. Cancelling Localization...\n";
         return;
     }
     Eigen::Tensor<float, 2> map = map_builder->MapFile_to_Tensor2D(map_filename, PBM);
@@ -689,12 +667,12 @@ void Robot::Localize(std::string map_filename) {
 void Robot::MapAndLocalize(int algorithm) {
 
     if (!map_params_set()) {
-        std::cout << "Map Size Parameters Not Set. Cancelling SLAM..." << std::endl;
+        std::cout << "ERROR: Map Size Parameters Not Set. Cancelling SLAM...\n";
         return;
     }
 
     if (!physical_params_set()) {
-        std::cout << "Physical Robot Parameters Not Set. Cancelling SLAM..." << std::endl;
+        std::cout << "ERROR: Physical Robot Parameters Not Set. Cancelling SLAM...\n";
         return;
     }
 
@@ -729,11 +707,6 @@ void Robot::BroadcastPointCloud() {
 
     GetCloud(BROADCAST);
 }
-
-
-
-
-
 
 
 }

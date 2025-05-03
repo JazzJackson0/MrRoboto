@@ -26,9 +26,8 @@ float DynamicWindowApproach::velocity(float trans_vel) {
     float v_norm = std::abs(trans_vel);
 
     // Higher cost for faster vels
-    if (dist > dist_nearing_goal) {
+    if (dist > dist_nearing_goal)
         return v_norm / MaxTransVel;
-    }
 
     // Higher cost for slower vels
     return 1 - (v_norm / MaxTransVel);
@@ -51,8 +50,7 @@ std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
         }
     }
 
-    std::cout << "# of Circular Trajectories: " << circular_trajectories.size() << std::endl;
-
+    // std::cout << "# of Circular Trajectories: " << circular_trajectories.size() << "\n";
     return circular_trajectories;
 }
 
@@ -73,14 +71,11 @@ std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::
         float trans_vel_limit = std::sqrt(2 * collision_dist * std::abs(trans_accel));
         float rot_vel_limit = std::sqrt(2 * collision_dist * std::abs(rot_accel));
         
-        if (vels[i].trans_vel <= trans_vel_limit && vels[i].rot_vel <= rot_vel_limit) {
-            admissable_velocities.push_back(vels[i]);
-        }
-        
+        if (vels[i].trans_vel <= trans_vel_limit && vels[i].rot_vel <= rot_vel_limit)
+            admissable_velocities.push_back(vels[i]);  
     }
 
-    std::cout << "# of Admissable Velocities: " << admissable_velocities.size() << std::endl;
-
+    // std::cout << "# of Admissable Velocities: " << admissable_velocities.size() << "\n";
     return admissable_velocities;
 }
 
@@ -97,16 +92,12 @@ std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<V
     for (int i = 0; i < vels.size(); i++) {
 
         if (vels[i].trans_vel >= (trans_lower) && vels[i].trans_vel <= (trans_upper) 
-            && vels[i].rot_vel >= (rot_lower) && vels[i].rot_vel <= (rot_upper)) {
-
+            && vels[i].rot_vel >= (rot_lower) && vels[i].rot_vel <= (rot_upper))
             within_window.push_back(vels[i]);
-        }
-
     }
 
-    std::cout << "# Within Dynamic Window: " << within_window.size() << std::endl;
+    // std::cout << "# Within Dynamic Window: " << within_window.size() << "\n";
     // std::cout << std::endl;
-
     return within_window;
 }
 
@@ -120,7 +111,7 @@ VectorXf DynamicWindowApproach::Optimize(std::vector<Velocities> vels) {
     VectorXf best_vel(2);
 
     if (vels.size() == 0) {
-        std::cerr << "No permissible DWA velocities available" << std::endl;
+        std::cerr << "ERROR: No permissible DWA velocities available" << std::endl;
         best_vel << 0, 0;
         return best_vel;
     }
@@ -142,7 +133,6 @@ VectorXf DynamicWindowApproach::Optimize(std::vector<Velocities> vels) {
     PreviousVel.trans_vel = best_vel[0];
     PreviousVel.rot_vel = best_vel[1];
 
-    
     return best_vel;
 }
 
@@ -175,7 +165,6 @@ void DynamicWindowApproach::Set_TranslationalVelocityLimits(float min_vel, float
         std::cerr << "WARNING: Max Velocity must be greater than 0. Setting min vel to 0.5" << std::endl; 
         MaxTransVel = 0.5;
     }
-    
 }
 
 
@@ -222,9 +211,8 @@ VectorXf DynamicWindowApproach::Run(VectorXf robot_pos, PointCloud point_cloud, 
     for (int i = 0; i < Cloud.points.size(); i++) {
         
         float dist = std::hypot((RobotPos[0] - Cloud.points[i][0]), (RobotPos[1] - Cloud.points[i][1]));
-        if (dist < closest_dist) {
+        if (dist < closest_dist)
             closest_idx = i;
-        }
     }
     VectorXf temp(2);
     temp << Cloud.points[closest_idx][0], Cloud.points[closest_idx][1];

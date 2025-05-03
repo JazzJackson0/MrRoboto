@@ -84,12 +84,16 @@ Eigen::Tensor<float, 2> EKFSlam::UpdateMap() {
 	VectorXi robot_index = map_builder.MapCoordinate_to_DataStructureIndex(PreviousPose.head<2>());
 	// std::cout << "Robot Index: " << robot_index.transpose() << std::endl;
 	
-	#pragma omp parallel for collapse(2)
+	#pragma omp parallel for
 	for (int i = 0; i < Correspondence.size(); i++) {
 
-		for (int j = 0; j < Correspondence[i].line_seg.points.size(); j++) {
+		int n_points = Correspondence[i].line_seg.points.size();
+
+		#pragma omp parallel for
+		for (int j = 0; j < n_points; j++) {
 			
-			VectorXf point{Correspondence[i].line_seg.points[j].x, Correspondence[i].line_seg.points[j].y};
+			VectorXf point(2);
+			point << Correspondence[i].line_seg.points[j].x, Correspondence[i].line_seg.points[j].y;
 			VectorXi beam_index = map_builder.MapCoordinate_to_DataStructureIndex(point.head<2>());
 
 			// If Beam is within Map range

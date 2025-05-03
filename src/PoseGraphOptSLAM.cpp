@@ -371,6 +371,8 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 	pose.pose = VectorXf::Zero(PoseDimensions);
 	pose.TransformationMatrix = MatrixXf::Zero(3, 3);
 	pose.TransformationMatrix(2, 2) = 1;
+
+	std::cout << "Point Cloud Overlap Amount: " << Calculate_Overlap(PreviousLandmarks, current_landmarks) << "\n";
 	
 	// Set origin node
 	if (InitialScan){
@@ -379,7 +381,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		InitialScan = false;
 	}
 		
-	/* Check for level of overlap between landmark set of current & previous pose
+	/* Check for level of overlap between landmark sets of current & previous pose
 		Add Pose & Edge to Graph if the amount of overlap is low enough*/
 	else if (Calculate_Overlap(PreviousLandmarks, current_landmarks) > OverlapTolerance) {
 
@@ -388,8 +390,7 @@ bool PoseGraphOptSLAM::FrontEnd(PointCloud current_landmarks) {
 		MatrixXf R = rot_trans.rotation_matrix;
 		VectorXf t = rot_trans.translation_vector;
 
-		// TEST-----------------------------------------------------------
-		// Just testing the Least Squares version really quick
+		// Least Squares version-----------------------------------------------------------
 		// VectorXf result = icp.RunICP_LeastSquares(PreviousLandmarks, current_landmarks);
 		// std::cout << "Least Squares ICP Result:" << "\n";
 		// std::cout << result.transpose() << "\n";

@@ -31,7 +31,7 @@ set_target_properties(GMockMain PROPERTIES
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
-
+find_package(OpenMP REQUIRED)
 
 set(RPLIDAR_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/sdk/)
 
@@ -62,4 +62,4 @@ include_directories(
 )
 
 add_executable(${TARGET} ${SOURCES})
-target_link_libraries(${TARGET} PRIVATE Threads::Threads ${OpenCV_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(${TARGET} PRIVATE Threads::Threads OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${CERES_LIBRARIES})

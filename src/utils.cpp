@@ -1,8 +1,5 @@
 #include "../include/utils.hpp"
 
-
-
-
 AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
     
     if (R.cols() != 3 && R.rows() != 3) {

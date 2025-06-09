@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 17)           # Specify C++17 standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)  # Make C++17 standard required
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
-#-----------------------FOR ARM ARCHITECTURE COMPILATION-------------------------------------
+# #-----------------------FOR ARM ARCHITECTURE COMPILATION-------------------------------------
 # CMake having trouble finding Google Mock without this (Needed for Ceres build)
 find_package(GTest REQUIRED CONFIG)
 include_directories(${GTEST_INCLUDE_DIRS})
@@ -32,8 +32,11 @@ find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED sdl2)
 
 set(RPLIDAR_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/sdk/)
+
 
 FILE(GLOB RPLIDAR_SDK_SRC
       "${RPLIDAR_SDK_PATH}/src/arch/linux/*.cpp"
@@ -50,6 +53,7 @@ set(SOURCES ${SRC}/main.cpp ${SRC}/Robot.cpp ${SRC}/ICP.cpp
     ${SRC}/FrontierExploration.cpp ${SRC}/PID.cpp ${SRC}/Serial.cpp ${SRC}/Odometry.cpp
     ${SRC}/PathUtil.cpp
     ${SRC}/camera/Calibration.cpp ${SRC}/camera/VisualOdometry ${SRC}/camera/VSLAM.cpp
+    ${SRC}/Controller.cpp
     )
 
 include_directories(
@@ -59,7 +63,10 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${OpenCV_INCLUDE_DIRS} # Include OpenCV headers
     ${CERES_INCLUDE_DIRS} # Include Ceres headers
+    ${CMAKE_SOURCE_DIR}/ext/nlohmann # json
+    ${SDL2_INCLUDE_DIRS} # sdl2
 )
 
 add_executable(${TARGET} ${SOURCES})
-target_link_libraries(${TARGET} PRIVATE Threads::Threads OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(${TARGET} PRIVATE Threads::Threads OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${CERES_LIBRARIES} ${SDL2_LIBRARIES})
+

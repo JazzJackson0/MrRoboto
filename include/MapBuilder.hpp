@@ -58,7 +58,7 @@ class MapBuilder {
          * @param m 
          * @param n 
          */
-        void Update_2DMapDimensions(int m, int n);
+        void update2DMapDimensions(int m, int n);
 
 
         /**
@@ -68,7 +68,7 @@ class MapBuilder {
          * @param n 
          * @param p
          */
-        void Update_3DMapDimensions(int m, int n, int p);
+        void update3DMapDimensions(int m, int n, int p);
 
         /**
          * @brief 
@@ -78,7 +78,7 @@ class MapBuilder {
          * @param filetype 
          * @param max_value 
          */
-        void Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filename, int filetype, int max_value);
+        void tensor2DToMapFile(Tensor<float, 2> tensor, std::string filename, int filetype, int max_value);
 
 
         /**
@@ -88,7 +88,7 @@ class MapBuilder {
          * @param filetype 
          * @return Tensor<float, 2> 
          */
-        Tensor<float, 2> MapFile_to_Tensor2D(std::string filename, int filetype);
+        Tensor<float, 2> mapFileToTensor2D(std::string filename, int filetype);
 
 
         /**
@@ -98,7 +98,7 @@ class MapBuilder {
          * @param filename 
          * @param filetype 
          */
-        void Tensor3D_to_MapFile(Tensor<float, 3> tensor, std::string filename, int filetype);
+        void tensor3DToMapFile(Tensor<float, 3> tensor, std::string filename, int filetype);
 
 
         /**
@@ -108,7 +108,7 @@ class MapBuilder {
          * @param filetype 
          * @return Tensor<float, 3> 
          */
-        Tensor<float, 3> MapFile_to_Tensor3D(std::string filename, int filetype);
+        Tensor<float, 3> mapFileToTensor3D(std::string filename, int filetype);
 
 
         /**
@@ -117,7 +117,7 @@ class MapBuilder {
          * @param coordinate 
          * @return VectorXf 
          */
-        VectorXi MapCoordinate_to_DataStructureIndex(VectorXf coordinate);
+        VectorXi mapCoordinateToDataStructureIndex(VectorXf coordinate);
 
 
         /**
@@ -126,7 +126,7 @@ class MapBuilder {
          * @param index 
          * @return VectorXi 
          */
-        VectorXf DataStructureIndex_to_MapCoordinate(VectorXi index);
+        VectorXf dataStructureIndexToMapCoordinate(VectorXi index);
 
 
         /**
@@ -135,7 +135,7 @@ class MapBuilder {
          * @param map 
 		 * @return Eigen::Tensor<float, 2> 
 		 */
-		Eigen::Tensor<float, 2> Get_MaximumLikelihoodMap(Eigen::Tensor<float, 2> map);
+		Eigen::Tensor<float, 2> getMaximumLikelihoodMap(Eigen::Tensor<float, 2> map);
 
 
         /**
@@ -144,7 +144,7 @@ class MapBuilder {
          * @param map 
          * @param inflation_radius 
          */
-        void Apply_InflationLayer(Tensor<float, 2> &map, int inflation_radius);
+        void applyInflationLayer(Tensor<float, 2> &map, int inflation_radius);
 
 };
 

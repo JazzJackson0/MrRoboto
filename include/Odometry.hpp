@@ -26,13 +26,13 @@ class Odom {
 
         Odom(float robot_trackwidth, float time_step);
 
-        void Set_Trackwidth(float robot_trackwidth);
+        void setTrackwidth(float robot_trackwidth);
 
-        VectorXf Get_NewPosition();
+        VectorXf getNewPosition();
 
-        VectorXf Get_NewVelocities();
+        VectorXf getNewVelocities();
 
-        VectorXf Get_NewRawVelocities();
+        VectorXf getNewRawVelocities();
 };
 
 

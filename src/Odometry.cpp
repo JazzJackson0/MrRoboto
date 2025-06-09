@@ -8,7 +8,7 @@ Odom::Odom(float robot_trackwidth, float time_step) : trackwidth(robot_trackwidt
     serial = new Serial();
 
     // I2C
-    serial->I2CInit(I2C_NUM, I2C_SLAVE_ADDRS);
+    serial->i2cInit(I2C_NUM, I2C_SLAVE_ADDRS);
     // serial->I2CInit(20, 0x0);
 
     // UART
@@ -17,15 +17,15 @@ Odom::Odom(float robot_trackwidth, float time_step) : trackwidth(robot_trackwidt
 }
 
 
-void Odom::Set_Trackwidth(float robot_trackwidth) {
+void Odom::setTrackwidth(float robot_trackwidth) {
 
     trackwidth = robot_trackwidth;
 }
 
-VectorXf Odom::Get_NewPosition() {
+VectorXf Odom::getNewPosition() {
     VectorXf new_position(3);
     uint8_t *encoder_buffer = new uint8_t[8];
-    serial->I2CRead(I2C_NUM, encoder_buffer, 8);
+    serial->i2cRead(I2C_NUM, encoder_buffer, 8);
     uint32_t left = *((uint32_t*)encoder_buffer);
     uint32_t right = *((uint32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
@@ -43,11 +43,11 @@ VectorXf Odom::Get_NewPosition() {
     return new_position;
 }
 
-VectorXf Odom::Get_NewVelocities() {
+VectorXf Odom::getNewVelocities() {
 
     VectorXf new_velocity(2);
     uint8_t *encoder_buffer = new uint8_t[8];
-    serial->I2CRead(I2C_NUM, encoder_buffer, 8);
+    serial->i2cRead(I2C_NUM, encoder_buffer, 8);
     uint32_t left = *((uint32_t*)encoder_buffer);
     uint32_t right = *((uint32_t*)(encoder_buffer + 4));
     // left_distance = (float)left;
@@ -64,11 +64,11 @@ VectorXf Odom::Get_NewVelocities() {
 }
 
 // No true odometry calculation. Just raw imu reads.
-VectorXf Odom::Get_NewRawVelocities() {
+VectorXf Odom::getNewRawVelocities() {
 
     VectorXf new_velocity(2);
     uint8_t *imu_buffer = new uint8_t[16];
-    serial->I2CRead(I2C_NUM, imu_buffer, 16);
+    serial->i2cRead(I2C_NUM, imu_buffer, 16);
 
     uint32_t rot_x = *((uint32_t*)imu_buffer);
     uint32_t rot_y = *((uint32_t*)(imu_buffer + 4));

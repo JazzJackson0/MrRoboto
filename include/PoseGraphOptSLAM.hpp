@@ -94,7 +94,7 @@ class PoseGraphOptSLAM {
 		 * @brief Uses a BFS to propagate accross the map, marking the spaces that the robot can see as "free"
 		 * 
 		 */
-		void propagateFreeSpace();
+		void propagate_free_space();
 
 		/**
 		 * @brief Checks if a given cell is visible from the robot
@@ -106,7 +106,7 @@ class PoseGraphOptSLAM {
 		 * @return true 
 		 * @return false 
 		 */
-		bool isVisible(int x, int y, int x_robot, int y_robot);
+		bool is_visible(int x, int y, int x_robot, int y_robot);
 
 
 		/**
@@ -114,7 +114,7 @@ class PoseGraphOptSLAM {
 		 * 
 		 * @return Eigen::Tensor<float, 2> 
 		 */
-		Eigen::Tensor<float, 2> UpdateMap();
+		Eigen::Tensor<float, 2> update_map();
 
 		/**
 		 * @brief Takes 2 point clouds and determines the amount of overlap between them.
@@ -126,7 +126,7 @@ class PoseGraphOptSLAM {
 		 * @param cloud_b point cloud b
 		 * @return float - The overlap distance.
 		 */
-		float Calculate_Overlap(PointCloud cloud_a, PointCloud cloud_b);
+		float calculate_overlap(PointCloud cloud_a, PointCloud cloud_b);
 
 
 		/**
@@ -137,7 +137,7 @@ class PoseGraphOptSLAM {
 		 * @param angle_axis angle and aaxis of rotation
 		 * @return MatrixXf 
 		 */
-		MatrixXf VectorToTransformationMatrix(int x, int y, AngleAndAxis angle_axis);
+		MatrixXf vector_to_transformation_matrix(int x, int y, AngleAndAxis angle_axis);
 
 
 		/**
@@ -145,7 +145,7 @@ class PoseGraphOptSLAM {
 		 * 		i.e. Convert from StateVector back to transformation matrices.
 		 * 
 		 */
-		void ConvertStateVector();
+		void convert_state_vector();
 
 
 		/**
@@ -153,7 +153,7 @@ class PoseGraphOptSLAM {
 		 * 
 		 * @return ** pair<VectorXf, std::vector<VectorXf>> StateVector and coressponding rotation axes 
 		 */
-		void UpdateStateVector();
+		void update_state_vector();
 
 
 		/**
@@ -163,7 +163,7 @@ class PoseGraphOptSLAM {
 		 * @return true 
 		 * @return false 
 		 */
-		bool CheckForLoopClosure(Pose pose);
+		bool check_for_loop_closure(Pose pose);
 
 
 		/**
@@ -172,7 +172,7 @@ class PoseGraphOptSLAM {
 		 * @param pose 
 		 * @param edge 
 		 */
-		void AddPoseToGraph(Pose pose, PoseEdge edge);
+		void add_pose_to_graph(Pose pose, PoseEdge edge);
 
 
 		/**
@@ -184,7 +184,7 @@ class PoseGraphOptSLAM {
 		 * @param MeasuredTranslatedVector Translation & Rotation. Obtained from the given Edge between poses i and j
 		 * @return ** VectorXf The Error Vector
 		 */
-		VectorXf GetErrorVector(VectorXf Pose_i, VectorXf Pose_j, VectorXf MeasuredTranslatedVector);
+		VectorXf get_error_vector(VectorXf Pose_i, VectorXf Pose_j, VectorXf MeasuredTranslatedVector);
 
 
 
@@ -198,7 +198,7 @@ class PoseGraphOptSLAM {
 		 *
 		 * @return ** void
 		 */
-		void Build_ErrorFunction();
+		void build_error_function();
 
 
 		/**
@@ -213,7 +213,7 @@ class PoseGraphOptSLAM {
 		 * 
          * @return ** HbResults
          */
-		HbResults Build_LinearSystem(
+		HbResults build_linear_system(
 				VectorXf pose_i, VectorXf pose_j, VectorXf MeasuredTranslatedVector, 
 				MatrixXf edge_covariance);
 
@@ -227,7 +227,7 @@ class PoseGraphOptSLAM {
          * 
          * @return ** bool - True if new loop closure made.
          */
-		bool FrontEnd(PointCloud current_landmarks);
+		bool front_end(PointCloud current_landmarks);
 
 
 
@@ -237,7 +237,7 @@ class PoseGraphOptSLAM {
 		 * 
          * @return ** void
          */
-		void Optimize();
+		void optimize();
 
 
         		
@@ -266,7 +266,7 @@ class PoseGraphOptSLAM {
 		 * @param n_recent_poses The number/amount of most recent poses to store.
 		 * @param closure_distance The minimum distance between 2 poses required for loop closure
 		 */
-		void FrontEndInit(int n_recent_poses, float closure_distance);
+		void frontEndInit(int n_recent_poses, float closure_distance);
 
 
         /**
@@ -275,7 +275,7 @@ class PoseGraphOptSLAM {
          * @param current_landmarks 
          * @return Eigen::Tensor<float, 2> 
          */
-        Eigen::Tensor<float, 2> Run(PointCloud current_landmarks);
+        Eigen::Tensor<float, 2> run(PointCloud current_landmarks);
 
 		/**
 		 * @brief 
@@ -283,14 +283,14 @@ class PoseGraphOptSLAM {
 		 * @param height 
 		 * @param width 
 		 */
-		void Set_MapDimensions(int height, int width);
+		void setMapDimensions(int height, int width);
 
 		/**
 		 * @brief 
 		 * 
 		 * @return VectorXf 
 		 */
-		VectorXf BroadcastCurrentPose();
+		VectorXf broadcastCurrentPose();
 
 
 		

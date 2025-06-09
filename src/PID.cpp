@@ -5,24 +5,24 @@ PID::PID() {}
 
 PID::PID(int direction, float sample_time_ms, float kp, float ki, float kd){
 
-    Set_ControllerDirection(direction);
-    Set_Sample_Time(sample_time_ms);
-    Set_Tuning_Parameters(kp, ki, kd);
-    Set_PIDMode(AUTO);
+    setControllerDirection(direction);
+    setSampleTime(sample_time_ms);
+    setTuningParameters(kp, ki, kd);
+    setPIDMode(AUTO);
     Integrator = 0;
     Differentiator = 0;
     prev_time =  std::chrono::duration<float, std::milli>(steady_clock::now().time_since_epoch()).count();
     output_data = 0;
-    Set_Output_Limits(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+    setOutputLimits(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
 }
 
 
-void PID::Set_ControllerDirection(int direction) {
+void PID::setControllerDirection(int direction) {
 	
 	controller_direction = direction;
 }
 
-void PID::Set_Sample_Time(float new_dt_ms) {
+void PID::setSampleTime(float new_dt_ms) {
 	
 	if (new_dt_ms > 0) {
 		
@@ -34,7 +34,7 @@ void PID::Set_Sample_Time(float new_dt_ms) {
 	}
 }
 
-void PID::Set_Tuning_Parameters(float kp, float ki, float kd) {
+void PID::setTuningParameters(float kp, float ki, float kd) {
 	
 	if (proportional_gain < 0.0 || integral_gain < 0.0 || derivative_gain < 0.0) return;
 	
@@ -52,7 +52,7 @@ void PID::Set_Tuning_Parameters(float kp, float ki, float kd) {
 }
 
 
-void PID::Set_PIDMode(int mode) { 
+void PID::setPIDMode(int mode) { 
 	
 	bool newAutoMode = (mode == AUTO);
 	
@@ -65,7 +65,7 @@ void PID::Set_PIDMode(int mode) {
 
 
 
-void PID::Set_Output_Limits(float min, float max) {
+void PID::setOutputLimits(float min, float max) {
 	
 	if (min > max) return;
 	min_output = min;		
@@ -84,7 +84,7 @@ void PID::Set_Output_Limits(float min, float max) {
 
 
 
-float PID::PID_Update(float set_point, float measurement) {
+float PID::pidUpdate(float set_point, float measurement) {
 	
 	if (pid_mode == MANUAL) {
         std::cerr << "ERROR: Leave Manual Mode to start PID" << std::endl;

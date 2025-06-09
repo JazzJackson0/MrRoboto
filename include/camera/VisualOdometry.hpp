@@ -29,7 +29,7 @@ class MonocularOdometry {
          * @param matched_points2 
          * @return std::pair<cv::Mat, cv::Mat> 
          */
-        std::pair<cv::Mat, cv::Mat> Decompose_Essential_Matrix(const cv::Mat& E, const cv::Mat &matched_points1, const cv::Mat &matched_points2);
+        std::pair<cv::Mat, cv::Mat> decompose_essential_matrix(const cv::Mat& E, const cv::Mat &matched_points1, const cv::Mat &matched_points2);
 
         /**
          * @brief Calculate and return the number of positive z values between the 2 point sets.
@@ -44,7 +44,7 @@ class MonocularOdometry {
          * @param points3D_2
          * @return int 
          */
-        int Get_SumOfZCoords(const cv::Mat &R, const cv::Mat &t, const cv::Mat &matched_points1, const cv::Mat &matched_points2,
+        int get_sum_of_z_coords(const cv::Mat &R, const cv::Mat &t, const cv::Mat &matched_points1, const cv::Mat &matched_points2,
             cv::Mat &points3D_1, cv::Mat &points3D_2);
 
         /**
@@ -55,7 +55,7 @@ class MonocularOdometry {
          * @param points3D_2 
          * @return double 
          */
-        double Caulculate_RelativeScale(cv::Mat points3D_1, cv::Mat points3D_2);
+        double caulculate_relative_scale(cv::Mat points3D_1, cv::Mat points3D_2);
 
     public:
 
@@ -70,7 +70,7 @@ class MonocularOdometry {
          * @param matched_points2 
          * @return cv::Mat 
          */
-        cv::Mat Get_Pose(const cv::Mat &matched_points1, const cv::Mat &matched_points2);
+        cv::Mat getPose(const cv::Mat &matched_points1, const cv::Mat &matched_points2);
 
         /**
          * @brief 
@@ -79,7 +79,7 @@ class MonocularOdometry {
          * @param img2 
          * @return std::pair<cv::Mat, cv::Mat> 
          */
-        std::pair<cv::Mat, cv::Mat> Get_Matches(cv::Mat img1, cv::Mat img2);
+        std::pair<cv::Mat, cv::Mat> getMatches(cv::Mat img1, cv::Mat img2);
 
         /**
          * @brief 
@@ -87,7 +87,7 @@ class MonocularOdometry {
          * @param frame 
          * @return int 
          */
-        Eigen::MatrixXf Run(cv::Mat frame);
+        Eigen::MatrixXf run(cv::Mat frame);
 };
 
 
@@ -178,7 +178,7 @@ class StereoOdometry {
          * @param max_error 
          * @return std::pair<cstd::vector<cv::Point2f>, std::vector<cv::Point2f>> 
          */
-        std::pair<std::vector<cv::Point2f>, std::vector<cv::Point2f>> Track_Keypoints(const cv::Mat &img1, const cv::Mat &img2, 
+        std::pair<std::vector<cv::Point2f>, std::vector<cv::Point2f>> track_keypoints(const cv::Mat &img1, const cv::Mat &img2, 
             const std::vector<cv::KeyPoint> &keypoints1, float max_error = 4.0f);
 
         /**
@@ -189,7 +189,7 @@ class StereoOdometry {
          * @param y 
          * @return std::vector<cv::KeyPoint> 
          */
-        std::vector<cv::KeyPoint> Get_TileKeypoints(const cv::Mat &img_tile, int x, int y);
+        std::vector<cv::KeyPoint> get_tile_keypoints(const cv::Mat &img_tile, int x, int y);
 
         /**
          * @brief 
@@ -200,14 +200,14 @@ class StereoOdometry {
          * @param tile_width 
          * @return std::pair<cstd::vector<cv::Point2f>, std::vector<cv::Point2f>> 
          */
-        std::pair<std::vector<cv::Point2f>, std::vector<cv::Point2f>> Get_LeftImageKeypoints(const cv::Mat &img1, const cv::Mat &img2, 
+        std::pair<std::vector<cv::Point2f>, std::vector<cv::Point2f>> get_left_image_keypoints(const cv::Mat &img1, const cv::Mat &img2, 
             int tile_height, int tile_width);
 
         /**
          * @brief 
          * 
          */
-        cv::Mat Get_DisparityMap(const cv::Mat &feature_points, const cv::Mat &l_r_disparities, cv::Mat &mask);
+        cv::Mat get_disparity_map(const cv::Mat &feature_points, const cv::Mat &l_r_disparities, cv::Mat &mask);
         
         /**
          * @brief Calculate the keypoints in the right images using the disparities between them and the left images' keypoints
@@ -218,7 +218,7 @@ class StereoOdometry {
          * @param feature_points2 
          * @return std::tuple<cv::Mat, cv::Mat, cv::Mat, cv::Mat> 
          */
-        std::tuple<cv::Mat, cv::Mat, cv::Mat, cv::Mat> Get_RightImageKeypoints(const cv::Mat& l_img2, const cv::Mat& r_img2, 
+        std::tuple<cv::Mat, cv::Mat, cv::Mat, cv::Mat> get_right_image_keypoints(const cv::Mat& l_img2, const cv::Mat& r_img2, 
             cv::Mat feature_points1, cv::Mat feature_points2);
 
         /**
@@ -230,7 +230,7 @@ class StereoOdometry {
          * @param r_feature_points2 
          * @return std::pair<cv::Mat, cv::Mat> 
          */
-        std::pair<cv::Mat, cv::Mat> Triangulate_3DPoints(cv::Mat l_feature_points1, cv::Mat r_feature_points1, 
+        std::pair<cv::Mat, cv::Mat> triangulate_3D_points(cv::Mat l_feature_points1, cv::Mat r_feature_points1, 
             cv::Mat l_feature_points2, cv::Mat r_feature_points2);
         
         /**
@@ -243,7 +243,7 @@ class StereoOdometry {
          * @param max_iter 
          * @return cv::Mat 
          */
-        cv::Mat Get_EstimatedPose(const std::vector<cv::Point2f>& feature_points1, const std::vector<cv::Point2f>& feature_points2,
+        cv::Mat get_estimated_pose(const std::vector<cv::Point2f>& feature_points1, const std::vector<cv::Point2f>& feature_points2,
             const std::vector<cv::Point3f>& points3D_1, const std::vector<cv::Point3f>& points3D_2,
             int max_iter = 100);
 
@@ -269,7 +269,7 @@ class StereoOdometry {
          * @param r_img2 
          * @return cv::Mat 
          */
-        cv::Mat Get_Pose(const cv::Mat &l_img1, const cv::Mat &l_img2, const cv::Mat &r_img1, const cv::Mat &r_img2);
+        cv::Mat getPose(const cv::Mat &l_img1, const cv::Mat &l_img2, const cv::Mat &r_img1, const cv::Mat &r_img2);
         
         /**
          * @brief 
@@ -278,5 +278,5 @@ class StereoOdometry {
          * @param right_frame 
          * @return Eigen::MatrixXf 
          */
-        Eigen::MatrixXf Run(cv::Mat left_frame, cv::Mat right_frame);
+        Eigen::MatrixXf run(cv::Mat left_frame, cv::Mat right_frame);
 };

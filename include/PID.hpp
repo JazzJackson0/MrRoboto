@@ -65,7 +65,7 @@ class PID {
          * @param direction Direction of PID: (0) Direct or (1) Reverse
          * @return ** void 
          */
-        void Set_ControllerDirection(int direction);
+        void setControllerDirection(int direction);
 
 
         /**
@@ -76,7 +76,7 @@ class PID {
          * @param kd Derivative Gain Coefficient
          * @return ** void 
          */
-        void Set_Tuning_Parameters(float kp, float ki, float kd);
+        void setTuningParameters(float kp, float ki, float kd);
 
 
         /**
@@ -87,7 +87,7 @@ class PID {
          * @param mode Vehicle Mode: Manual or Automatic
          * @return ** void 
          */
-        void Set_PIDMode(int mode);
+        void setPIDMode(int mode);
 
 
         /**
@@ -96,7 +96,7 @@ class PID {
          * @param new_dt_ms Time interval between calculations
          * @return ** void 
          */
-        void Set_Sample_Time(float new_dt_ms);
+        void setSampleTime(float new_dt_ms);
 
 
         /**
@@ -106,7 +106,7 @@ class PID {
          * @param max Max PID Output value
          * @return ** void 
          */
-        void Set_Output_Limits(float min, float max);
+        void setOutputLimits(float min, float max);
 
 
         /**
@@ -116,6 +116,6 @@ class PID {
          * @param measurement current incoming value to input into the PID
          * @return ** float 
          */
-        float PID_Update(float set_point, float measurement);
+        float pidUpdate(float set_point, float measurement);
 
 };

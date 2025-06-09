@@ -9,12 +9,12 @@ Serial::Serial() {
 }
 
 
-void Serial::Set_BufferSize(int buff_size) {
+void Serial::setBufferSize(int buff_size) {
     buffer_size = buff_size;
 }
 
 
-int8_t Serial::PinInit(uint8_t gpioNum, int pinDirection) {
+int8_t Serial::pinInit(uint8_t gpioNum, int pinDirection) {
 
     FILE *file;
 
@@ -49,7 +49,7 @@ int8_t Serial::PinInit(uint8_t gpioNum, int pinDirection) {
 }
 
 
-int8_t Serial::UARTInit(uint8_t uartNum) {
+int8_t Serial::uartInit(uint8_t uartNum) {
   
     struct termios settings; // termios: A general API for configuring the I/O characteristics of character devices, including both terminals and UARTs
 
@@ -104,13 +104,13 @@ void Serial::RestoreTerminal() {
     }   
 }
 
-void Serial::UARTDeInit(uint8_t uartNum) {
+void Serial::uartDeInit(uint8_t uartNum) {
 
     close(uart_buses[uartNum]);
 }
 
 
-int8_t Serial::I2CInit(uint8_t i2cNum, uint8_t slaveAddress) {
+int8_t Serial::i2cInit(uint8_t i2cNum, uint8_t slaveAddress) {
 
     // char path[20];
     // snprintf(path, sizeof(path), "/dev/i2c-%d", i2cNum);
@@ -133,12 +133,12 @@ int8_t Serial::I2CInit(uint8_t i2cNum, uint8_t slaveAddress) {
     return 1;
 }
 
-void Serial::I2CDeInit(uint8_t i2cNum) {
+void Serial::i2cDeInit(uint8_t i2cNum) {
 
     close(i2c_buses[i2cNum]);
 }
 
-int8_t Serial::SPIInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint8_t spi_bits) {
+int8_t Serial::spiInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint8_t spi_bits) {
 
     mode = spi_mode;
     speed = speed_hz;
@@ -176,13 +176,13 @@ int8_t Serial::SPIInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint
 }
 
 
-void Serial::SPIDeInit(uint8_t spiNum) {
+void Serial::spiDeInit(uint8_t spiNum) {
 
     close(spi_buses[spiNum]);
 }
 
 
-int8_t Serial::PinWrite(uint8_t gpioNum, uint8_t pinState) {
+int8_t Serial::pinWrite(uint8_t gpioNum, uint8_t pinState) {
 
     FILE *file;
 
@@ -206,7 +206,7 @@ int8_t Serial::PinWrite(uint8_t gpioNum, uint8_t pinState) {
 }
 
 
-int8_t Serial::PinRead(uint8_t gpioNum) {
+int8_t Serial::pinRead(uint8_t gpioNum) {
     
     FILE *file;
     char* pinState;
@@ -229,7 +229,7 @@ int8_t Serial::PinRead(uint8_t gpioNum) {
 
 
 
-int8_t Serial::UARTWrite(uint8_t uartNum, char* data, int datalen) {
+int8_t Serial::uartWrite(uint8_t uartNum, char* data, int datalen) {
 
     if (write(uart_buses[uartNum], data, datalen) != datalen) {
         std::cerr << "ERROR: Failed to write" << std::endl;
@@ -239,7 +239,7 @@ int8_t Serial::UARTWrite(uint8_t uartNum, char* data, int datalen) {
 }
 
 
-int8_t Serial::UARTRead(uint8_t uartNum, char* data, int datalen) {
+int8_t Serial::uartRead(uint8_t uartNum, char* data, int datalen) {
 
     if (write(uart_buses[uartNum], data, datalen) != datalen) {
         std::cerr << "ERROR: Failed to write" << std::endl;
@@ -249,7 +249,7 @@ int8_t Serial::UARTRead(uint8_t uartNum, char* data, int datalen) {
 }
 
 
-int8_t Serial::I2CWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
+int8_t Serial::i2cWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     
     int bytesWritten = write(i2c_buses[i2cNum], dataBytes, byteNum);
     
@@ -265,7 +265,7 @@ int8_t Serial::I2CWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
 }
 
 
-int8_t Serial::I2CRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
+int8_t Serial::i2cRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
 
     int bytesRead = read(i2c_buses[i2cNum], dataBytes, byteNum);
     
@@ -303,7 +303,7 @@ int8_t Serial::I2CRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
 
 
 
-int Serial::SPITransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
+int Serial::spiTransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
 
     struct spi_ioc_transfer spi_info[len];
 
@@ -331,7 +331,7 @@ int Serial::SPITransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
 }
 
 
-int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t duty_cycle) {
+int Serial::pwmInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t duty_cycle) {
 
     FILE *enable_file;
     FILE *period_file;
@@ -383,7 +383,7 @@ int Serial::PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t d
 
 }
 
-int Serial::PWMDeInit(uint8_t chipNum, uint8_t pwmNum) {
+int Serial::pwmDeInit(uint8_t chipNum, uint8_t pwmNum) {
 
     // FILE *unexport_file;
 
@@ -403,7 +403,7 @@ int Serial::PWMDeInit(uint8_t chipNum, uint8_t pwmNum) {
 
 }
 
-int Serial::PWMUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle) {
+int Serial::pwmUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle) {
     
     FILE *dutycycle_file;
     std::string pwm_dutycycle = "/sys/class/pwm/pwmchip" + std::to_string(chipNum) + "/pwm"  + std::to_string(pwmNum) + "/duty_cycle";

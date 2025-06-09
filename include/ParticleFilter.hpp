@@ -55,7 +55,7 @@ class ParticleFilter {
 		 * @param p2 
 		 * @return float 
 		 */
-		float Get_Range(VectorXf p1, VectorXf p2);
+		float get_range(VectorXf p1, VectorXf p2);
 
 
 		/**
@@ -65,7 +65,7 @@ class ParticleFilter {
 		 * @param p2 
 		 * @return * float 
 		 */
-		float Get_Bearing(VectorXf p1, VectorXf p2);
+		float get_bearing(VectorXf p1, VectorXf p2);
 
 
 		/**
@@ -75,7 +75,7 @@ class ParticleFilter {
 		 * @param highVal 
 		 * @return float 
 		 */
-		float Get_RandomBetween(float lowVal, float highVal);
+		float get_random_between(float lowVal, float highVal);
 
 
 		/**
@@ -87,7 +87,7 @@ class ParticleFilter {
 		 *
 		 * @return ** float - Probability
 		 */
-		float ProbabilityDensityFunction(float x, Distribution distribution);
+		float probability_density_function(float x, Distribution distribution);
 
 
 		/**
@@ -97,7 +97,7 @@ class ParticleFilter {
 		 * 
 		 * @return ** Scan - Returns a vector of all the feature points picked up within range of the give particle
 		 */
-		PointCloud Get_FeaturePointsInRange(Particle particle);
+		PointCloud get_feature_points_in_range(Particle particle);
 
 
 		/**
@@ -107,7 +107,7 @@ class ParticleFilter {
 		 * @param odom 
 		 * @return Particle 
 		 */
-		Particle Move_Particle(int particle_idx, ControlCommand odom);
+		Particle move_particle(int particle_idx, ControlCommand odom);
 
 
 		/**
@@ -117,7 +117,7 @@ class ParticleFilter {
 		 * @param robot_pointcloud The point cloud obtained from the scanner.
 		 * @param particle The particle to be weighted. 
 		 */
-		void Generate_ParticleWeight(PointCloud robot_pointcloud, Particle &particle);
+		void generate_particle_weight(PointCloud robot_pointcloud, Particle &particle);
 
 		
 		/**
@@ -128,7 +128,7 @@ class ParticleFilter {
          * 
          * @return ** void
          */
-        void RunParticleFilter(PointCloud scan, ControlCommand odom);
+        void run_particle_filter(PointCloud scan, ControlCommand odom);
 
 
         /**
@@ -136,7 +136,7 @@ class ParticleFilter {
          * 
          * @return ** void 
          */
-        void Resample();
+        void resample();
 
 
 
@@ -166,7 +166,7 @@ class ParticleFilter {
 		 * @param max_beam_dist The distance from the particle to search for map features
 		 * @param angular_beam_width The Width of the range around the particle to search for map features
 		 */
-		void AddMap(Eigen::Tensor<float, 2> map, float max_beam_dist, float angular_beam_width);
+		void addMap(Eigen::Tensor<float, 2> map, float max_beam_dist, float angular_beam_width);
 
 
 		/**
@@ -175,7 +175,7 @@ class ParticleFilter {
 		 * @param scan 
 		 * @param odom 
 		 */
-		void Run(PointCloud scan, ControlCommand odom);
+		void run(PointCloud scan, ControlCommand odom);
 };
 
 

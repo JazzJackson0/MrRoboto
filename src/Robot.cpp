@@ -20,7 +20,7 @@ bool Robot::physical_params_set() {
     return physical_set;
 }
 
-void Robot::Callibrate_Camera(const std::string& images_path) {
+void Robot::callibrate_camera(const std::string& images_path) {
 
     calibrator->calibrateCamera(images_path);
 
@@ -30,7 +30,7 @@ void Robot::Callibrate_Camera(const std::string& images_path) {
     std::cout << diagnosis << std::endl;
 }
 
-void Robot::StartScanner() {
+void Robot::start_scanner() {
 
     lidar->startMotor();
     // Start scan with default scan mode
@@ -38,7 +38,7 @@ void Robot::StartScanner() {
     lidar->startScan(false, true, 0, &scanMode);
 }
 
-void Robot::StopScanner() {
+void Robot::stop_scanner() {
 
     lidar->stop();
     // lidar->disconnect();
@@ -46,7 +46,7 @@ void Robot::StopScanner() {
     RPlidarDriver::DisposeDriver(lidar);
 }
 
-void Robot::RawScan() {
+void Robot::raw_scan() {
 
     // Grab Complete 0-360 degree scan previously received
     auto res = lidar->grabScanDataHq(nodes, nodeCount);
@@ -61,7 +61,7 @@ void Robot::RawScan() {
 }
 
 
-PointCloud Robot::GetCloud(int broadcast_state) {
+PointCloud Robot::get_cloud(int broadcast_state) {
 
     PointCloud cloud;
     cloud.mean_x = 0.f;
@@ -103,7 +103,7 @@ PointCloud Robot::GetCloud(int broadcast_state) {
             cloud.weights.push_back((float)(nodes[i].quality >> 2)); // Echo Signal Strength 0 - 255
             cloud.mean_x += x;
             cloud.mean_y += y;
-            cloud.kd_tree.AddData(point, (float)(nodes[i].quality >> 2));
+            cloud.kd_tree.addData(point, (float)(nodes[i].quality >> 2));
         }
         
         else if (broadcast_state == BROADCAST)
@@ -117,7 +117,7 @@ PointCloud Robot::GetCloud(int broadcast_state) {
 }
 
 
-std::vector<VectorXf> Robot::GetScan() {
+std::vector<VectorXf> Robot::get_scan() {
 
     std::vector<VectorXf> scan;
     int idx = 0;
@@ -151,7 +151,7 @@ std::vector<VectorXf> Robot::GetScan() {
 
 
 
-void Robot::FindFrontier() {
+void Robot::find_frontier() {
 
     while (!map_ready());
 
@@ -166,67 +166,67 @@ void Robot::FindFrontier() {
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> pos_lock(map_mutex);
-        VectorXi pos = map_builder->MapCoordinate_to_DataStructureIndex(current_pos.head<2>());
+        VectorXi pos = map_builder->mapCoordinateToDataStructureIndex(current_pos.head<2>());
         VectorXf flt_pos = current_pos;
         pos_lock.unlock();
         
-        map_builder->Apply_InflationLayer(map, 5); // Create Cost Map
-        frontier_explorer->Load_MAP(map);
+        map_builder->applyInflationLayer(map, 5); // Create Cost Map
+        frontier_explorer->loadMAP(map);
 
         // std::cout << map << std::endl;
         // std::cout << std::endl;
 
-        VectorXi frontier_goal = frontier_explorer->FindFrontier(pos);
-        std::vector<VectorXf> waypoints = path_util->SmoothPath(path_util->SamplePath(CreatePath(A_STAR, map, pos, frontier_goal)));
-        FollowLocalPath(waypoints, map, cloud, flt_pos);
+        VectorXi frontier_goal = frontier_explorer->findFrontier(pos);
+        std::vector<VectorXf> waypoints = path_util->smoothPath(path_util->samplePath(create_path(A_STAR, map, pos, frontier_goal)));
+        follow_local_path(waypoints, map, cloud, flt_pos);
     }
 }
 
 
-std::vector<VectorXi> Robot::CreatePath(int algorithm, Eigen::Tensor<float, 2> map, VectorXi start, VectorXi goal) {
+std::vector<VectorXi> Robot::create_path(int algorithm, Eigen::Tensor<float, 2> map, VectorXi start, VectorXi goal) {
 
     std::vector<VectorXi> path;
     path.push_back(start);
 
     if (algorithm == A_STAR) {
-        astar_path->Load_MAP(map);
-        return astar_path->Path(start, goal);
+        astar_path->loadMAP(map);
+        return astar_path->path(start, goal);
     }   
     
     else if (algorithm == RRT_VANILLA) {
-        rrt_path->Load_MAP(map);
-        return rrt_path->RRT_Path(start, goal, 1);
+        rrt_path->loadMAP(map);
+        return rrt_path->rrtPath(start, goal, 1);
     }
     
     else if (algorithm == RRT_STAR) {
-        rrt_path->Load_MAP(map);
-        return rrt_path->RRTStar_Path(start, goal, 1, 2);
+        rrt_path->loadMAP(map);
+        return rrt_path->rrtStarPath(start, goal, 1, 2);
     }
 
     return path; 
 }
 
 
-void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos) {
+void Robot::follow_local_path(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos) {
 
     float wheel_radius_inv = 1 / wheel_radius;
     for (int i = 0; i < smooth_waypoints.size(); i++) {
 
-        d_window->Set_Goal(smooth_waypoints[i]);
+        d_window->setGoal(smooth_waypoints[i]);
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        // VectorXf odom_vels = odom->Get_NewVelocities();
-        VectorXf odom_vels = odom->Get_NewRawVelocities();
+        // VectorXf odom_vels = odom->getNewVelocities();
+        VectorXf odom_vels = odom->getNewRawVelocities();
         odom_lock.unlock();
-        VectorXf vels = d_window->Run(pos, cloud, odom_vels);
+        VectorXf vels = d_window->run(pos, cloud, odom_vels);
         
         // Determine Wheel Angular Velocities (w_l & w_r)
         float current_vel_r = (odom_vels[0] + ((odom_vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
         float current_vel_l = (odom_vels[0] - ((odom_vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
         float setpoint_vel_r = (vels[0] + ((vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
         float setpoint_vel_l = (vels[0] - ((vels[1] * trackwidth) * 0.5)) * wheel_radius_inv;
-        float right_wheel_duty_cycle = pid_right->PID_Update(setpoint_vel_r, current_vel_r);
-        float left_wheel_duty_cycle = pid_left->PID_Update(setpoint_vel_l, current_vel_l);
+        float right_wheel_duty_cycle = pid_right->pidUpdate(setpoint_vel_r, current_vel_r);
+        float left_wheel_duty_cycle = pid_left->pidUpdate(setpoint_vel_l, current_vel_l);
 
         // std::cout << "Current Velocities: " << odom_vels.transpose() << "\n";
         // std::cout << "Goal Velocities: " << vels.transpose() << "\n";
@@ -247,17 +247,17 @@ void Robot::FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tenso
                 duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
         }   
 
-        serial->UARTWrite(UART_NUM, duty_cycle_buff, 8);
+        serial->uartWrite(UART_NUM, duty_cycle_buff, 8);
     }
 }
 
-void Robot::RunSLAM(int algorithm) {
+void Robot::run_slam(int algorithm) {
 
     bool first_map = true;
 
     while (1) {
-        RawScan();
-        PointCloud cloud = GetCloud(NO_BROADCAST);
+        raw_scan();
+        PointCloud cloud = get_cloud(NO_BROADCAST);
 
         std::unique_lock<std::mutex> cloud_lock(cloud_mutex);
         current_cloud = cloud;
@@ -265,7 +265,7 @@ void Robot::RunSLAM(int algorithm) {
 
         if (algorithm == POSE_GRAPH) {
             
-            Eigen::Tensor<float, 2> new_map = slam1->Run(cloud);
+            Eigen::Tensor<float, 2> new_map = slam1->run(cloud);
             // std::cout << current_map << "\n";
             // std::cout << std::endl;
             
@@ -281,14 +281,14 @@ void Robot::RunSLAM(int algorithm) {
             } 
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
-            current_pos = slam1->BroadcastCurrentPose();  
+            current_pos = slam1->broadcastCurrentPose();  
         }
         
         else if (algorithm == EKF) {
 
             std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-            // VectorXf odom_out = odom->Get_NewVelocities();
-            VectorXf odom_out = odom->Get_NewRawVelocities();
+            // VectorXf odom_out = odom->getNewVelocities();
+            VectorXf odom_out = odom->getNewRawVelocities();
             odom_lock.unlock();
 
             ControlCommand ctrl;
@@ -301,7 +301,7 @@ void Robot::RunSLAM(int algorithm) {
             // ctrl.rot_vel = 0.0;
             //-------------------------------------------------
 
-            Eigen::Tensor<float, 2> new_map = slam2->Run(cloud, ctrl);
+            Eigen::Tensor<float, 2> new_map = slam2->run(cloud, ctrl);
             // std::cout << current_map << std::endl;
             // std::cout << std::endl;
 
@@ -316,14 +316,14 @@ void Robot::RunSLAM(int algorithm) {
             map_lock.unlock();
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
-            current_pos = slam2->BroadcastCurrentPose();       
+            current_pos = slam2->broadcastCurrentPose();       
         }
     }
 }
 
 
 
-cv::Mat Robot::RunVSLAM(bool stereo) {
+cv::Mat Robot::run_vslam(bool stereo) {
 
     // Monocular Camera
     if (!stereo) {
@@ -341,7 +341,7 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
                 break;  // Exit if no frame is captured
             }
 
-            v_slam->RunMono(frame);
+            v_slam->runMono(frame);
 
             // Exit on 'q' key press
             if (cv::waitKey(1) == 'q')
@@ -367,7 +367,7 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
                 break;  // Exit if no frames are captured
             }
 
-            v_slam->RunStereo(frame_left, frame_right);
+            v_slam->runStereo(frame_left, frame_right);
 
             // Exit on 'q' key press
             if (cv::waitKey(1) == 'q')
@@ -383,38 +383,38 @@ cv::Mat Robot::RunVSLAM(bool stereo) {
 
 
 // Should probably add some way to recognize when you are localized and stopping pfilter process.
-void Robot::RunLocalizer(Eigen::Tensor<float, 2> map) {
+void Robot::run_localizer(Eigen::Tensor<float, 2> map) {
 
-    pfilter->AddMap(map, 6, 2 * M_PI);
+    pfilter->addMap(map, 6, 2 * M_PI);
     std::cout << "Map Added!!!\n";
     while (1) {
-        RawScan();
-        PointCloud cloud = GetCloud(NO_BROADCAST);
+        raw_scan();
+        PointCloud cloud = get_cloud(NO_BROADCAST);
 
         std::unique_lock<std::mutex> cloud_lock(cloud_mutex);
         current_cloud = cloud;
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        // VectorXf odom_out = odom->Get_NewVelocities();
-        VectorXf odom_out = odom->Get_NewRawVelocities();
+        // VectorXf odom_out = odom->getNewVelocities();
+        VectorXf odom_out = odom->getNewRawVelocities();
         odom_lock.unlock();
 
         ControlCommand ctrl;
         ctrl.trans_vel = odom_out[0];
         ctrl.rot_vel = odom_out[1];
-        pfilter->Run(cloud, ctrl);
+        pfilter->run(cloud, ctrl);
     }
 }
 
 
 // Needs GPS running on separate thread to update the "current_pos" variable.
-void Robot::RunMapper() {
+void Robot::run_mapper() {
 
     while (1) {
-        RawScan();
+        raw_scan();
         // Version 1
-        std::vector<VectorXf> scan = GetScan();
+        std::vector<VectorXf> scan = get_scan();
 
         std::unique_lock<std::mutex> scan_lock(scan_mutex);
         current_scan = scan;
@@ -424,7 +424,7 @@ void Robot::RunMapper() {
         VectorXf pos = current_pos;
         pos_lock.unlock();
 
-        Eigen::Tensor<float, 2> new_map = og_map->UpdateGridMap(pos, scan);
+        Eigen::Tensor<float, 2> new_map = og_map->updateGridMap(pos, scan);
 
         std::unique_lock<std::mutex> map_lock(map_mutex);
         current_map = new_map;
@@ -438,7 +438,7 @@ void Robot::RunMapper() {
         // current_cloud = cloud;
         // cloud_lock.unlock();
 
-        // Eigen::Tensor<float, 2> new_map = og_map->UpdateGridMapWithPointCloud(cloud);
+        // Eigen::Tensor<float, 2> new_map = og_map->updateGridMapWithPointCloud(cloud);
 
         // std::unique_lock<std::mutex> map_lock(map_mutex);
         // current_map = new_map;
@@ -447,7 +447,7 @@ void Robot::RunMapper() {
 }
 
 
-void Robot::Save_Map(std::string output_filename) {
+void Robot::save_map(std::string output_filename) {
 
     if (!map_params_set()) {
         std::cerr << "ERROR: No Map Available. Cancelling Save...\n";
@@ -458,7 +458,7 @@ void Robot::Save_Map(std::string output_filename) {
     Eigen::Tensor<float, 2> map = current_map;
     map_lock.unlock();
 
-    map_builder->Tensor2D_to_MapFile(map, output_filename, PGM, 255);
+    map_builder->tensor2DToMapFile(map, output_filename, PGM, 255);
 }
 
 
@@ -524,31 +524,32 @@ Robot * Robot::CreateRobot() {
 }
 
 
-void Robot::Set_PhysicalParameters(float robot_trackwidth, float robot_wheel_radius) {
+void Robot::setPhysicalParameters(float robot_trackwidth, float robot_wheel_radius) {
 
     trackwidth = robot_trackwidth;
     wheel_radius = robot_wheel_radius;
-    odom->Set_Trackwidth(trackwidth);
+    odom->setTrackwidth(trackwidth);
     physical_set = true;
-    std::cout << "Phyisical Parameters Set.\n";
-    std::cout << "Track Width: " << trackwidth << "\n";
-    std::cout << "Wheel Radius: " << wheel_radius << "\n";
+    // std::cout << "Phyisical Parameters Set.\n";
+    // std::cout << "Track Width: " << trackwidth << "\n";
+    // std::cout << "Wheel Radius: " << wheel_radius << "\n";
 }
 
 
-void Robot::Set_MapDimensions(int height, int width) {
+void Robot::setMapDimensions(int height, int width) {
     map_height = height;
     map_width = width;
-    map_builder->Update_2DMapDimensions(height, width);
-    slam1->Set_MapDimensions(map_height, map_width);
-    slam2->Set_MapDimensions(map_height, map_width);
+    map_builder->update2DMapDimensions(height, width);
+    slam1->setMapDimensions(map_height, map_width);
+    slam2->setMapDimensions(map_height, map_width);
     map_set = true;
-    std::cout << "Map Parameters Set: (" << height << " x " << width << ")" << std::endl;
+    // std::cout << "Map Parameters Set: (" << height << " x " << width << ")" << std::endl;
     current_map = Eigen::Tensor<float, 2>(height, width);
     current_map.setConstant(0.3);
 }
 
-void Robot::RobotStart() {
+void Robot::robotStart(bool autonomous) {
+    this->autonomous = autonomous;
 
     std::cout << "Starting Robot..." << std::endl;
 
@@ -556,11 +557,11 @@ void Robot::RobotStart() {
     physical_set = false;
     map_data_available = false;
 
-    StartScanner();
+    start_scanner();
 
     // Setupe for PWM Out Values
     serial = std::make_unique<Serial>();
-    serial->UARTInit(UART_NUM); 
+    serial->uartInit(UART_NUM); 
 
     // Set Current Position
     current_pos = VectorXf::Zero(3);
@@ -571,11 +572,11 @@ void Robot::RobotStart() {
 
     // Setup SLAM 1
     slam1 = std::make_unique<PoseGraphOptSLAM>(MAX_NODES, POSE_DIMENSION, GUESS_VARIATION);
-    slam1->FrontEndInit(N_RECENT_POSES, LOOP_CLOSURE_DIST);
+    slam1->frontEndInit(N_RECENT_POSES, LOOP_CLOSURE_DIST);
     
     // Setup SLAM 2
     slam2 = std::make_unique<EKFSlam>(POSE_DIM, LANDMARK_DIM);
-    slam2->SetInitialState(current_pos, PROCESS_UNCERTAINTY, MEASUREMENT_UNCERTAINTY);
+    slam2->setInitialState(current_pos, PROCESS_UNCERTAINTY, MEASUREMENT_UNCERTAINTY);
 
     // Setup SLAM 3
     v_slam = std::make_unique<vSLAM>();
@@ -587,7 +588,7 @@ void Robot::RobotStart() {
     pfilter = std::make_unique<ParticleFilter>(MAX_PARTICLES, P_FILTER_POSE_DIM, P_FILTER_TIME_INTERVAL);
     
     // Setup Path Planner 1
-    astar_path = std::make_unique<A_Star>();
+    astar_path = std::make_unique<AStar>();
 
     // Setup Path Planner 2
     rrt_path = std::make_unique<RRT>();  
@@ -597,34 +598,36 @@ void Robot::RobotStart() {
 
     //Setup Local Path Planning
     d_window = std::make_unique<DynamicWindowApproach>(SMOOTHING_VAL, HEADING_WEIGHT, DISTANCE_WEIGHT, VELOCITY_WEIGHT); 
-    d_window->Set_TranslationalVelocityLimits(MIN_TRANS_VEL, MAX_TRANS_VEL, TRANS_VEL_INTERVAL); 
-    d_window->Set_RotationalVelocityLimits(MIN_ROT_VEL, MAX_ROT_VEL, ROT_VEL_INTERVAL); 
-    d_window->Set_MaxAccelerations(MAX_TRANS_ACCEL, MAX_ROT_ACCEL);
+    d_window->setTranslationalVelocityLimits(MIN_TRANS_VEL, MAX_TRANS_VEL, TRANS_VEL_INTERVAL); 
+    d_window->setRotationalVelocityLimits(MIN_ROT_VEL, MAX_ROT_VEL, ROT_VEL_INTERVAL); 
+    d_window->setMaxAccelerations(MAX_TRANS_ACCEL, MAX_ROT_ACCEL);
 
     // Setup PIDs
     pid_left = std::make_unique<PID>(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
     pid_right = std::make_unique<PID>(DIRECT, SAMPLE_TIME_MS, KP, KI, KD); 
-    pid_left->Set_Output_Limits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
-    pid_right->Set_Output_Limits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
+    pid_left->setOutputLimits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
+    pid_right->setOutputLimits(MIN_OUTPUT_VAL, MAX_OUTPUT_VAL); 
 
     odom = std::make_unique<Odom>(ODOM_TRACKWIDTH, ODOM_TIMESTEP);
 
     path_util = std::make_unique<PathUtil>();
+
+    controller = std::make_unique<Controller>(DIFF_BOT);
 }
 
-void Robot::RobotStop(std::string output_filename) {
+void Robot::robotStop(std::string output_filename) {
 
     std::cout << "Saving Map...\n";
-    Save_Map(output_filename);
+    save_map(output_filename);
     
     std::cout << "Shutting Down..." << std::endl;
-    StopScanner();
+    stop_scanner();
     // std::cout << "Scanner Stopped" << std::endl;
     Serial::RestoreTerminal();
 }
 
 
-void Robot::MapEnv() {
+void Robot::mapEnv() {
 
     if (!map_params_set()) {
         std::cerr << "ERROR: Map Size Parameters Not Set. Cancelling Mapping...\n";
@@ -635,14 +638,24 @@ void Robot::MapEnv() {
         std::cerr << "ERROR: Physical Robot Parameters Not Set. Cancelling Mapping...\n";
         return;
     }
-    std::thread mapping_thread(&diffdrive::Robot::RunMapper, this);
-    std::thread explorer_thread(&diffdrive::Robot::FindFrontier, this);
+
+    if (autonomous) {
+        std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
+         explorer_thread.join();
+    }
+
+    else {
+        std::thread controller_thread(&Controller::controllerRun, controller.get());
+        controller_thread.join();
+    }
+        
+    std::thread mapping_thread(&diffdrive::Robot::run_mapper, this);
     mapping_thread.join();
-    explorer_thread.join();
+   
 }
 
 
-void Robot::Localize(std::string map_filename) {
+void Robot::localize(std::string map_filename) {
 
     if (!map_params_set()) {
         std::cerr << "ERROR: Map Size Parameters Not Set. Cancelling Localization...\n";
@@ -653,18 +666,27 @@ void Robot::Localize(std::string map_filename) {
         std::cerr << "ERROR: Physical Robot Parameters Not Set. Cancelling Localization...\n";
         return;
     }
-    Eigen::Tensor<float, 2> map = map_builder->MapFile_to_Tensor2D(map_filename, PBM);
+    Eigen::Tensor<float, 2> map = map_builder->mapFileToTensor2D(map_filename, PBM);
     std::unique_lock<std::mutex> map_lock(map_mutex);
     current_map = map;
     map_lock.unlock();
-    std::thread localizer_thread(&diffdrive::Robot::RunLocalizer, this, map);
-    std::thread explorer_thread(&diffdrive::Robot::FindFrontier, this);
+
+    if (autonomous) {
+        std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
+         explorer_thread.join();
+    }
+
+    else {
+        std::thread controller_thread(&Controller::controllerRun, controller.get());
+        controller_thread.join();
+    }
+
+    std::thread localizer_thread(&diffdrive::Robot::run_localizer, this, map);
     localizer_thread.join();
-    explorer_thread.join();
 }
 
 
-void Robot::MapAndLocalize(int algorithm) {
+void Robot::mapAndLocalize(int algorithm) {
 
     if (!map_params_set()) {
         std::cout << "ERROR: Map Size Parameters Not Set. Cancelling SLAM...\n";
@@ -676,36 +698,44 @@ void Robot::MapAndLocalize(int algorithm) {
         return;
     }
 
-    std::thread slam_thread(&diffdrive::Robot::RunSLAM, this, algorithm);
-    std::thread explorer_thread(&diffdrive::Robot::FindFrontier, this);
+    if (autonomous) {
+        std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
+         explorer_thread.join();
+    }
+
+    else {
+        std::thread controller_thread(&Controller::controllerRun, controller.get());
+        controller_thread.join();
+    }
+
+    std::thread slam_thread(&diffdrive::Robot::run_slam, this, algorithm);
     slam_thread.join();
-    explorer_thread.join();
 }
 
 
-std::vector<VectorXi> Robot::CreatePath(int algorithm, std::string map_filename, VectorXi start, VectorXi goal) {
+std::vector<VectorXi> Robot::createPath(int algorithm, std::string map_filename, VectorXi start, VectorXi goal) {
 
     if (algorithm == A_STAR) {
-        astar_path->Load_MAP(map_builder->MapFile_to_Tensor2D(map_filename, PBM));
-        return astar_path->Path(start, goal);
+        astar_path->loadMAP(map_builder->mapFileToTensor2D(map_filename, PBM));
+        return astar_path->path(start, goal);
     }   
     
     else if (algorithm == RRT_VANILLA) {
-        rrt_path->Load_MAP(map_builder->MapFile_to_Tensor2D(map_filename, PBM));
-        return rrt_path->RRT_Path(start, goal, 1);
+        rrt_path->loadMAP(map_builder->mapFileToTensor2D(map_filename, PBM));
+        return rrt_path->rrtPath(start, goal, 1);
     }
     
     else if (algorithm == RRT_STAR) {
-        rrt_path->Load_MAP(map_builder->MapFile_to_Tensor2D(map_filename, PBM));
-        return rrt_path->RRTStar_Path(start, goal, 1, 2);
+        rrt_path->loadMAP(map_builder->mapFileToTensor2D(map_filename, PBM));
+        return rrt_path->rrtStarPath(start, goal, 1, 2);
     } 
 }
 
 
 
-void Robot::BroadcastPointCloud() {
+void Robot::broadcastPointCloud() {
 
-    GetCloud(BROADCAST);
+    get_cloud(BROADCAST);
 }
 
 

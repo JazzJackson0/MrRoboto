@@ -32,7 +32,7 @@ struct Cell {
 };
 
 
-class A_Star {
+class AStar {
 
     private: 
         
@@ -58,7 +58,7 @@ class A_Star {
          * 
          * @return ** float 
          */
-        float Get_ManhattanDistance(int x1, int y1, int x2, int y2);
+        float get_manhattan_distance(int x1, int y1, int x2, int y2);
 
         /**
          * @brief Get the Diagonal Distance to goal. (An Approximate Heuristic)
@@ -71,7 +71,7 @@ class A_Star {
          * 
          * @return ** float 
          */
-        float Get_DiagonalDistance(int x1, int y1, int x2, int y2);
+        float get_diagonal_distance(int x1, int y1, int x2, int y2);
 
         /**
          * @brief Get the Euclidean Distance to goal. (An Approximate Heuristic)
@@ -86,7 +86,7 @@ class A_Star {
          * 
          * @return ** float 
          */
-        float Get_EuclideanDistance(int x1, int y1, int x2, int y2);
+        float get_euclidean_distance(int x1, int y1, int x2, int y2);
 
 
         /**
@@ -98,7 +98,7 @@ class A_Star {
          * @return true - If Cell is Valid
          * @return false - If Cell is Not Valid
          */
-        bool isValid(int x, int y);
+        bool is_valid(int x, int y);
 
         /**
          * @brief Checks the Grid to see whether or not a given cell is blocked.
@@ -108,7 +108,7 @@ class A_Star {
          * @return true - If Cell is Blocked
          * @return false - If Cell is Not Blocked
          */
-        bool isBlocked(int x, int y);
+        bool is_blocked(int x, int y);
 
 
         /**
@@ -119,7 +119,7 @@ class A_Star {
          * @return true - If match 
          * @return false - If No match
          */
-        bool isGoalReached(int x, int y);
+        bool is_goal_reached(int x, int y);
 
 
         /**
@@ -128,7 +128,7 @@ class A_Star {
          * @return true 
          * @return false 
          */
-        bool isStartAndGoalValid();
+        bool is_start_and_goal_valid();
 
 
         /**
@@ -139,7 +139,7 @@ class A_Star {
          * @param formula Type of distance calculation formula
          * @return ** float 
          */
-        float Get_HCost(int x, int y, DistanceFormula formula);
+        float get_h_cost(int x, int y, DistanceFormula formula);
 
 
         /**
@@ -153,7 +153,7 @@ class A_Star {
          * @param formula Type of distance calculation formula
          * @return float 
          */
-        float Get_GCost(int x1, int y1, int x2, int y2, DistanceFormula formula);
+        float get_g_cost(int x1, int y1, int x2, int y2, DistanceFormula formula);
 
 
         /**
@@ -165,7 +165,7 @@ class A_Star {
          * @param y_adjacent 
          * @param adjacent_cell_num 
          */
-        void Get_AdjacentCellCoordinates(int x, int y, int &x_adjacent, int &y_adjacent, int adjacent_cell_num);
+        void get_adjacent_cell_coordinates(int x, int y, int &x_adjacent, int &y_adjacent, int adjacent_cell_num);
 
 
         /**
@@ -174,7 +174,7 @@ class A_Star {
          * 
          * @return ** Cell** 
          */
-        std::vector<std::vector<astar::Cell>> Init_MatrixOfCells();
+        std::vector<std::vector<astar::Cell>> init_matrix_of_cells();
 
 
         /**
@@ -184,7 +184,7 @@ class A_Star {
          * @param cells Holds 2D array of the Uncovered and Visited Cells.
          * @return ** void 
          */
-        void PathTrace(std::vector<std::vector<astar::Cell>> cells);
+        void path_trace(std::vector<std::vector<astar::Cell>> cells);
 
  
     public:
@@ -193,7 +193,7 @@ class A_Star {
          * @brief Construct a new a star object
          * 
          */
-        A_Star();
+        AStar();
 
         /**
          * @brief Performs an A* search on a given Grid
@@ -201,7 +201,7 @@ class A_Star {
          * @param map The Grid that will be searched
          * 
          */
-        A_Star(Eigen::Tensor<float, 2> map);
+        AStar(Eigen::Tensor<float, 2> map);
 
 
         /**
@@ -209,7 +209,7 @@ class A_Star {
          * 
          * @param map 
          */
-        void Load_MAP(Eigen::Tensor<float, 2> map);
+        void loadMAP(Eigen::Tensor<float, 2> map);
 
 
         /**
@@ -219,7 +219,7 @@ class A_Star {
          * @param goalCell Goal coordinates
          * @return ** std::vector<VectorXf> The waypoints of the path 
          */
-        std::vector<VectorXi> Path(VectorXi startCell, VectorXi goalCell);
+        std::vector<VectorXi> path(VectorXi startCell, VectorXi goalCell);
 
 };
 

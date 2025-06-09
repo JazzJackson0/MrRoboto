@@ -5,7 +5,7 @@
  */
 
 // Private-----------------------------------------------------------------------------------------------------------------------------------
-void CameraCalibrator::loadImages(const std::string& path) {
+void CameraCalibrator::load_images(const std::string& path) {
     
     glob_t glob_result;
     glob((path + "/*.png").c_str(), 0, nullptr, &glob_result);
@@ -110,7 +110,7 @@ void CameraCalibrator::captureImages(int camera_id, int num_of_frames) {
 
 std::tuple<cv::Mat, std::vector<cv::Mat>, std::vector<cv::Mat>> CameraCalibrator::calibrateCamera(const std::string& images_path) {
     
-    loadImages(images_path);
+    load_images(images_path);
 
     if (objpoints_3D.empty() || imgpoints_2D.empty()) {
         std::cerr << "Error: No object points or image points collected." << std::endl;

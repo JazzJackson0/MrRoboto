@@ -43,7 +43,7 @@ class OccupancyGridMap {
 		 *
 		 *	@return float - Log Odds Value 
 		 */
-		inline float LogOdds(float x);
+		inline float log_odds(float x);
 
 		
 		/**
@@ -56,7 +56,7 @@ class OccupancyGridMap {
 		 *
 		 * @return float - Return probability value for given cell.
 		 */
-		float InverseSensorModel(ogrid::Cell cell, std::vector<VectorXf> beams);
+		float inverse_sensor_model(ogrid::Cell cell, std::vector<VectorXf> beams);
 
 
 		/**
@@ -68,7 +68,7 @@ class OccupancyGridMap {
 		 * @param cell_bearing 
 		 * @return int - Index of beam with a bearing most similar to the bearing parameter
 		 */
-		int Get_MostSimilarBeam(std::vector<VectorXf> beams, ogrid::Cell cell, float cell_range, float cell_bearing);
+		int get_most_similar_beam(std::vector<VectorXf> beams, ogrid::Cell cell, float cell_range, float cell_bearing);
 
 
 	public:
@@ -100,7 +100,7 @@ class OccupancyGridMap {
 		 *
 		 * @return Eigen::Tensor<float, 2> - The updated map
 		 */
-		Eigen::Tensor<float, 2> UpdateGridMap(VectorXf pose, std::vector<VectorXf> scan);
+		Eigen::Tensor<float, 2> updateGridMap(VectorXf pose, std::vector<VectorXf> scan);
 
 
 		/**
@@ -109,7 +109,7 @@ class OccupancyGridMap {
 		 * @param cloud 
 		 * @return Eigen::Tensor<float, 2> 
 		 */
-		Eigen::Tensor<float, 2> UpdateGridMapWithPointCloud(PointCloud cloud);
+		Eigen::Tensor<float, 2> updateGridMapWithPointCloud(PointCloud cloud);
 
 };
 

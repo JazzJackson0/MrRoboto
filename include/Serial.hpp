@@ -49,7 +49,7 @@ class Serial {
          * 
          * @param buff_size 
          */
-        void Set_BufferSize(int buff_size);
+        void setBufferSize(int buff_size);
 
 
         /**
@@ -59,7 +59,7 @@ class Serial {
          * @param pinDirection Direction of Pin (PIN_IN or PIN_OUT)
          * @return ** int8_t - Returns 1 is successful, -1 if error occured.
          */
-        int8_t PinInit(uint8_t gpioNum, int pinDirection);
+        int8_t pinInit(uint8_t gpioNum, int pinDirection);
 
 
         /**
@@ -68,7 +68,7 @@ class Serial {
          * @param uartNum
          * @return int8_t 
          */
-        int8_t UARTInit(uint8_t uartNum);
+        int8_t uartInit(uint8_t uartNum);
 
         /**
          * @brief Restore terminal settings when the program ends
@@ -81,7 +81,7 @@ class Serial {
          * 
          * @param uartNum
          */
-        void UARTDeInit(uint8_t uartNum);
+        void uartDeInit(uint8_t uartNum);
 
 
         /**
@@ -91,7 +91,7 @@ class Serial {
          * @param slaveAddress 
          * @return int8_t 
          */
-        int8_t I2CInit(uint8_t i2cNum, uint8_t slaveAddress);
+        int8_t i2cInit(uint8_t i2cNum, uint8_t slaveAddress);
 
 
         /**
@@ -99,7 +99,7 @@ class Serial {
          * 
          * @param i2cNum
          */
-        void I2CDeInit(uint8_t i2cNum);
+        void i2cDeInit(uint8_t i2cNum);
 
         /**
          * @brief Initialize the SPI Bus
@@ -110,7 +110,7 @@ class Serial {
          * @param spi_bits Num of Bits to read/write on every SPI access
          * @return int8_t 
          */
-        int8_t SPIInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint8_t spi_bits);
+        int8_t spiInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint8_t spi_bits);
 
 
         /**
@@ -119,7 +119,7 @@ class Serial {
          * @param spiNum
          * 
          */
-        void SPIDeInit(uint8_t spiNum);
+        void spiDeInit(uint8_t spiNum);
 
 
         /**
@@ -129,7 +129,7 @@ class Serial {
          * @param pinState State of Pin (PIN_HIGH or PIN_LOW)
          * @return ** int8_t - Returns 1 is successful, -1 if error occured.
          */
-        int8_t PinWrite(uint8_t gpioNum, uint8_t pinState);
+        int8_t pinWrite(uint8_t gpioNum, uint8_t pinState);
 
         /**
          * @brief Get the state of a given pin.
@@ -137,7 +137,7 @@ class Serial {
          * @param gpioNum 
          * @return ** int8_t - Returns State of Pin, or -1 if error occured.
          */
-        int8_t PinRead(uint8_t gpioNum);
+        int8_t pinRead(uint8_t gpioNum);
 
 
         /**
@@ -148,7 +148,7 @@ class Serial {
          * @param datalen 
          * @return int8_t 
          */
-        int8_t UARTWrite(uint8_t uartNum, char* data, int datalen);
+        int8_t uartWrite(uint8_t uartNum, char* data, int datalen);
 
 
         /**
@@ -159,7 +159,7 @@ class Serial {
          * @param datalen 
          * @return int8_t 
          */
-        int8_t UARTRead(uint8_t uartNum, char* data, int datalen);
+        int8_t uartRead(uint8_t uartNum, char* data, int datalen);
 
 
         /**
@@ -170,7 +170,7 @@ class Serial {
          * @param byteNum Number of bytes to write
          * @return int 
          */
-        int8_t I2CWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum);
+        int8_t i2cWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum);
 
 
         /**
@@ -181,7 +181,7 @@ class Serial {
          * @param byteNum Number of bytes to read
          * @return int 
          */
-        int8_t I2CRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum);
+        int8_t i2cRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum);
 
 
         /**
@@ -193,7 +193,7 @@ class Serial {
          * 
          * @return int
          */
-        int SPITransfer(uint8_t spiNum, int8_t *dataBytes, int len);
+        int spiTransfer(uint8_t spiNum, int8_t *dataBytes, int len);
 
         /**
          * @brief 
@@ -204,7 +204,7 @@ class Serial {
          * @param duty_cycle 
          * @return int 
          */
-        int PWMInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t duty_cycle);
+        int pwmInit(uint8_t chipNum, uint8_t pwmNum, uint64_t period, uint64_t duty_cycle);
 
         /**
          * @brief 
@@ -213,7 +213,7 @@ class Serial {
          * @param pwmNum 
          * @return int 
          */
-        int PWMDeInit(uint8_t chipNum, uint8_t pwmNum);
+        int pwmDeInit(uint8_t chipNum, uint8_t pwmNum);
 
         /**
          * @brief 
@@ -223,6 +223,6 @@ class Serial {
          * @param duty_cycle 
          * @return int 
          */
-        int PWMUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle);
+        int pwmUpdate(uint8_t chipNum, uint8_t pwmNum, uint64_t duty_cycle);
 
 };

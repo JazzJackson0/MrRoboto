@@ -29,7 +29,7 @@ class vSLAM {
          * @param detector 
          * @return cv::Mat 
          */
-        cv::Mat BagOfWords(cv::Mat image, cv::Mat img_descriptors,std::vector<cv::KeyPoint> img_keypoints, cv::Ptr<cv::ORB> detector);
+        cv::Mat bagOfWords(cv::Mat image, cv::Mat img_descriptors,std::vector<cv::KeyPoint> img_keypoints, cv::Ptr<cv::ORB> detector);
 
         /**
          * @brief 
@@ -38,16 +38,16 @@ class vSLAM {
          * @param hist2 
          * @return double 
          */
-        double Compare_Histograms(cv::Mat hist1, cv::Mat hist2);
+        double compareHistograms(cv::Mat hist1, cv::Mat hist2);
 
 
-        void Optimize();
+        void optimize();
 
 
-        void RunMono(cv::Mat img);
+        void runMono(cv::Mat img);
 
 
-        void RunStereo(cv::Mat left_img, cv::Mat right_img);
+        void runStereo(cv::Mat left_img, cv::Mat right_img);
 
 };
 

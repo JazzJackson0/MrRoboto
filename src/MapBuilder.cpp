@@ -14,7 +14,7 @@ MapBuilder::MapBuilder(int m, int n) : M(m), N(n) {
 MapBuilder::MapBuilder(int p, int m, int n) : P(p), M(m), N(n) {}
 
 
-void MapBuilder::Update_2DMapDimensions(int m, int n) {
+void MapBuilder::update2DMapDimensions(int m, int n) {
 
     M = m;
     N = n;
@@ -22,14 +22,14 @@ void MapBuilder::Update_2DMapDimensions(int m, int n) {
 }
 
 
-void MapBuilder::Update_3DMapDimensions(int m, int n, int p) {
+void MapBuilder::update3DMapDimensions(int m, int n, int p) {
 
     M = m;
     N = n;
     P = p;
 }
 
-void MapBuilder::Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filename, int filetype, int max_value) {
+void MapBuilder::tensor2DToMapFile(Tensor<float, 2> tensor, std::string filename, int filetype, int max_value) {
 
     // map_file.open(filename, std::ios::out | std::ios::trunc);
     map_file.open(filename, std::ios::out | std::ios::binary); // truncation is implicit here
@@ -106,7 +106,7 @@ void MapBuilder::Tensor2D_to_MapFile(Tensor<float, 2> tensor, std::string filena
 }
 
 
-Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filetype) {
+Tensor<float, 2> MapBuilder::mapFileToTensor2D(std::string filename, int filetype) {
 
     Tensor<float, 2> tensor_2d(M, N);
     tensor_2d.setZero();
@@ -123,7 +123,7 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
         while (getline(map_file, line)) {
             
             line_num++;
-            elems = split(line, "\\s+");
+            elems = utils::split(line, "\\s+");
 
             // Skip blank lines
             if (elems.size() == 0)
@@ -196,7 +196,7 @@ Tensor<float, 2> MapBuilder::MapFile_to_Tensor2D(std::string filename, int filet
 }
 
 
-void MapBuilder::Tensor3D_to_MapFile(Tensor<float, 3> tensor, std::string filename, int filetype) {
+void MapBuilder::tensor3DToMapFile(Tensor<float, 3> tensor, std::string filename, int filetype) {
 
     if (P <= 0) return;
 
@@ -228,7 +228,7 @@ void MapBuilder::Tensor3D_to_MapFile(Tensor<float, 3> tensor, std::string filena
 }
 
 
-Tensor<float, 3> MapBuilder::MapFile_to_Tensor3D(std::string filename, int filetype) {
+Tensor<float, 3> MapBuilder::mapFileToTensor3D(std::string filename, int filetype) {
 
     // Use PLY Library (7-Libraries/PLY-Polygon-File-Format/)
     Tensor<float, 3> tensor_3d(P, M, N);
@@ -245,7 +245,7 @@ Tensor<float, 3> MapBuilder::MapFile_to_Tensor3D(std::string filename, int filet
         int points_added = 0;
         while (getline(map_file, line)) {
             
-            elems = split(line, "\\s+");
+            elems = utils::split(line, "\\s+");
             
             // Skip blank lines
             if (elems.size() == 0)
@@ -280,7 +280,7 @@ Tensor<float, 3> MapBuilder::MapFile_to_Tensor3D(std::string filename, int filet
 }
 
 
-VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
+VectorXi MapBuilder::mapCoordinateToDataStructureIndex(VectorXf coordinate) {
 
     
     VectorXi index = VectorXi::Zero(2);
@@ -301,7 +301,7 @@ VectorXi MapBuilder::MapCoordinate_to_DataStructureIndex(VectorXf coordinate) {
 }
 
 
-VectorXf MapBuilder::DataStructureIndex_to_MapCoordinate(VectorXi index) {
+VectorXf MapBuilder::dataStructureIndexToMapCoordinate(VectorXi index) {
 
     VectorXf coordinate = VectorXf::Zero(2);
     if (P > 0) coordinate.resize(3);
@@ -316,7 +316,7 @@ VectorXf MapBuilder::DataStructureIndex_to_MapCoordinate(VectorXi index) {
 }
 
 
-Eigen::Tensor<float, 2> MapBuilder::Get_MaximumLikelihoodMap(Eigen::Tensor<float, 2> map) {
+Eigen::Tensor<float, 2> MapBuilder::getMaximumLikelihoodMap(Eigen::Tensor<float, 2> map) {
     
     int height = map.dimension(0);
     int width = map.dimension(1);
@@ -341,7 +341,7 @@ Eigen::Tensor<float, 2> MapBuilder::Get_MaximumLikelihoodMap(Eigen::Tensor<float
 
 
 
-void MapBuilder::Apply_InflationLayer(Tensor<float, 2> &map, int inflation_radius) {
+void MapBuilder::applyInflationLayer(Tensor<float, 2> &map, int inflation_radius) {
 
     int height = map.dimension(0);
     int width = map.dimension(1);

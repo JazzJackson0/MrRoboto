@@ -1,7 +1,7 @@
 #include "../include/FrontierExploration.hpp"
 
 // Private-----------------------------------------------------------------------------------------------------------------------------------
-void FrontierExplorer::Build_CellStatusMap() {
+void FrontierExplorer::build_cell_status_map() {
 
     CellStatusMap = new PointStatus*[M];
     for (int i = 0; i < M; i++) {
@@ -20,21 +20,21 @@ void FrontierExplorer::Build_CellStatusMap() {
     }
 }
 
-bool FrontierExplorer::isValid(int row, int col) {
+bool FrontierExplorer::is_valid(int row, int col) {
     return (col >= 0) && (col < N) && 
         (row >= 0) && (row < M);
 }
 
-bool FrontierExplorer::isFrontierPoint(VectorXi point) {
+bool FrontierExplorer::is_frontier_point(VectorXi point) {
 
     // If Point is not an unknown space it can't be a frontier
     if (Map(point[1], point[0]) != 0.5) { return false; }
 
-    return Has_OpenSpaceNeighbor(point);
+    return has_open_space_neighbor(point);
 }
 
 
-bool FrontierExplorer::Has_OpenSpaceNeighbor(VectorXi point) {
+bool FrontierExplorer::has_open_space_neighbor(VectorXi point) {
 
     int row = point[1];
     int col = point[0];
@@ -46,14 +46,14 @@ bool FrontierExplorer::Has_OpenSpaceNeighbor(VectorXi point) {
         int ncol = col + dir[0];
         int nrow = row + dir[1];
 
-        if (isValid(nrow, ncol) && Map(nrow, ncol) < 0.5) { return true; }
+        if (is_valid(nrow, ncol) && Map(nrow, ncol) < 0.5) { return true; }
     }
 
     return false;
 }
 
 
-VectorXi FrontierExplorer::Get_Centroid(std::vector<VectorXi> frontier) {
+VectorXi FrontierExplorer::get_centroid(std::vector<VectorXi> frontier) {
 
     VectorXi centroid(2);
     float x_sum = 0;
@@ -68,12 +68,12 @@ VectorXi FrontierExplorer::Get_Centroid(std::vector<VectorXi> frontier) {
     return centroid;
 }
 
-int FrontierExplorer::Get_CellStatus(VectorXi point, int map_frontier) {
+int FrontierExplorer::get_cell_status(VectorXi point, int map_frontier) {
 
     int row = point[1];
     int col = point[0];
 
-    if (!isValid(row, col)) {
+    if (!is_valid(row, col)) {
         std::cerr << "ERROR: Cell (" << row << ", "<< col << ") Out of Bounds [Cannot Find Frontier]" << std::endl;
     }
     
@@ -87,12 +87,12 @@ int FrontierExplorer::Get_CellStatus(VectorXi point, int map_frontier) {
 
 
 
-void FrontierExplorer::Update_CellStatus(VectorXi point, int map_frontier, int status) {
+void FrontierExplorer::update_cell_status(VectorXi point, int map_frontier, int status) {
 
     int row = point[1];
     int col = point[0];
 
-    if (!isValid(row, col)) {
+    if (!is_valid(row, col)) {
         std::cerr << "ERROR: Cell (" << row << ", "<< col << ") Out of Bounds [Cannot Find Frontier]" << std::endl;
         return;
     }
@@ -120,12 +120,12 @@ void FrontierExplorer::Update_CellStatus(VectorXi point, int map_frontier, int s
 
 
 
-std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(VectorXi robot_index) {
+std::vector<std::vector<VectorXi>> FrontierExplorer::detect_wavefront_frontier(VectorXi robot_index) {
 
     MapQueue.push(robot_index);
     MapOpenList.push_back(robot_index);
     std::vector<std::vector<VectorXi>> frontiers;
-    Update_CellStatus(robot_index, MAP_STATUS, xOPEN);
+    update_cell_status(robot_index, MAP_STATUS, xOPEN);
 
 
     while (!MapQueue.empty()) {
@@ -134,10 +134,10 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
         MapQueue.pop();
         // std::cout << "Viewing Point: " << point.transpose() << std::endl;
 
-        if (Get_CellStatus(point, MAP_STATUS) == xCLOSED) { continue; }
+        if (get_cell_status(point, MAP_STATUS) == xCLOSED) { continue; }
 
-        if (isFrontierPoint(point)) {
-            std::vector<VectorXi> new_frontier = Extract_Frontier2D(point);
+        if (is_frontier_point(point)) {
+            std::vector<VectorXi> new_frontier = extract_frontier_2D(point);
             // std::cout << "Frontier of SIZE " << new_frontier.size() << " Created." << std::endl;
             frontiers.push_back(new_frontier);
             // std::cout << "NEW FRONTIER POINT FOUND!!" << std::endl; 
@@ -155,24 +155,24 @@ std::vector<std::vector<VectorXi>> FrontierExplorer::Detect_WavefrontFrontier(Ve
             neighbor << neighborx, neighbory;
 
             // Check bounds
-            if (!isValid(neighbory, neighborx)) {
+            if (!is_valid(neighbory, neighborx)) {
                 continue;
             }
 
             //NOTE: 'Has_OpenSpaceNeighbor(neighbor)' Prevents you from propagating deep into unknown space.
-            if (Get_CellStatus(neighbor, MAP_STATUS) == xNONE && Has_OpenSpaceNeighbor(neighbor)) {
-                Update_CellStatus(neighbor, MAP_STATUS, xOPEN);
+            if (get_cell_status(neighbor, MAP_STATUS) == xNONE && has_open_space_neighbor(neighbor)) {
+                update_cell_status(neighbor, MAP_STATUS, xOPEN);
                 MapQueue.push(neighbor);
                 // std::cout << "Pushing Neighbor: " << neighbor.transpose() << std::endl;
             }
         }
-        Update_CellStatus(point, MAP_STATUS, xCLOSED);
+        update_cell_status(point, MAP_STATUS, xCLOSED);
     }
 
     return frontiers;
 }
 
-std::vector<VectorXi> FrontierExplorer::Extract_Frontier2D(VectorXi frontier_pt) {
+std::vector<VectorXi> FrontierExplorer::extract_frontier_2D(VectorXi frontier_pt) {
 
     FrontierQueue.push(frontier_pt);
     FrontierOpenList.push_back(frontier_pt);
@@ -183,9 +183,9 @@ std::vector<VectorXi> FrontierExplorer::Extract_Frontier2D(VectorXi frontier_pt)
         VectorXi point = FrontierQueue.front();
         FrontierQueue.pop();
 
-        if (Get_CellStatus(point, MAP_STATUS) == xCLOSED || Get_CellStatus(point, FRONTIER_STATUS) == xCLOSED) { continue; }
+        if (get_cell_status(point, MAP_STATUS) == xCLOSED || get_cell_status(point, FRONTIER_STATUS) == xCLOSED) { continue; }
 
-        if (isFrontierPoint(point)) {
+        if (is_frontier_point(point)) {
             
             new_frontier.push_back(point);
 
@@ -201,18 +201,18 @@ std::vector<VectorXi> FrontierExplorer::Extract_Frontier2D(VectorXi frontier_pt)
                 neighbor << neighborx, neighbory;
 
                 // Check bounds
-                if (!isValid(neighbory, neighborx)) {
+                if (!is_valid(neighbory, neighborx)) {
                     continue;
                 }
 
-                if (Get_CellStatus(neighbor, FRONTIER_STATUS) == xNONE && Get_CellStatus(neighbor, MAP_STATUS) != xCLOSED) {
-                    Update_CellStatus(neighbor, FRONTIER_STATUS, xOPEN);
+                if (get_cell_status(neighbor, FRONTIER_STATUS) == xNONE && get_cell_status(neighbor, MAP_STATUS) != xCLOSED) {
+                    update_cell_status(neighbor, FRONTIER_STATUS, xOPEN);
                     FrontierQueue.push(neighbor);
                 }
             }
         }
 
-        Update_CellStatus(point, FRONTIER_STATUS, xCLOSED);
+        update_cell_status(point, FRONTIER_STATUS, xCLOSED);
     }
 
     return new_frontier;
@@ -228,23 +228,23 @@ FrontierExplorer::FrontierExplorer(Eigen::Tensor<float, 2> map) : Map(map) {
     auto &d = Map.dimensions();
     M = d[0];
 	N = d[1];
-    Build_CellStatusMap();
+    build_cell_status_map();
 }
 
 
-void FrontierExplorer::Load_MAP(Eigen::Tensor<float, 2> map) {
+void FrontierExplorer::loadMAP(Eigen::Tensor<float, 2> map) {
 
     Map = map;
     auto &d = Map.dimensions();
     M = d[0];
 	N = d[1];
-    Build_CellStatusMap();
+    build_cell_status_map();
 }
 
 
-VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
+VectorXi FrontierExplorer::findFrontier(VectorXi robot_pose) {
 
-    std::vector<std::vector<VectorXi>> frontiers = Detect_WavefrontFrontier(robot_pose);
+    std::vector<std::vector<VectorXi>> frontiers = detect_wavefront_frontier(robot_pose);
     // std::cout << Map << std::endl;
     
     // Decide on frontier to visit----------
@@ -253,7 +253,7 @@ VectorXi FrontierExplorer::FindFrontier(VectorXi robot_pose) {
     float closest_dist = std::numeric_limits<float>::max();
     for (int i = 0; i < frontiers.size(); i++) {
 
-        VectorXi centroid = Get_Centroid(frontiers[i]);
+        VectorXi centroid = get_centroid(frontiers[i]);
         
         float dist = std::hypot((centroid[0] - robot_pose[0]), (centroid[1] - robot_pose[1]));
         if (dist < closest_dist) {

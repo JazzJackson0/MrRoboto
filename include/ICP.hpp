@@ -40,7 +40,7 @@ class ICP {
 		 * @param NewPointSet 
 		 * @return float RMS Error
 		 */
-		float Get_RootMeanSquaredError(PointCloud RefPointSet, PointCloud NewPointSet);
+		float get_root_mean_squared_error(PointCloud RefPointSet, PointCloud NewPointSet);
 
 		/**
 		 * @brief Calculate the Euclidean Distance between two points.
@@ -49,7 +49,7 @@ class ICP {
 		 * @param q 
 		 * @return float 
 		 */
-		float Get_EuclideanDistance(VectorXf p, VectorXf q);
+		float get_euclidean_distance(VectorXf p, VectorXf q);
 
 		/**
 		 * @brief Calculate the Center of Mass for a given Point Cloud
@@ -57,7 +57,7 @@ class ICP {
 		 * @param p_cloud The cloud you calculate the center of mass of
 		 * @return VectorXf Center of Mass
 		 */
-		VectorXf Get_CenterOfMass(PointCloud p_cloud);
+		VectorXf get_center_of_mass(PointCloud p_cloud);
 
 
 		/**
@@ -68,7 +68,7 @@ class ICP {
 		 * @param x_increment The increment to add to the Point Cloud.
 		 * @return ** PointCloud  Updated Point Cloud
 		 */
-		PointCloud Update_PointCloud(PointCloud PointCloud, VectorXf x_increment);
+		PointCloud update_point_cloud(PointCloud PointCloud, VectorXf x_increment);
 		
 		/**
 		 * @brief Calculates the correspondences between two point clouds and returns subsets
@@ -79,7 +79,7 @@ class ICP {
 		 *
 		 * @return ** pair<PointCloud, PointCloud> - (Reference Point Set, New Point Set)
 		 */
-		pair<PointCloud, PointCloud>  Calculate_Correspondences(PointCloud RefPointCloud, 
+		pair<PointCloud, PointCloud>  calculate_correspondences(PointCloud RefPointCloud, 
 			PointCloud NewPointCloud);
 
 		/**
@@ -90,7 +90,7 @@ class ICP {
 		 * @param NewPoint Point n from New Point Set
 		 * @return ** VectorXf 
 		 */
-		VectorXf GetErrorVector(VectorXf x_param, VectorXf ReferencePoint, VectorXf NewPoint);
+		VectorXf get_error_vector(VectorXf x_param, VectorXf ReferencePoint, VectorXf NewPoint);
 
 		/**
 		 * @brief Builds the error function for the Non-Linear Least Squares ICP method.
@@ -100,7 +100,7 @@ class ICP {
 		 *
 		 * @return ** void
 		 */
-		void BuildErrorFunction(VectorXf ReferencePoint, VectorXf NewPoint); 
+		void build_error_function(VectorXf ReferencePoint, VectorXf NewPoint); 
 		 
 
 		/**
@@ -112,7 +112,7 @@ class ICP {
 		 * 
          * @return ** MatrixXf - Jacobian 
          */
-		MatrixXf CalculateJacobian(VectorXf ReferencePoint, VectorXf NewPoint, VectorXf x_update); 
+		MatrixXf calculate_jacobian(VectorXf ReferencePoint, VectorXf NewPoint, VectorXf x_update); 
 
 
 	public:
@@ -140,7 +140,7 @@ class ICP {
 		 *
 		 * @return ** RotationTranslation
 		 */
-		RotationTranslation RunSVDAlign(PointCloud RefPointSet, PointCloud NewPointSet);
+		RotationTranslation runSVDAlign(PointCloud RefPointSet, PointCloud NewPointSet);
 
 
 
@@ -152,7 +152,7 @@ class ICP {
 		 *
 		 * @return ** RotationTranslation
 		 */
-		RotationTranslation RunICP_SVD(PointCloud RefPointCloud, PointCloud NewPointCloud);
+		RotationTranslation runICPSVD(PointCloud RefPointCloud, PointCloud NewPointCloud);
 
 		
 
@@ -164,7 +164,7 @@ class ICP {
 		 * 
 		 * @return ** VectorXf updated rotation & translation parameters that minimize the error between clouds.
 		 */
-		VectorXf RunICP_LeastSquares(PointCloud RefPointCloud, PointCloud NewPointCloud);
+		VectorXf runICPLeastSquares(PointCloud RefPointCloud, PointCloud NewPointCloud);
 };
 
 

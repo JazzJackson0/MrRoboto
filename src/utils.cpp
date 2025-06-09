@@ -1,6 +1,8 @@
 #include "../include/utils.hpp"
 
-AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
+namespace utils {
+
+AngleAndAxis rotationMatrix3DToAngle(MatrixXf R) {
     
     if (R.cols() != 3 && R.rows() != 3) {
         std::cerr << "ERROR: Rotation Matrix dimensions should be 3x3. Cannot convert to angle." << std::endl;
@@ -60,7 +62,7 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R) {
 }
 
 
-float RotationMatrix2D_to_Angle(MatrixXf R) {
+float rotationMatrix2DToAngle(MatrixXf R) {
     
     if (R.cols() != 2 && R.rows() != 2) {
         std::cerr << "ERROR: Rotation Matrix dimensions should be 2x2. Cannot convert to angle." << std::endl;
@@ -71,7 +73,7 @@ float RotationMatrix2D_to_Angle(MatrixXf R) {
 }
 
 
-MatrixXf Angle_to_3DRotationMatrix(AngleAndAxis a_a) {
+MatrixXf angleTo3DRotationMatrix(AngleAndAxis a_a) {
 
     // Rodriguez Formula method
     // MatrixXf identity;
@@ -141,4 +143,6 @@ double normalizeAngleRadians(double angle, bool pi_to_pi) {
     }
     
     return angle;
+}
+
 }

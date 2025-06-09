@@ -78,14 +78,14 @@ class DynamicWindowApproach {
          * @param rot_vel 
          * @return float 
          */
-        float ObjectiveFunction(float trans_vel, float rot_vel);
+        float objective_function(float trans_vel, float rot_vel);
 
         /**
          * @brief Generate set of possible velocity combinations ranging from min to max of each volocity type.
          * 
          * @return std::vector<Velocities> 
          */
-        std::vector<Velocities> Generate_CircularTrajectories();
+        std::vector<Velocities> generate_circular_trajectories();
 
         /**
          * @brief A velocity is considered admissible if the robot can stop before it reaches an obstacle.
@@ -93,7 +93,7 @@ class DynamicWindowApproach {
          * @param vels 
          * @return std::vector<Velocities> 
          */
-        std::vector<Velocities> Choose_AdmissableVelocities(std::vector<Velocities> vels);
+        std::vector<Velocities> choose_admissable_velocities(std::vector<Velocities> vels);
 
         /**
          * @brief Restricts the admissible velocities to those that can be reached within a short time interval 
@@ -102,14 +102,14 @@ class DynamicWindowApproach {
          * @param vels 
          * @return std::vector<Velocities> 
          */
-        std::vector<Velocities> Apply_DynamicWindow(std::vector<Velocities> vels);
+        std::vector<Velocities> apply_dynamic_window(std::vector<Velocities> vels);
 
         /**
          * @brief Determine a set of permissible velocities
          * 
          * @return std::vector<Velocities> 
          */
-        std::vector<Velocities> SearchSpace();
+        std::vector<Velocities> search_space();
 
         /**
          * @brief 
@@ -117,7 +117,7 @@ class DynamicWindowApproach {
          * @param vels 
          * @return VectorXf 
          */
-        VectorXf Optimize(std::vector<Velocities> vels);
+        VectorXf optimize(std::vector<Velocities> vels);
 
 
     public:
@@ -145,7 +145,7 @@ class DynamicWindowApproach {
          * @param max_vel 
          * @param vel_interval 
          */
-        void Set_TranslationalVelocityLimits(float min_vel, float max_vel, float vel_interval);
+        void setTranslationalVelocityLimits(float min_vel, float max_vel, float vel_interval);
 
         /**
          * @brief 
@@ -154,7 +154,7 @@ class DynamicWindowApproach {
          * @param max_vel 
          * @param vel_interval 
          */
-        void Set_RotationalVelocityLimits(float min_vel, float max_vel, float vel_interval);
+        void setRotationalVelocityLimits(float min_vel, float max_vel, float vel_interval);
 
         /**
          * @brief 
@@ -162,14 +162,14 @@ class DynamicWindowApproach {
          * @param _trans_accel_max 
          * @param _rot_accel_max 
          */
-        void Set_MaxAccelerations(float _trans_accel_max, float _rot_accel_max);
+        void setMaxAccelerations(float _trans_accel_max, float _rot_accel_max);
 
         /**
          * @brief 
          * 
          * @param goal 
          */
-        void Set_Goal(VectorXf goal);
+        void setGoal(VectorXf goal);
 
         /**
          * @brief 
@@ -179,5 +179,5 @@ class DynamicWindowApproach {
          * @param current_vels
          * @return VectorXf 
          */
-        VectorXf Run(VectorXf robot_pos, PointCloud point_cloud, VectorXf current_vels);
+        VectorXf run(VectorXf robot_pos, PointCloud point_cloud, VectorXf current_vels);
 };

@@ -83,7 +83,7 @@ class FeatureExtractor {
          * @param point_b 
          * @return float 
          */
-        float Get_EuclideanDistance(Point point_a, Point point_b);
+        float get_euclidean_distance(Point point_a, Point point_b);
 
         /**
          * @brief Calculate distance between point and line
@@ -92,7 +92,7 @@ class FeatureExtractor {
          * @param general_line 
          * @return float 
          */
-        float Get_Point2LineDistance(Point point, GeneralFormLine general_line);
+        float get_point_to_line_distance(Point point, GeneralFormLine general_line);
 
         /**
          * @brief Get two points in a given line
@@ -102,7 +102,7 @@ class FeatureExtractor {
          * @param slope_line The line to get the points from
          * @return vector<Point> The two points
          */
-        std::vector<Point> Get_2PointsFromLine(int x1, int x2, SlopeInterceptLine slope_line);
+        std::vector<Point> get_2_points_from_line(int x1, int x2, SlopeInterceptLine slope_line);
 
         /**
          * @brief Converts Line from Slope-Intercept Form to General Form
@@ -110,7 +110,7 @@ class FeatureExtractor {
          * @param slope_line line in slope-intercept form
          * @return GeneralFormLine - line in general form
          */
-        GeneralFormLine SlopeInt2General(SlopeInterceptLine slope_line);
+        GeneralFormLine slope_int_to_general(SlopeInterceptLine slope_line);
 
 
         /**
@@ -119,7 +119,7 @@ class FeatureExtractor {
          * @param general_line line in general form
          * @return SlopeInterceptLine - line in slope-intercept form
          */
-        SlopeInterceptLine General2SlopeInt(GeneralFormLine general_line);
+        SlopeInterceptLine general_to_slope_int(GeneralFormLine general_line);
 
         /**
          * @brief Calculate the intersection between 2 lines
@@ -128,7 +128,7 @@ class FeatureExtractor {
          * @param general_line_2 line 2 (in general form)
          * @return Point - Intersection point
          */
-        Point Get_Intersection(GeneralFormLine general_line_1, GeneralFormLine general_line_2);
+        Point get_intersection(GeneralFormLine general_line_1, GeneralFormLine general_line_2);
 
         /**
          * @brief Get Position Coordinate from Angle & Distance Information
@@ -137,7 +137,7 @@ class FeatureExtractor {
          * @param angle angle measurement
          * @return Point 
          */
-        Point AD2Position(float dist, float angle);
+        Point angle_distance_to_position(float dist, float angle);
 
         /**
          * @brief Transform scan from array of range & bearing values to array of position coordinates
@@ -145,7 +145,7 @@ class FeatureExtractor {
          * @param scan point cloud
          * @return vector<Point> 
          */
-        std::vector<Point> TransformScan(PointCloud scan);
+        std::vector<Point> transform_scan(PointCloud scan);
 
         /**
          * @brief Create a Linear Model given two points
@@ -154,7 +154,7 @@ class FeatureExtractor {
          * @param point_2 
          * @return SlopeInterceptLine 
          */
-        SlopeInterceptLine CreateLinearModel(Point point_1, Point point_2);
+        SlopeInterceptLine create_linear_model(Point point_1, Point point_2);
 
 
         /**
@@ -163,7 +163,7 @@ class FeatureExtractor {
          * @param laser_points Set of points
          * @return GeneralFormLine 
          */
-        GeneralFormLine ODRFit(std::vector<Point> laser_points);
+        GeneralFormLine odr_fit(std::vector<Point> laser_points);
 
         /**
          * @brief Calculate the predicted position of a given point by calculating the intersection 
@@ -174,7 +174,7 @@ class FeatureExtractor {
          * @param point_in_scan The geven point from the scan
          * @return Point - The predicted point
          */
-        Point Get_PointPrediction(GeneralFormLine fitted_line, Point point_in_scan);
+        Point get_point_prediction(GeneralFormLine fitted_line, Point point_in_scan);
 
 
         /**
@@ -185,7 +185,7 @@ class FeatureExtractor {
          * @param point_b The outermost point on end b
          * @return vector<Point> The two endpoints
          */
-        std::vector<Point> Get_Endpoints(LineSegment line, Point point_a, Point point_b);
+        std::vector<Point> get_endpoints(LineSegment line, Point point_a, Point point_b);
         
         
         /**
@@ -195,7 +195,7 @@ class FeatureExtractor {
          * @param data_point 
          * @return Point 
          */
-        Point OrthogProjectPoint2Line(LineSegment line, Point data_point);
+        Point orthog_project_point_to_line(LineSegment line, Point data_point);
 
 
         /**
@@ -205,7 +205,7 @@ class FeatureExtractor {
          * @param point 
          * @return Point 
          */
-        Point ClampPointOnLine(LineSegment line, Point point);
+        Point clamp_point_on_line(LineSegment line, Point point);
 
 
         /**
@@ -214,7 +214,7 @@ class FeatureExtractor {
          *      version of it with the new one) or new (upon which you add that landmark to the saved ones).
          * 
          */
-        void CheckOverlap();
+        void check_overlap();
 
 
         /**
@@ -222,7 +222,7 @@ class FeatureExtractor {
          * 
          * @return SeedSegment 
          */
-        LineSegment DetectSeedSegment();
+        LineSegment detect_seed_segment();
 
 
         /**
@@ -231,7 +231,7 @@ class FeatureExtractor {
          * @param seed_seg 
          * @return LineSegment 
          */
-        LineSegment GrowSeedSegment(LineSegment seed_seg);
+        LineSegment grow_seed_segment(LineSegment seed_seg);
 
 
         /**
@@ -241,7 +241,7 @@ class FeatureExtractor {
          * @param feature line segment to validate as a landmark
          * @return Landmark Unvalidated landmarks will have an error value of 1
          */
-        Landmark ValidationGate(LineSegment feature);
+        Landmark validation_gate(LineSegment feature);
 
 
         /**
@@ -272,7 +272,7 @@ class FeatureExtractor {
          * @param current_scan 
          * @param current_pose
          */
-        std::vector<Landmark> LandmarksFromScan(PointCloud current_scan, VectorXf current_pose);
+        std::vector<Landmark> landmarksFromScan(PointCloud current_scan, VectorXf current_pose);
 
 
         /**
@@ -280,7 +280,7 @@ class FeatureExtractor {
          * 
          * @param delta Distance threshold from point position to predicted point position
          */
-        void Set_Delta(float delta);
+        void setDelta(float delta);
 
 
         /**
@@ -288,7 +288,7 @@ class FeatureExtractor {
          * 
          * @param epsillon  Distance threshold from every potential segment point to the fitting line
          */
-        void Set_Epsillon(float epsillon);
+        void setEpsillon(float epsillon);
 
 
         /**
@@ -296,7 +296,7 @@ class FeatureExtractor {
          * 
          * @param gap_val 
          */
-        void Set_GapValue(float gap_val);
+        void setGapValue(float gap_val);
 
 
         /**
@@ -304,7 +304,7 @@ class FeatureExtractor {
          * 
          * @param min_seed_seg_num 
          */
-        void Set_MinSeedSegNum(int min_seed_seg_num);
+        void setMinSeedSegNum(int min_seed_seg_num);
 
 
         /**
@@ -312,7 +312,7 @@ class FeatureExtractor {
          * 
          * @param min_line_seg_len 
          */
-        void Set_MinLineSegLen(float min_line_seg_len);
+        void setMinLineSegLen(float min_line_seg_len);
 
 };
 

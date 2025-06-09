@@ -1,6 +1,6 @@
 #include "../include/AStar.hpp"
 
-float A_Star::Get_ManhattanDistance(int x1, int y1, int x2, int y2) {
+float AStar::get_manhattan_distance(int x1, int y1, int x2, int y2) {
 
     // Returns H-Cost
     return (float)abs(x1 - x2) + (float)abs(y1 - y2);
@@ -8,7 +8,7 @@ float A_Star::Get_ManhattanDistance(int x1, int y1, int x2, int y2) {
 
 
 
-float A_Star::Get_DiagonalDistance(int x1, int y1, int x2, int y2) {
+float AStar::get_diagonal_distance(int x1, int y1, int x2, int y2) {
 
     float nodeDistance = 1;
     float nodeDiagonalDistance = sqrt(2);
@@ -21,21 +21,21 @@ float A_Star::Get_DiagonalDistance(int x1, int y1, int x2, int y2) {
 }
 
 
-float A_Star::Get_EuclideanDistance(int x1, int y1, int x2, int y2) {
+float AStar::get_euclidean_distance(int x1, int y1, int x2, int y2) {
 
     // Returns H-Cost
     return std::hypot(( x1 - x2 ), ( y1 - y2 ));
 }
 
 
-bool A_Star::isValid(int x, int y) {
+bool AStar::is_valid(int x, int y) {
     return (x >= 0) && (x < WIDTH) && 
         (y >= 0) && (y < HEIGHT);
 }
 
 
 
-bool A_Star::isBlocked(int x, int y) {
+bool AStar::is_blocked(int x, int y) {
 
     int row = y;
     int col = x;
@@ -43,30 +43,30 @@ bool A_Star::isBlocked(int x, int y) {
 }
 
 
-bool A_Star::isGoalReached(int x, int y) {
+bool AStar::is_goal_reached(int x, int y) {
 
     return ( x == Goal[0] && y == Goal[1]);
 }
 
 
-bool A_Star::isStartAndGoalValid() {
+bool AStar::is_start_and_goal_valid() {
     
-    if (!isValid(Start[0], Start[1])) {
+    if (!is_valid(Start[0], Start[1])) {
         std::cerr << "ERROR: Invalid Starting Coordinates." << std::endl;
         return false;
     }
 
-    if (!isValid(Goal[0], Goal[1])) {
+    if (!is_valid(Goal[0], Goal[1])) {
         std::cerr << "ERROR: Invalid Goal Coordinates." << std::endl;
         return false;
     }
 
-    if (isBlocked(Start[0], Start[1])) {
+    if (is_blocked(Start[0], Start[1])) {
         std::cerr << "ERROR: Start Coodrdinates Blocked." << std::endl;
         return false;
     }
 
-    if (isGoalReached(Start[0], Start[1])) {
+    if (is_goal_reached(Start[0], Start[1])) {
         std::cerr << "ERROR: Ummm... You're already there..." << std::endl;
         return false;
     }
@@ -76,34 +76,34 @@ bool A_Star::isStartAndGoalValid() {
 
 
 
-float A_Star::Get_HCost(int x, int y, DistanceFormula formula) {
+float AStar::get_h_cost(int x, int y, DistanceFormula formula) {
 
     int goal_x = Goal[0];
     int goal_y = Goal[1];
 
-    if (formula == MANHATTAN) { return Get_ManhattanDistance(x, y, goal_x, goal_y); }
+    if (formula == MANHATTAN) { return get_manhattan_distance(x, y, goal_x, goal_y); }
 
-    if (formula == DIAGONAL) { return Get_DiagonalDistance(x, y, goal_x, goal_y); }
+    if (formula == DIAGONAL) { return get_diagonal_distance(x, y, goal_x, goal_y); }
 
-    if (formula == EUCLID) { return Get_EuclideanDistance(x, y, goal_x, goal_y); }
-
-    return 0.0;
-}
-
-
-float A_Star::Get_GCost(int x1, int y1, int x2, int y2, DistanceFormula formula) {
-
-    if (formula == MANHATTAN) { return Get_ManhattanDistance(x1, y1, x2, y2); }
-
-    if (formula == DIAGONAL) { return Get_DiagonalDistance(x1, y1, x2, y2); }
-
-    if (formula == EUCLID) { return Get_EuclideanDistance(x1, y1, x2, y2); }
+    if (formula == EUCLID) { return get_euclidean_distance(x, y, goal_x, goal_y); }
 
     return 0.0;
 }
 
 
-void A_Star::Get_AdjacentCellCoordinates(int x, int y, int &x_adjacent, int &y_adjacent, int adjacent_cell_num) {
+float AStar::get_g_cost(int x1, int y1, int x2, int y2, DistanceFormula formula) {
+
+    if (formula == MANHATTAN) { return get_manhattan_distance(x1, y1, x2, y2); }
+
+    if (formula == DIAGONAL) { return get_diagonal_distance(x1, y1, x2, y2); }
+
+    if (formula == EUCLID) { return get_euclidean_distance(x1, y1, x2, y2); }
+
+    return 0.0;
+}
+
+
+void AStar::get_adjacent_cell_coordinates(int x, int y, int &x_adjacent, int &y_adjacent, int adjacent_cell_num) {
 
     switch (adjacent_cell_num) {
         case 0: // North Cell: (x-1, y)
@@ -143,7 +143,7 @@ void A_Star::Get_AdjacentCellCoordinates(int x, int y, int &x_adjacent, int &y_a
 
 
 
-std::vector<std::vector<astar::Cell>> A_Star::Init_MatrixOfCells() {
+std::vector<std::vector<astar::Cell>> AStar::init_matrix_of_cells() {
 
     astar::Cell default_cell;
     default_cell.FCost = FLT_MAX - 1;
@@ -166,7 +166,7 @@ std::vector<std::vector<astar::Cell>> A_Star::Init_MatrixOfCells() {
     return cells;
 }
 
-void A_Star::PathTrace(std::vector<std::vector<astar::Cell>> cells) {
+void AStar::path_trace(std::vector<std::vector<astar::Cell>> cells) {
     
     int x = Goal[0];
     int y = Goal[1];
@@ -207,11 +207,11 @@ void A_Star::PathTrace(std::vector<std::vector<astar::Cell>> cells) {
     return;
 }
 
-A_Star::A_Star() {
+AStar::AStar() {
     // Defualt Constructor
 }
 
-A_Star::A_Star(Eigen::Tensor<float, 2> map) : MAP(map) {
+AStar::AStar(Eigen::Tensor<float, 2> map) : MAP(map) {
 
     auto &d = MAP.dimensions();
 	WIDTH = d[1];
@@ -223,7 +223,7 @@ A_Star::A_Star(Eigen::Tensor<float, 2> map) : MAP(map) {
 }
 
 
-void A_Star::Load_MAP(Eigen::Tensor<float, 2> map) {
+void AStar::loadMAP(Eigen::Tensor<float, 2> map) {
 
     MAP = map;
 
@@ -237,12 +237,12 @@ void A_Star::Load_MAP(Eigen::Tensor<float, 2> map) {
 }
 
 
-std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
+std::vector<VectorXi> AStar::path(VectorXi startCell, VectorXi goalCell) {
 
     ThePath.clear();
     Start = startCell;
     Goal = goalCell;
-    if (!isStartAndGoalValid()) { 
+    if (!is_start_and_goal_valid()) { 
         ThePath.push_back(startCell);
         std::cerr << "ERROR: Invalid Coordinates for START (" << startCell.transpose() << ") or GOAL (" << goalCell.transpose() << ")" << std::endl;
         return ThePath; 
@@ -256,7 +256,7 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
         return cell_a.FCost > cell_b.FCost;
     };
     std::priority_queue<astar::Cell, std::vector<astar::Cell>, decltype(cmp)> Uncovered(cmp);
-    std::vector<std::vector<astar::Cell>> MapOfCells = Init_MatrixOfCells();
+    std::vector<std::vector<astar::Cell>> MapOfCells = init_matrix_of_cells();
     
     // Mark the starting node as "Uncovered" and "Visited"
     astar::Cell start;
@@ -285,23 +285,23 @@ std::vector<VectorXi> A_Star::Path(VectorXi startCell, VectorXi goalCell) {
         int x_adjacent, y_adjacent;
         for (int i = 0; i < 8; i++) {
 
-            Get_AdjacentCellCoordinates(cell.x, cell.y, x_adjacent, y_adjacent, i);
+            get_adjacent_cell_coordinates(cell.x, cell.y, x_adjacent, y_adjacent, i);
 
-            if (!isValid(x_adjacent, y_adjacent) || isBlocked(x_adjacent, y_adjacent) || (Visited[x_adjacent][y_adjacent])) { continue; }
+            if (!is_valid(x_adjacent, y_adjacent) || is_blocked(x_adjacent, y_adjacent) || (Visited[x_adjacent][y_adjacent])) { continue; }
 
             // If the Goal has been reached
-            if (isGoalReached(x_adjacent, y_adjacent)) {
+            if (is_goal_reached(x_adjacent, y_adjacent)) {
 
                 MapOfCells[x_adjacent][y_adjacent].parentX = cell.x;
                 MapOfCells[x_adjacent][y_adjacent].parentY = cell.y;
-                PathTrace(MapOfCells);
+                path_trace(MapOfCells);
 
                 return ThePath;
             }
 
             // Re-Calculate Costs
-            New_GCost = Get_GCost(x_adjacent, y_adjacent, cell.x, cell.y, EUCLID) + MapOfCells[cell.x][cell.y].GCost;
-            New_HCost = Get_HCost(x_adjacent, y_adjacent, EUCLID);
+            New_GCost = get_g_cost(x_adjacent, y_adjacent, cell.x, cell.y, EUCLID) + MapOfCells[cell.x][cell.y].GCost;
+            New_HCost = get_h_cost(x_adjacent, y_adjacent, EUCLID);
             New_FCost = New_GCost + New_HCost;
 
             // If New F-Cost is Smaller than Old F-Cost 

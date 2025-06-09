@@ -1,23 +1,23 @@
 #include "../include/ICP.hpp"
 
-float ICP::Get_RootMeanSquaredError(PointCloud RefPointSet, PointCloud NewPointSet) {
+float ICP::get_root_mean_squared_error(PointCloud RefPointSet, PointCloud NewPointSet) {
 
 	float rms_error = 0.f;
 	int n = RefPointSet.points.size();
 
 	for (int i = 0; i < n; i++)
-		rms_error += Get_EuclideanDistance(RefPointSet.points[i], NewPointSet.points[i]);
+		rms_error += get_euclidean_distance(RefPointSet.points[i], NewPointSet.points[i]);
 
 	return sqrt(rms_error / n);
 	// TODO: Squaring the data once here and once in 'Get_EuclideanDistance' might be a problem, look into it.
 }
 
-float ICP::Get_EuclideanDistance(VectorXf p, VectorXf q) {
+float ICP::get_euclidean_distance(VectorXf p, VectorXf q) {
 
 	return (p - q).norm();
 }
 
-VectorXf ICP::Get_CenterOfMass(PointCloud p_cloud) {
+VectorXf ICP::get_center_of_mass(PointCloud p_cloud) {
 
 	VectorXf center_mass(PoseDimension);
 	center_mass = VectorXf::Zero(PoseDimension);
@@ -30,7 +30,7 @@ VectorXf ICP::Get_CenterOfMass(PointCloud p_cloud) {
 	return center_mass;
 }
 
-PointCloud ICP::Update_PointCloud(PointCloud pointCloud, VectorXf x_increment) {
+PointCloud ICP::update_point_cloud(PointCloud pointCloud, VectorXf x_increment) {
 
 	// Create Rotation Matrix from angle increment.
 	MatrixXf rotation(2, 2);
@@ -46,7 +46,7 @@ PointCloud ICP::Update_PointCloud(PointCloud pointCloud, VectorXf x_increment) {
 	return pointCloud;
 }
 
-pair<PointCloud, PointCloud>  ICP::Calculate_Correspondences(PointCloud RefPointCloud, 
+pair<PointCloud, PointCloud>  ICP::calculate_correspondences(PointCloud RefPointCloud, 
 	PointCloud NewPointCloud) {
 	
 	int ref_size = RefPointCloud.points.size();
@@ -81,7 +81,7 @@ pair<PointCloud, PointCloud>  ICP::Calculate_Correspondences(PointCloud RefPoint
 		//--------------------------------------------------------------------------------------------------------------
 
 		// start = std::chrono::high_resolution_clock::now();
-		Packet pt = NewPointCloud.kd_tree.NearestNeighbor(ref_point);
+		Packet pt = NewPointCloud.kd_tree.nearestNeighbor(ref_point);
 		// end = std::chrono::high_resolution_clock::now();
     	// std::cout << "ICP O(LogN) Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
 		
@@ -94,7 +94,7 @@ pair<PointCloud, PointCloud>  ICP::Calculate_Correspondences(PointCloud RefPoint
 	return std::make_pair(RefPointCloud, PointSet_New);
 }
 
-VectorXf ICP::GetErrorVector(VectorXf x_param, VectorXf ReferencePoint, VectorXf NewPoint) {
+VectorXf ICP::get_error_vector(VectorXf x_param, VectorXf ReferencePoint, VectorXf NewPoint) {
 
 	VectorXf error_vector(2);
 	error_vector[0] = (cos(x_param[2]) * NewPoint[0]) - (sin(x_param[2]) * NewPoint[1]) + x_param[0] - ReferencePoint[0];
@@ -105,7 +105,7 @@ VectorXf ICP::GetErrorVector(VectorXf x_param, VectorXf ReferencePoint, VectorXf
 
 
 
-void ICP::BuildErrorFunction(VectorXf ReferencePoint, VectorXf NewPoint) {
+void ICP::build_error_function(VectorXf ReferencePoint, VectorXf NewPoint) {
 	
 	// Initialize each element in X as an Auto-Diff Object (Equivalent to a variable x)
 	for (size_t i = 0; i < ErrorDimension; i++)
@@ -128,10 +128,10 @@ void ICP::BuildErrorFunction(VectorXf ReferencePoint, VectorXf NewPoint) {
 
 	
 
-MatrixXf ICP::CalculateJacobian(VectorXf ReferencePoint, VectorXf NewPoint, VectorXf x_update) {
+MatrixXf ICP::calculate_jacobian(VectorXf ReferencePoint, VectorXf NewPoint, VectorXf x_update) {
 	
 	// STEP 1: Set Up Update Function----------------------------------------------	
-	BuildErrorFunction(NewPoint, ReferencePoint);	
+	build_error_function(NewPoint, ReferencePoint);	
 	
 	// STEP 2: Compute the Jacobian of the Update Function ------------------------
 	int rows = ErrorDimension;
@@ -182,7 +182,7 @@ ICP::ICP(int pose_dim, int error_dim) : PoseDimension(pose_dim), ErrorDimension(
 
 
 
-RotationTranslation ICP::RunSVDAlign(PointCloud RefPointSet, PointCloud NewPointSet) {
+RotationTranslation ICP::runSVDAlign(PointCloud RefPointSet, PointCloud NewPointSet) {
 	
 	VectorXf TrueCenterMass; // Initialize to 0
 	// VectorXf EstimatedCenterMass; // Initialize to 0
@@ -201,8 +201,8 @@ RotationTranslation ICP::RunSVDAlign(PointCloud RefPointSet, PointCloud NewPoint
 		cloud_size = NewPointSet.points.size();
 	
 	// Calculate Centers of Mass & Weight Sums
-	TrueCenterMass = Get_CenterOfMass(RefPointSet);
-	transformation.center_mass = Get_CenterOfMass(NewPointSet);
+	TrueCenterMass = get_center_of_mass(RefPointSet);
+	transformation.center_mass =  get_center_of_mass(NewPointSet);
 
 	for (int i = 0; i < cloud_size; i++) {
 		TrueWeightSum += RefPointSet.weights[i];
@@ -230,10 +230,10 @@ RotationTranslation ICP::RunSVDAlign(PointCloud RefPointSet, PointCloud NewPoint
 
 
 
-RotationTranslation ICP::RunICP_SVD(PointCloud RefPointCloud, PointCloud NewPointCloud) {
+RotationTranslation ICP::runICPSVD(PointCloud RefPointCloud, PointCloud NewPointCloud) {
 
 	RotationTranslation transformation;
-	pair<PointCloud, PointCloud> point_sets = Calculate_Correspondences(RefPointCloud, NewPointCloud);
+	pair<PointCloud, PointCloud> point_sets = calculate_correspondences(RefPointCloud, NewPointCloud);
 	PointCloud TransformedPointCloud = point_sets.second;
 
 	float prev_error_norm = std::numeric_limits<float>::max();
@@ -249,12 +249,12 @@ RotationTranslation ICP::RunICP_SVD(PointCloud RefPointCloud, PointCloud NewPoin
 
 	while (error_norm < prev_error_norm && error_norm > error_thresh) {
 
-		transformation = RunSVDAlign(point_sets.first, TransformedPointCloud);
+		transformation = runSVDAlign(point_sets.first, TransformedPointCloud);
 
 		// Use the new Transformation to Align the point cloud: x_n = R(x_n - x_0) + y_0
 		for (int i = 0; i < TransformedPointCloud.points.size(); i++)
 			TransformedPointCloud.points[i] = (transformation.rotation_matrix * 
-				(point_sets.second.points[i] - Get_CenterOfMass(point_sets.second))) + (Get_CenterOfMass(point_sets.first));
+				(point_sets.second.points[i] - get_center_of_mass(point_sets.second))) + (get_center_of_mass(point_sets.first));
 			
 
 		// Calculate the new Error between the point clouds (Just the difference between the newly rotated point set and the reference point set)
@@ -278,23 +278,23 @@ RotationTranslation ICP::RunICP_SVD(PointCloud RefPointCloud, PointCloud NewPoin
 
 
 
-VectorXf ICP::RunICP_LeastSquares(PointCloud RefPointCloud, PointCloud NewPointCloud) {
+VectorXf ICP::runICPLeastSquares(PointCloud RefPointCloud, PointCloud NewPointCloud) {
 	
-	pair<PointCloud, PointCloud> point_sets = Calculate_Correspondences(RefPointCloud, NewPointCloud);
+	pair<PointCloud, PointCloud> point_sets = calculate_correspondences(RefPointCloud, NewPointCloud);
 	MatrixXf H_sum = MatrixXf::Zero(ErrorDimension, ErrorDimension);
 	VectorXf b_sum = VectorXf::Zero(ErrorDimension);
 	VectorXf x_update = VectorXf::Zero(ErrorDimension);
 	int iterations = 0;
 
 	// While Not Converged
-	while (Get_RootMeanSquaredError(point_sets.first, point_sets.second) < min_convergence_thresh || iterations < 30) { 
+	while (get_root_mean_squared_error(point_sets.first, point_sets.second) < min_convergence_thresh || iterations < 30) { 
 			
 		// Compute sum of H and b over all N points.
 		for (int n = 0; n < point_sets.first.points.size() ; n++) {
 			
-			MatrixXf Jac = CalculateJacobian(point_sets.first.points[n], point_sets.second.points[n], x_update);
+			MatrixXf Jac = calculate_jacobian(point_sets.first.points[n], point_sets.second.points[n], x_update);
 			MatrixXf H = Jac.transpose() * Jac;
-			VectorXf b = Jac.transpose() * GetErrorVector(x_update, point_sets.first.points[n], point_sets.second.points[n]);
+			VectorXf b = Jac.transpose() * get_error_vector(x_update, point_sets.first.points[n], point_sets.second.points[n]);
 
 			H_sum += H;
 			b_sum += b;
@@ -304,11 +304,11 @@ VectorXf ICP::RunICP_LeastSquares(PointCloud RefPointCloud, PointCloud NewPointC
 		x_update += H_sum.colPivHouseholderQr().solve(b_sum);	
 
 		// Update Parameters
-		point_sets.second = Update_PointCloud(point_sets.second, x_update);
+		point_sets.second = update_point_cloud(point_sets.second, x_update);
 		iterations++;
 	}
 
-	x_update[0] = normalizeAngleRadians(x_update[0], true);
+	x_update[0] = utils::normalizeAngleRadians(x_update[0], true);
 
 	return x_update;
 }

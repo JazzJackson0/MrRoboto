@@ -30,7 +30,7 @@ class KDTree {
          * @param node 
          * @return int 
          */
-        int getDepth(Node* node);
+        int get_depth(Node* node);
         
         /**
          * @brief 
@@ -38,7 +38,7 @@ class KDTree {
          * @param node 
          * @param points 
          */
-        void collectPoints(Node* node, std::vector<VectorXf> &points);
+        void collect_points(Node* node, std::vector<VectorXf> &points);
         
         /**
          * @brief 
@@ -47,7 +47,7 @@ class KDTree {
          * @param depth 
          * @return Node* 
          */
-        Node* buildBalancedTree(std::vector<VectorXf> &points, int depth);
+        Node* build_balanced_tree(std::vector<VectorXf> &points, int depth);
 
         /**
          * @brief Retruns the squared distance between two points
@@ -74,7 +74,7 @@ class KDTree {
          * @param current_node 
          * @return Node* 
          */
-        Node* findMin(Node *current_node);
+        Node* find_min(Node *current_node);
 
         /**
          * @brief 
@@ -94,7 +94,7 @@ class KDTree {
          * @param depth 
          * @return Node* 
          */
-        Node* insert(VectorXf point, Node *current_node, int depth);
+        Node* insert_core(VectorXf point, Node *current_node, int depth);
 
         /**
          * @brief 
@@ -104,7 +104,7 @@ class KDTree {
          * @param depth 
          * @return Node* Root of the modified tree
          */
-        Node* remove(VectorXf point, Node *current_node, int depth);
+        Node* remove_core(VectorXf point, Node *current_node, int depth);
 
         /**
          * @brief 
@@ -114,7 +114,7 @@ class KDTree {
          * @param depth 
          * @return Node* 
          */
-        Node* search(VectorXf point, Node *current_node, int depth);
+        Node* search_core(VectorXf point, Node *current_node, int depth);
 
         /**
          * @brief 
@@ -149,21 +149,21 @@ class KDTree {
          * 
          * @return Node* 
          */
-        Node* GetKDTree();
+        Node* getKDTree();
 
         /**
          * @brief 
          * 
          * @param point 
          */
-        void Insert(VectorXf point);
+        void insert(VectorXf point);
         
         /**
          * @brief 
          * 
          * @param point 
          */
-        void Remove(VectorXf point);
+        void remove(VectorXf point);
         
         /**
          * @brief 
@@ -171,7 +171,7 @@ class KDTree {
          * @param point 
          * @return VectorXf 
          */
-        Packet Search(VectorXf point);
+        Packet search(VectorXf point);
 
         /**
          * @brief 
@@ -179,7 +179,7 @@ class KDTree {
          * @param point 
          * @return VectorXf 
          */
-        Packet NearestNeighbor(VectorXf point);
+        Packet nearestNeighbor(VectorXf point);
 
 
         /**
@@ -187,7 +187,7 @@ class KDTree {
          * 
          * @param point 
          */
-        void AddData(VectorXf point, float weight);
+        void addData(VectorXf point, float weight);
 
         
         /**

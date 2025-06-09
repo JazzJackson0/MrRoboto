@@ -63,7 +63,7 @@ class RRT {
          * @return true 
          * @return false 
          */
-        bool isValid(int x, int y);
+        bool is_valid(int x, int y);
 
 
         /**
@@ -74,7 +74,7 @@ class RRT {
          * @return true 
          * @return false 
          */
-        bool isBlocked(int x, int y);
+        bool is_blocked(int x, int y);
 
 
         /**
@@ -85,7 +85,7 @@ class RRT {
          * @return true 
          * @return false 
          */
-        bool isGoalReached(int x, int y);
+        bool is_goal_reached(int x, int y);
 
 
         /**
@@ -94,7 +94,7 @@ class RRT {
          * @return true 
          * @return false 
          */
-        bool isStartAndGoalValid();
+        bool is_start_and_goal_valid();
 
 
         /**
@@ -105,7 +105,7 @@ class RRT {
          * @return true 
          * @return false 
          */
-        bool isVisible(RRT_Node node, RRT_Node nearest);
+        bool is_visible(RRT_Node node, RRT_Node nearest);
 
 
         /**
@@ -116,7 +116,7 @@ class RRT {
 		 *
 		 * @return ** float - The distance between 2 nodes.
 		 * **/
-		float Get_Distance(RRT_Node node_a, RRT_Node node_b); 
+		float get_distance(RRT_Node node_a, RRT_Node node_b); 
 
 
         /**
@@ -124,7 +124,7 @@ class RRT {
          * 
          * @return ** Node - A Random (x, y) position on the grid.
          */
-        RRT_Node Get_RandomPosition();
+        RRT_Node get_random_position();
 
 
         /**
@@ -136,7 +136,7 @@ class RRT {
          * @return true 
          * @return false 
          */
-		bool Get_Neighbors(RRT_Node node, float search_radius, std::vector<int> &neighbors); 
+		bool get_neighbors(RRT_Node node, float search_radius, std::vector<int> &neighbors); 
 
 
         /**
@@ -146,7 +146,7 @@ class RRT {
 		 *
          * @return ** pair<int, float> - (Index of the Nearest Vertex, Distance to node)
          */
-        std::pair<int, float> Get_NearestVertexIndex(RRT_Node node);
+        std::pair<int, float> get_nearest_vertex_index(RRT_Node node);
 
 
         /**
@@ -156,7 +156,7 @@ class RRT {
          * @param nearest
          * @return bool 
          */
-        bool Move_NodeCloser(RRT_Node &node, RRT_Node nearest);
+        bool move_node_closer(RRT_Node &node, RRT_Node nearest);
 
         
         /**
@@ -168,7 +168,7 @@ class RRT {
          * @return true - If new Vertex was set.
          * @return false - If new Vertex was not set.
          */
-        bool Connect_NewVertex(std::pair<int, float> nearest_info, RRT_Node new_vertex_data);
+        bool connect_new_vertex(std::pair<int, float> nearest_info, RRT_Node new_vertex_data);
 		
 		
 		/**
@@ -180,15 +180,15 @@ class RRT {
 		 *
 		 * @return ** void 
 		 */
-		void Rewire_Neighbors(std::vector<int> neighbors, int newest_node_idx);
+		void rewire_neighbors(std::vector<int> neighbors, int newest_node_idx);
 
 
-        void Update_Distances(int node_index);
+        void update_distances(int node_index);
 
 
-        std::stack<VectorXi> PathTraceHelper(int goal_node_idx, int current_node_idx, std::stack<VectorXi> path);
+        std::stack<VectorXi> path_trace_helper(int goal_node_idx, int current_node_idx, std::stack<VectorXi> path);
 
-        std::vector<VectorXi> PathTrace(int goal_node_idx, int current_node_idx);
+        std::vector<VectorXi> path_trace(int goal_node_idx, int current_node_idx);
 
 
     public:
@@ -208,7 +208,7 @@ class RRT {
         RRT(Eigen::Tensor<float, 2> map);
 
 
-        void Load_MAP(Eigen::Tensor<float, 2> map);
+        void loadMAP(Eigen::Tensor<float, 2> map);
 
 
         /**
@@ -220,7 +220,7 @@ class RRT {
          *                          it's connected to.
          * @return ** std::vector<VectorXf> - The waypoints of the path  
          */
-        std::vector<VectorXi> RRT_Path(VectorXi start, VectorXi goal, float maxConnectionDistance);
+        std::vector<VectorXi> rrtPath(VectorXi start, VectorXi goal, float maxConnectionDistance);
 
 		/**
 		 * @brief Runs an optimized version of RRT that provides a shorter path to the goal than
@@ -233,7 +233,7 @@ class RRT {
 		 *
 		 * @return ** std::vector<VectorXf> - The waypoints of the path 
 		 */
-        std::vector<VectorXi> RRTStar_Path(VectorXi start, VectorXi goal, float maxConnectionDistance, float search_radius);
+        std::vector<VectorXi> rrtStarPath(VectorXi start, VectorXi goal, float maxConnectionDistance, float search_radius);
 };
 
 

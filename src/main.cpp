@@ -13,7 +13,7 @@ Robot *mr_roboto;
 
 void ctrl_c_handler(int s){
 
-    mr_roboto->RobotStop("final_map.pgm");
+    mr_roboto->robotStop("final_map.pgm");
     exit(1); 
 }
 
@@ -28,13 +28,13 @@ int main(int argc, char* argv[]) {
     sigaction(SIGINT, &sigIntHandler, NULL);
 
     mr_roboto = Robot::CreateRobot();
-    mr_roboto->RobotStart();
-    mr_roboto->Set_MapDimensions(1000, 1000);
-    mr_roboto->Set_PhysicalParameters(ROBOT_TRACKWIDTH, ROBOT_WHEEL_RADIUS);
+    mr_roboto->robotStart(true);
+    mr_roboto->setMapDimensions(1000, 1000);
+    mr_roboto->setPhysicalParameters(ROBOT_TRACKWIDTH, ROBOT_WHEEL_RADIUS);
 
-    mr_roboto->MapAndLocalize(POSE_GRAPH);
-    // mr_roboto->MapEnv();
-    // mr_roboto->Localize("../tests/map2.pbm");
+    mr_roboto->mapAndLocalize(POSE_GRAPH);
+    // mr_roboto->mapEnv();
+    // mr_roboto->localize("../tests/map2.pbm");
     
     return 0;
 

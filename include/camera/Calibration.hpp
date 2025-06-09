@@ -32,7 +32,7 @@ class CameraCalibrator {
          * 
          * @param path 
          */
-        void loadImages(const std::string& path);
+        void load_images(const std::string& path);
 
 
     public:

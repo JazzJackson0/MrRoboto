@@ -22,7 +22,7 @@ vSLAM::vSLAM(bool stereo) {
 
 }
 
-cv::Mat vSLAM::BagOfWords(cv::Mat image, cv::Mat img_descriptors,std::vector<cv::KeyPoint> img_keypoints, cv::Ptr<cv::ORB> detector) {
+cv::Mat vSLAM::bagOfWords(cv::Mat image, cv::Mat img_descriptors,std::vector<cv::KeyPoint> img_keypoints, cv::Ptr<cv::ORB> detector) {
 
     int clusterSize = 100; // Number of clusters (visual words)
 
@@ -47,7 +47,7 @@ cv::Mat vSLAM::BagOfWords(cv::Mat image, cv::Mat img_descriptors,std::vector<cv:
 }
 
 
-double vSLAM::Compare_Histograms(cv::Mat hist1, cv::Mat hist2) {
+double vSLAM::compareHistograms(cv::Mat hist1, cv::Mat hist2) {
     
     // Normalize. Ensure comparison not affected by scale
     cv::Mat hist1Norm, hist2Norm;
@@ -69,20 +69,20 @@ double vSLAM::Compare_Histograms(cv::Mat hist1, cv::Mat hist2) {
     return comparison;
 }
 
-void vSLAM::Optimize() {
+void vSLAM::optimize() {
 
     
 }
 
 
 
-void vSLAM::RunMono(cv::Mat img) {
+void vSLAM::runMono(cv::Mat img) {
 
-    mono_odom->Run(img);
+    mono_odom->run(img);
 }
 
 
-void vSLAM::RunStereo(cv::Mat left_img, cv::Mat right_img) {
+void vSLAM::runStereo(cv::Mat left_img, cv::Mat right_img) {
 
-    stereo_odom->Run(left_img, right_img);
+    stereo_odom->run(left_img, right_img);
 }

@@ -87,7 +87,7 @@ class EKFSlam {
 		 * @brief Uses a BFS to propagate accross the map, marking the spaces that the robot can see as "free"
 		 * 
 		 */
-		void propagateFreeSpace();
+		void propagate_free_space();
 
 		/**
 		 * @brief Checks if a given cell is visible from the robot
@@ -99,14 +99,14 @@ class EKFSlam {
 		 * @return true 
 		 * @return false 
 		 */
-		bool isVisible(int x, int y, int x_robot, int y_robot);
+		bool is_visible(int x, int y, int x_robot, int y_robot);
 
 		/**
 		 * @brief Create a Map object
 		 * 
 		 * @return Eigen::Tensor<float, 2> 
 		 */
-		Eigen::Tensor<float, 2> UpdateMap();
+		Eigen::Tensor<float, 2> update_map();
 
 
 		/**
@@ -114,35 +114,35 @@ class EKFSlam {
 		 *
 		 * @return ** void 
 		 */
-		void Build_StateVector();
+		void build_state_vector();
 
 
 		/**
 		 * @brief Builds the INITIAL Covariance Matrix.
 		 * 
 		 */
-		void Build_Covariance();
+		void build_covariance();
 
 
 		/**
 		 * @brief Builds the Process Noise and Measurement Noise covariance matrices
 		 * 
 		 */
-		void Build_NoiseCovariances();
+		void build_noise_covariances();
 
 
 		/**
 		 * @brief Builds the Observation and Update mapping function matrices
 		 * 
 		 */
-		void Build_MappingFunctions();
+		void build_mapping_functions();
 
 
 		/**
 		 * @brief Builds the Identity Matrix
 		 * 
 		 */
-		void Build_Identity();
+		void build_identity();
 
 		/**
 		 * @brief Add a new landmark coordinates to the map (Increasing thre size of the state vector and all related matrices),
@@ -151,7 +151,7 @@ class EKFSlam {
 		 * @param landmark 
 		 * @return int 
 		 */
-		int UpdateMapAndResize(Landmark landmark);
+		int update_map_and_resize(Landmark landmark);
 
 
 		/**
@@ -161,7 +161,7 @@ class EKFSlam {
 		 *
 		 * @return ** VectorXf Updated Pose
 		 */
-		VectorXf PredictPose_g(ControlCommand ctrl);
+		VectorXf predict_pose_g(ControlCommand ctrl);
 
 
 		/**
@@ -173,7 +173,7 @@ class EKFSlam {
 		 *
 		 * @return ** VectorXf Updated Landmark Data
 		 */
-		VectorXf GetEstimatedLandmark_h(VectorXf robot_pose_est, Point landmark_position_est);
+		VectorXf get_estimated_landmark_h(VectorXf robot_pose_est, Point landmark_position_est);
 
 
 		/**
@@ -182,7 +182,7 @@ class EKFSlam {
 		 *
 		 * @return ** void
 		 */
-		void BuildPredictionFunctionFor_G();
+		void build_prediction_function_for_G();
 
 
 		/**
@@ -191,7 +191,7 @@ class EKFSlam {
 		 *
 		 * @return ** void
 		 */
-		void BuildObservationFunctionFor_H();
+		void build_observation_function_for_H();
 
 
 		/**
@@ -202,7 +202,7 @@ class EKFSlam {
 		 * 
          * @return ** MatrixXf - Jacobian Matrix 
          */
-		MatrixXf CalculateJacobian(FunctionType f_type, int landmark_location);
+		MatrixXf calculate_jacobian(FunctionType f_type, int landmark_location);
 
 
 		/**
@@ -213,7 +213,7 @@ class EKFSlam {
          * 
          * @return ** void 
          */
-        void Prediction(ControlCommand ctrl);
+        void prediction(ControlCommand ctrl);
 
 
 
@@ -225,7 +225,7 @@ class EKFSlam {
          * 
          * @return ** void 
          */
-        void Correction(std::vector<Landmark> current_scan);
+        void correction(std::vector<Landmark> current_scan);
     
 	public:
 
@@ -251,7 +251,7 @@ class EKFSlam {
 		 * @param _process_uncertainty_r A constant that corresponds to the non-zero diagonal components of R (dim = dim(pose))
 		 * @param _measurement_uncertainty_q A constant that corresponds to the non-zero components of Q (The uncertainty of each landmark)
 		 */
-		void SetInitialState(Eigen::VectorXf initial_position, float _process_uncertainty_r, float _measurement_uncertainty_q);
+		void setInitialState(Eigen::VectorXf initial_position, float _process_uncertainty_r, float _measurement_uncertainty_q);
 
        
 		/**
@@ -261,7 +261,7 @@ class EKFSlam {
 		 * @param ctrl 
 		 * @return Eigen::Tensor<float, 2> 
 		 */
-        Eigen::Tensor<float, 2> Run(PointCloud current_scan, ControlCommand ctrl);
+        Eigen::Tensor<float, 2> run(PointCloud current_scan, ControlCommand ctrl);
 
 
 		/**
@@ -269,7 +269,7 @@ class EKFSlam {
 		 * 
 		 * @param landmarks A vector of all known landmark (x, y) positions.
 		 */
-		void SetKnownLandmarks(std::vector<VectorXf> landmarks);
+		void setKnownLandmarks(std::vector<VectorXf> landmarks);
 
 		/**
 		 * @brief 
@@ -277,7 +277,7 @@ class EKFSlam {
 		 * @param height 
 		 * @param width 
 		 */
-		void Set_MapDimensions(int height, int width);
+		void setMapDimensions(int height, int width);
 
 
 		/**
@@ -285,7 +285,7 @@ class EKFSlam {
 		 * 
 		 * @return VectorXf 
 		 */
-		VectorXf BroadcastCurrentPose();
+		VectorXf broadcastCurrentPose();
 
 
 		

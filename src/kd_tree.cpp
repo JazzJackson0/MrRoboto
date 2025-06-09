@@ -1,19 +1,19 @@
 #include "../include/kd_tree.hpp"
 
 // Private ------------------------------------------------------------------------
-int KDTree::getDepth(Node* node) {
+int KDTree::get_depth(Node* node) {
     if (!node) return 0;
-    return 1 + std::max(getDepth(node->left), getDepth(node->right));
+    return 1 + std::max(get_depth(node->left), get_depth(node->right));
 }
 
-void KDTree::collectPoints(Node* node, std::vector<VectorXf> &points) {
+void KDTree::collect_points(Node* node, std::vector<VectorXf> &points) {
     if (!node) return;
     points.push_back(node->packet.data);
-    collectPoints(node->left, points);
-    collectPoints(node->right, points);
+    collect_points(node->left, points);
+    collect_points(node->right, points);
 }
 
-Node* KDTree::buildBalancedTree(std::vector<VectorXf> &points, int depth) {
+Node* KDTree::build_balanced_tree(std::vector<VectorXf> &points, int depth) {
     
     if (points.empty()) return nullptr;
 
@@ -33,8 +33,8 @@ Node* KDTree::buildBalancedTree(std::vector<VectorXf> &points, int depth) {
     std::vector<VectorXf> right_points(points.begin() + median_idx + 1, points.end());
 
     // 3. Recursively apply steps 1-2 for the left and right subtrees.
-    newNode->left = buildBalancedTree(left_points, depth + 1);
-    newNode->right = buildBalancedTree(right_points, depth + 1);
+    newNode->left = build_balanced_tree(left_points, depth + 1);
+    newNode->right = build_balanced_tree(right_points, depth + 1);
 
     return newNode;
 }
@@ -57,10 +57,10 @@ Node * KDTree::get_closest(VectorXf point, Node *node_a, Node *node_b) {
     return (node_a_rad < node_b_rad)? node_a : node_b;
 }
 
-Node* KDTree::findMin(Node *current_node) {
+Node* KDTree::find_min(Node *current_node) {
     // TODO: Finish
     if (current_node->left == nullptr) return current_node;
-    return findMin(current_node->left);
+    return find_min(current_node->left);
 }
 
 bool KDTree::point_match(VectorXf point_a, VectorXf point_b) {
@@ -68,7 +68,7 @@ bool KDTree::point_match(VectorXf point_a, VectorXf point_b) {
     return (point_a.array() == point_b.array()).all();
 }
 
-Node* KDTree::insert(VectorXf point, Node *current_node, int depth) {
+Node* KDTree::insert_core(VectorXf point, Node *current_node, int depth) {
 
     if (current_node == nullptr) {
         current_node = new Node;
@@ -80,17 +80,17 @@ Node* KDTree::insert(VectorXf point, Node *current_node, int depth) {
 
     // Go Left
     if (point[depth % k] < current_node->packet.data[depth % k])
-        current_node->left = insert(point, current_node->left, depth + 1);
+        current_node->left = insert_core(point, current_node->left, depth + 1);
 
     // Go Right
     else if (point[depth % k] >= current_node->packet.data[depth % k]) 
-        current_node->right = insert(point, current_node->right, depth + 1);  
+        current_node->right = insert_core(point, current_node->right, depth + 1);  
 
     return current_node;
 }
 
 // TODO: Edit this. Needs a working findMin
-Node* KDTree::remove(VectorXf point, Node *current_node, int depth) {
+Node* KDTree::remove_core(VectorXf point, Node *current_node, int depth) {
 
     if (current_node == nullptr) return nullptr;
 
@@ -105,20 +105,20 @@ Node* KDTree::remove(VectorXf point, Node *current_node, int depth) {
 
         else if (current_node->right != nullptr) {  
             // Replace node to delete with min
-            Node *min = findMin(current_node->right);
+            Node *min = find_min(current_node->right);
             current_node->packet.data = min->packet.data;
 
             // Delete the Min
-            current_node->right = remove(min->packet.data, current_node->right, depth + 1);
+            current_node->right = remove_core(min->packet.data, current_node->right, depth + 1);
         }
 
         else if (current_node->left != nullptr) {
             // Replace node to delete with min
-            Node *min = findMin(current_node->left);
+            Node *min = find_min(current_node->left);
             current_node->packet.data = min->packet.data;
             
             // Delete the Min
-            current_node->right = remove(min->packet.data, current_node->left, depth + 1);
+            current_node->right = remove_core(min->packet.data, current_node->left, depth + 1);
         }
 
         return current_node;   
@@ -127,20 +127,20 @@ Node* KDTree::remove(VectorXf point, Node *current_node, int depth) {
     // Go Left
     else if (point[depth % k] < current_node->packet.data[depth % k]) {
         
-        current_node->left = remove(point, current_node->left, depth + 1); 
+        current_node->left = remove_core(point, current_node->left, depth + 1); 
     }
 
     // Go Right
     else if (point[depth % k] >= current_node->packet.data[depth % k]) {
 
-        current_node->right = remove(point, current_node->right, depth + 1);  
+        current_node->right = remove_core(point, current_node->right, depth + 1);  
     }
 
     return current_node;
 }
 
 
-Node* KDTree::search(VectorXf point, Node *current_node, int depth) {
+Node* KDTree::search_core(VectorXf point, Node *current_node, int depth) {
 
     Node *found = NULL;
 
@@ -153,17 +153,17 @@ Node* KDTree::search(VectorXf point, Node *current_node, int depth) {
             found = current_node;
         
         else 
-            found = search(point, current_node->right, depth + 1);     
+            found = search_core(point, current_node->right, depth + 1);     
     }
 
     // Go Left
     else if (point[depth % k] < current_node->packet.data[depth % k]) 
-        found = search(point, current_node->left, depth + 1);
+        found = search_core(point, current_node->left, depth + 1);
     
 
     // Go Right
     else if (point[depth % k] > current_node->packet.data[depth % k]) 
-        found = search(point, current_node->right, depth + 1);
+        found = search_core(point, current_node->right, depth + 1);
     
     return found;
 }
@@ -217,34 +217,34 @@ KDTree::KDTree(int k) : KDTree() {
     this->k = k;
 }
 
-Node* KDTree::GetKDTree() {
+Node* KDTree::getKDTree() {
     return kd_tree;
 }
 
-void KDTree::Insert(VectorXf point) {
+void KDTree::insert(VectorXf point) {
     VectorXf pt = point.head<2>();
-    kd_tree = insert(pt, kd_tree, 0);
+    kd_tree = insert_core(pt, kd_tree, 0);
 }
 
 
-void KDTree::Remove(VectorXf point) {
+void KDTree::remove(VectorXf point) {
     VectorXf pt = point.head<2>();
-    kd_tree = remove(pt, kd_tree, 0);
+    kd_tree = remove_core(pt, kd_tree, 0);
 }
 
 
-Packet KDTree::Search(VectorXf point) {
+Packet KDTree::search(VectorXf point) {
     VectorXf pt = point.head<2>();
-    return search(pt, kd_tree, 0)->packet;
+    return search_core(pt, kd_tree, 0)->packet;
 }
 
-Packet KDTree::NearestNeighbor(VectorXf point) {
+Packet KDTree::nearestNeighbor(VectorXf point) {
     VectorXf pt = point.head<2>();
     return get_nearest_neighbor(pt, kd_tree, 0)->packet;
 }
 
 
-void KDTree::AddData(VectorXf point, float weight) {
+void KDTree::addData(VectorXf point, float weight) {
     VectorXf pt = point.head<2>();
     Packet pckt;
     pckt.data = pt;
@@ -271,24 +271,24 @@ void KDTree::buildKDTree() {
     
     int median_idx = raw_points.size() / 2;
     VectorXf median = raw_points[median_idx].data;
-    kd_tree = insert(median, kd_tree, 0);
+    kd_tree = insert_core(median, kd_tree, 0);
 
     for (int i = 0; i < median_idx; i++) {
         // std::cout << "Inserting: (" << raw_points[i][0] << ", " << raw_points[i][1] << ")" << std::endl;
-        kd_tree = insert(raw_points[i].data, kd_tree, 0);
+        kd_tree = insert_core(raw_points[i].data, kd_tree, 0);
     }
     for (int i = median_idx + 1; i < raw_points.size(); i++) {
         // std::cout << "Inserting: (" << raw_points[i][0] << ", " << raw_points[i][1] << ")" << std::endl;
-        kd_tree = insert(raw_points[i].data, kd_tree, 0);
+        kd_tree = insert_core(raw_points[i].data, kd_tree, 0);
     }
 
-    int leftDepth = getDepth(kd_tree->left);
-    int rightDepth = getDepth(kd_tree->right);
+    int leftDepth = get_depth(kd_tree->left);
+    int rightDepth = get_depth(kd_tree->right);
     if (abs(leftDepth - rightDepth) > 25) {  // Balance threshold (allowable depth difference)
         // std::cout << "REEEEEEBBBBAAAALLLLLLLAAAAAANNNNNNCCCCCCEEEEEEE!!!@@@@!!!@@@@!!!@@@@!!!@@@@!!!@@@@!!!@@@@!!!@@@@!!!@@@@" << std::endl;
         std::vector<VectorXf> points;
-        collectPoints(kd_tree, points);
-        kd_tree = buildBalancedTree(points, 0);
+        collect_points(kd_tree, points);
+        kd_tree = build_balanced_tree(points, 0);
     }
 }
 

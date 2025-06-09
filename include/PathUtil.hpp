@@ -15,9 +15,9 @@ class PathUtil {
 
         PathUtil();
 
-        std::vector<VectorXi> SamplePath(std::vector<VectorXi> path);
+        std::vector<VectorXi> samplePath(std::vector<VectorXi> path);
 
-        std::vector<VectorXf> SmoothPath(std::vector<VectorXi> path);
+        std::vector<VectorXf> smoothPath(std::vector<VectorXi> path);
 };
 
 

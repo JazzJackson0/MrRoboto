@@ -33,13 +33,13 @@ float DynamicWindowApproach::velocity(float trans_vel) {
     return 1 - (v_norm / MaxTransVel);
 }
 
-float DynamicWindowApproach::ObjectiveFunction(float trans_vel, float rot_vel) {
+float DynamicWindowApproach::objective_function(float trans_vel, float rot_vel) {
 
     return smoothing * (heading_weight * heading(trans_vel, rot_vel) + 
         dist_weight * distance(trans_vel, rot_vel) + vel_weight * velocity(trans_vel));
 }
 
-std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
+std::vector<Velocities> DynamicWindowApproach::generate_circular_trajectories() {
 
     std::vector<Velocities> circular_trajectories;
     for (float i = MinTransVel; i < MaxTransVel + 0.01; i += TransVelInterval) {
@@ -54,7 +54,7 @@ std::vector<Velocities> DynamicWindowApproach::Generate_CircularTrajectories() {
     return circular_trajectories;
 }
 
-std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::vector<Velocities> vels) {
+std::vector<Velocities> DynamicWindowApproach::choose_admissable_velocities(std::vector<Velocities> vels) {
 
     float time_interval_inv = 1.0 / time_interval;
     std::vector<Velocities> admissable_velocities;
@@ -79,7 +79,7 @@ std::vector<Velocities> DynamicWindowApproach::Choose_AdmissableVelocities(std::
     return admissable_velocities;
 }
 
-std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<Velocities> vels) {
+std::vector<Velocities> DynamicWindowApproach::apply_dynamic_window(std::vector<Velocities> vels) {
 
     std::vector<Velocities> within_window;
 
@@ -101,12 +101,12 @@ std::vector<Velocities> DynamicWindowApproach::Apply_DynamicWindow(std::vector<V
     return within_window;
 }
 
-std::vector<Velocities> DynamicWindowApproach::SearchSpace() {
+std::vector<Velocities> DynamicWindowApproach::search_space() {
 
-    return Apply_DynamicWindow(Choose_AdmissableVelocities(Generate_CircularTrajectories()));
+    return apply_dynamic_window(choose_admissable_velocities(generate_circular_trajectories()));
 }
 
-VectorXf DynamicWindowApproach::Optimize(std::vector<Velocities> vels) {
+VectorXf DynamicWindowApproach::optimize(std::vector<Velocities> vels) {
 
     VectorXf best_vel(2);
 
@@ -120,7 +120,7 @@ VectorXf DynamicWindowApproach::Optimize(std::vector<Velocities> vels) {
     float lowest_cost_idx = -1;
     for (int i = 0; i < vels.size(); i++) {
 
-        float cost = ObjectiveFunction(vels[i].trans_vel, vels[i].rot_vel);
+        float cost = objective_function(vels[i].trans_vel, vels[i].rot_vel);
 
         if (cost < lowest_cost) {
 
@@ -150,7 +150,7 @@ DynamicWindowApproach::DynamicWindowApproach(float smoothing_val, float heading_
     PreviousVel = Velocities(0.f, 0.f);
 }
 
-void DynamicWindowApproach::Set_TranslationalVelocityLimits(float min_vel, float max_vel, float vel_interval) {
+void DynamicWindowApproach::setTranslationalVelocityLimits(float min_vel, float max_vel, float vel_interval) {
 
     MinTransVel = min_vel;
     MaxTransVel = max_vel;
@@ -168,7 +168,7 @@ void DynamicWindowApproach::Set_TranslationalVelocityLimits(float min_vel, float
 }
 
 
-void DynamicWindowApproach::Set_RotationalVelocityLimits(float min_vel, float max_vel, float vel_interval) {
+void DynamicWindowApproach::setRotationalVelocityLimits(float min_vel, float max_vel, float vel_interval) {
 
     MinRotVel = min_vel;
     MaxRotVel = max_vel;
@@ -185,18 +185,18 @@ void DynamicWindowApproach::Set_RotationalVelocityLimits(float min_vel, float ma
     }
 }
 
-void DynamicWindowApproach::Set_MaxAccelerations(float _trans_accel_max, float _rot_accel_max) {
+void DynamicWindowApproach::setMaxAccelerations(float _trans_accel_max, float _rot_accel_max) {
 
     trans_accel_max = _trans_accel_max;
     rot_accel_max = _rot_accel_max;
 }
 
-void DynamicWindowApproach::Set_Goal(VectorXf goal) {
+void DynamicWindowApproach::setGoal(VectorXf goal) {
 
     Goal = goal;
 }
 
-VectorXf DynamicWindowApproach::Run(VectorXf robot_pos, PointCloud point_cloud, VectorXf current_vels) {
+VectorXf DynamicWindowApproach::run(VectorXf robot_pos, PointCloud point_cloud, VectorXf current_vels) {
 
     current_trans_vel = current_vels[0];
     current_rot_vel = current_vels[1];
@@ -226,5 +226,5 @@ VectorXf DynamicWindowApproach::Run(VectorXf robot_pos, PointCloud point_cloud, 
     // end = std::chrono::high_resolution_clock::now();
     // std::cout << "O(LogN) Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
 
-    return Optimize(SearchSpace());
+    return optimize(search_space());
 }

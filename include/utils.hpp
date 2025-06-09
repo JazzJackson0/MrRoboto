@@ -11,7 +11,6 @@
 using std::pair;
 using namespace Eigen;
 
-
 struct PointCloud {
 	std::vector<VectorXf> points;
 	std::vector<float> weights;
@@ -35,6 +34,7 @@ struct ControlCommand {
 
 typedef pair<float, VectorXf> AngleAndAxis;
 
+namespace utils {
 
 /**
  * @brief Convert 3D rotation matrix to rotation angle and axis of rotation pair
@@ -42,7 +42,7 @@ typedef pair<float, VectorXf> AngleAndAxis;
  * @param R Rotation matrix
  * @return AngleAndAxis - rotation angle and axis
  */
-AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R);
+AngleAndAxis rotationMatrix3DToAngle(MatrixXf R);
 
 
 /**
@@ -51,7 +51,7 @@ AngleAndAxis RotationMatrix3D_to_Angle(MatrixXf R);
  * @param R Rotation matrix
  * @return float 
  */
-float RotationMatrix2D_to_Angle(MatrixXf R);
+float rotationMatrix2DToAngle(MatrixXf R);
 
 
 /**
@@ -60,7 +60,7 @@ float RotationMatrix2D_to_Angle(MatrixXf R);
  * @param a_a rotation angle and axis
  * @return MatrixXf - Return rotation matrix
  */
-MatrixXf Angle_to_3DRotationMatrix(AngleAndAxis a_a);
+MatrixXf angleTo3DRotationMatrix(AngleAndAxis a_a);
 
 
 /**
@@ -111,3 +111,8 @@ std::vector<std::string> split(const std::string& s, std::string regx);
  * @return double 
  */
 double normalizeAngleRadians(double angle, bool pi_to_pi);
+
+}
+
+
+

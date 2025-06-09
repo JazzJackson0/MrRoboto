@@ -26,6 +26,8 @@
 #include "PathUtil.hpp"
 #include "camera/Calibration.hpp"
 #include "camera/VSLAM.hpp"
+#include "Controller.hpp"
+#include "ext/nlohmann/json.hpp"
 #define POSE_GRAPH 0
 #define EKF 1
 #define A_STAR 2
@@ -90,7 +92,7 @@
 #define MAX_WHEEL_VEL 30
 
 
-
+using json = nlohmann::json;
 using namespace rp::standalone::rplidar;
 
 namespace diffdrive {
@@ -98,6 +100,9 @@ namespace diffdrive {
     class Robot {
 
         private:
+
+            bool autonomous;
+
             std::fstream broadcast_output;
 
             // Shared Data
@@ -122,7 +127,7 @@ namespace diffdrive {
             std::unique_ptr<PoseGraphOptSLAM> slam1; // LATER: Make this a generic SLAM Interface that can also take EKF 
             std::unique_ptr<EKFSlam> slam2;
             std::unique_ptr<ParticleFilter> pfilter;
-            std::unique_ptr<A_Star> astar_path;
+            std::unique_ptr<AStar> astar_path;
             std::unique_ptr<RRT> rrt_path;
             std::unique_ptr<OccupancyGridMap> og_map;
             std::unique_ptr<DynamicWindowApproach> d_window;
@@ -132,6 +137,7 @@ namespace diffdrive {
             std::unique_ptr<Odom> odom;
             std::unique_ptr<Serial> serial;
             std::unique_ptr<PathUtil> path_util;
+            std::unique_ptr<Controller> controller;
 
             // Robot Physical Dimensions
             float trackwidth;
@@ -148,7 +154,7 @@ namespace diffdrive {
 
             // Camera
             CameraCalibrator *calibrator;
-            vSLAM *v_slam;
+            std::unique_ptr<vSLAM> v_slam;
             cv::VideoCapture cap;
             cv::VideoCapture cap_left;
             cv::VideoCapture cap_right;
@@ -176,25 +182,25 @@ namespace diffdrive {
              * @brief 
              * 
              */
-            void Callibrate_Camera(const std::string& images_path);
+            void callibrate_camera(const std::string& images_path);
 
             /**
              * @brief 
              * 
              */
-            void StartScanner();
+            void start_scanner();
 
             /**
              * @brief 
              * 
              */
-            void StopScanner();
+            void stop_scanner();
 
             /**
              * @brief 
              * 
              */
-            void RawScan();
+            void raw_scan();
 
             /**
              * @brief Convert lidar beam nodes from RPLidar into a Point Cloud
@@ -202,7 +208,7 @@ namespace diffdrive {
              * @param broadcast_state 
              * @return PointCloud 
              */
-            PointCloud GetCloud(int broadcast_state); 
+            PointCloud get_cloud(int broadcast_state); 
 
 
             /**
@@ -210,7 +216,7 @@ namespace diffdrive {
              * 
              * @return std::vector<VectorXf> 
              */
-            std::vector<VectorXf> GetScan();
+            std::vector<VectorXf> get_scan();
 
 
             /**
@@ -222,33 +228,33 @@ namespace diffdrive {
              * @param goal 
              * @return std::vector<VectorXi> 
              */
-            std::vector<VectorXi> CreatePath(int algorithm, Eigen::Tensor<float, 2> map, VectorXi start, VectorXi goal);
+            std::vector<VectorXi> create_path(int algorithm, Eigen::Tensor<float, 2> map, VectorXi start, VectorXi goal);
 
 
-            void FindFrontier();
+            void find_frontier();
 
 
 
-            void FollowLocalPath(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos);
+            void follow_local_path(std::vector<VectorXf> smooth_waypoints, Eigen::Tensor<float, 2> map, PointCloud cloud, VectorXf pos);
 
 
-            void RunSLAM(int algorithm);
+            void run_slam(int algorithm);
 
 
-            cv::Mat RunVSLAM(bool stereo);
+            cv::Mat run_vslam(bool stereo);
 
 
-            void RunLocalizer(Eigen::Tensor<float, 2> map);
+            void run_localizer(Eigen::Tensor<float, 2> map);
 
 
-            void RunMapper();
+            void run_mapper();
 
             /**
              * @brief 
              * 
              * @param output_filename 
              */
-            void Save_Map(std::string output_filename);
+            void save_map(std::string output_filename);
 
 
             /**
@@ -268,13 +274,16 @@ namespace diffdrive {
             static Robot * CreateRobot();
 
 
+            // TODO: MOVE PHYSICAL PARAMETERS AND MAP PARAMS TO STRUCT??????
+
+
             /**
              * @brief 
              * 
              * @param robot_trackwidth 
              * @param robot_wheel_radius 
              */
-            void Set_PhysicalParameters(float robot_trackwidth, float robot_wheel_radius);
+            void setPhysicalParameters(float robot_trackwidth, float robot_wheel_radius);
 
             /**
              * @brief (Must be called AFTER the RobobtStart() function)
@@ -282,40 +291,42 @@ namespace diffdrive {
              * @param height 
              * @param width 
              */
-            void Set_MapDimensions(int height, int width);
+            void setMapDimensions(int height, int width);
 
             
             /**
              * @brief 
+             * 
+             * @param autonomous 
              */
-            void RobotStart();
+            void robotStart(bool autonomous);
 
             /**
              * @brief 
              * 
              * @param output_filename name of ouptut map file
              */
-            void RobotStop(std::string output_filename);
+            void robotStop(std::string output_filename);
 
             /**
              * @brief 
              * 
              */
-            void MapEnv();
+            void mapEnv();
 
             /**
              * @brief 
              * 
              * @param map_filename 
              */
-            void Localize(std::string map_filename);
+            void localize(std::string map_filename);
 
             /**
              * @brief 
              * 
              * @param algorithm 
              */
-            void MapAndLocalize(int algorithm);
+            void mapAndLocalize(int algorithm);
 
             /**
              * @brief 
@@ -326,12 +337,12 @@ namespace diffdrive {
              * @param goal 
              * @return std::vector<VectorXi> 
              */
-            std::vector<VectorXi> CreatePath(int algorithm, std::string map_filename, VectorXi start, VectorXi goal);
+            std::vector<VectorXi> createPath(int algorithm, std::string map_filename, VectorXi start, VectorXi goal);
 
             /**
              * @brief Broadcast the point cloud points to stdout
              * 
              */
-            void BroadcastPointCloud();
+            void broadcastPointCloud();
     };
 }

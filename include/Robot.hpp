@@ -158,9 +158,28 @@ namespace diffdrive {
             cv::VideoCapture cap;
             cv::VideoCapture cap_left;
             cv::VideoCapture cap_right;
+
+            const std::string map_param_path = "cfg/map-params.json";
+            const std::string robot_param_path = "cfg/config.json";
             
 
             bool map_ready();
+
+            /**
+             * @brief 
+             * 
+             * @param robot_wheel_radius 
+             * @param robot_trackwidth 
+             */
+            void set_physical_parameters(float robot_wheel_radius, float robot_trackwidth);
+
+            /**
+             * @brief 
+             * 
+             * @param width 
+             * @param height 
+             */
+            void set_map_dimensions(int width, int height);
 
             /**
              * @brief 
@@ -177,6 +196,12 @@ namespace diffdrive {
              * @return false 
              */
             bool physical_params_set();
+
+            /**
+             * @brief 
+             * 
+             */
+            void set_parameters();
 
             /**
              * @brief 
@@ -272,26 +297,6 @@ namespace diffdrive {
              * @return Robot* 
              */
             static Robot * CreateRobot();
-
-
-            // TODO: MOVE PHYSICAL PARAMETERS AND MAP PARAMS TO STRUCT??????
-
-
-            /**
-             * @brief 
-             * 
-             * @param robot_trackwidth 
-             * @param robot_wheel_radius 
-             */
-            void setPhysicalParameters(float robot_trackwidth, float robot_wheel_radius);
-
-            /**
-             * @brief (Must be called AFTER the RobobtStart() function)
-             * 
-             * @param height 
-             * @param width 
-             */
-            void setMapDimensions(int height, int width);
 
             
             /**

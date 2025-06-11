@@ -12,12 +12,48 @@ bool Robot::map_ready() {
     return result;
 }
 
+void Robot::set_physical_parameters(float robot_wheel_radius, float robot_trackwidth) {
+
+    trackwidth = robot_trackwidth;
+    wheel_radius = robot_wheel_radius;
+    odom->setTrackwidth(trackwidth);
+    physical_set = true;
+    // std::cout << "Phyisical Parameters Set.\n";
+    // std::cout << "Track Width: " << trackwidth << "\n";
+    // std::cout << "Wheel Radius: " << wheel_radius << "\n";
+}
+
+
+void Robot::set_map_dimensions(int width, int height) {
+    map_height = height;
+    map_width = width;
+    map_builder->update2DMapDimensions(height, width);
+    slam1->setMapDimensions(map_height, map_width);
+    slam2->setMapDimensions(map_height, map_width);
+    map_set = true;
+    // std::cout << "Map Parameters Set: (" << height << " x " << width << ")" << std::endl;
+    current_map = Eigen::Tensor<float, 2>(height, width);
+    current_map.setConstant(0.3);
+}
+
 bool Robot::map_params_set() {
     return map_set;
 }
 
 bool Robot::physical_params_set() {
     return physical_set;
+}
+
+void Robot::set_parameters() {
+
+    std::ifstream map_f(map_param_path);
+    std::ifstream diff_f(robot_param_path);
+
+    json map_data = json::parse(map_f);
+    json diffbot_data = json::parse(diff_f);
+    set_physical_parameters(diffbot_data["wheel_radius"], diffbot_data["robot_trackwidth"]);
+    set_map_dimensions(map_data["width"], map_data["height"]);
+
 }
 
 void Robot::callibrate_camera(const std::string& images_path) {
@@ -523,31 +559,6 @@ Robot * Robot::CreateRobot() {
     return new Robot();
 }
 
-
-void Robot::setPhysicalParameters(float robot_trackwidth, float robot_wheel_radius) {
-
-    trackwidth = robot_trackwidth;
-    wheel_radius = robot_wheel_radius;
-    odom->setTrackwidth(trackwidth);
-    physical_set = true;
-    // std::cout << "Phyisical Parameters Set.\n";
-    // std::cout << "Track Width: " << trackwidth << "\n";
-    // std::cout << "Wheel Radius: " << wheel_radius << "\n";
-}
-
-
-void Robot::setMapDimensions(int height, int width) {
-    map_height = height;
-    map_width = width;
-    map_builder->update2DMapDimensions(height, width);
-    slam1->setMapDimensions(map_height, map_width);
-    slam2->setMapDimensions(map_height, map_width);
-    map_set = true;
-    // std::cout << "Map Parameters Set: (" << height << " x " << width << ")" << std::endl;
-    current_map = Eigen::Tensor<float, 2>(height, width);
-    current_map.setConstant(0.3);
-}
-
 void Robot::robotStart(bool autonomous) {
     this->autonomous = autonomous;
 
@@ -613,6 +624,9 @@ void Robot::robotStart(bool autonomous) {
     path_util = std::make_unique<PathUtil>();
 
     controller = std::make_unique<Controller>(DIFF_BOT);
+
+    // Set Physical Parameters for Vehicle & Environment (Robot, Map, Etc...)
+    set_parameters();
 }
 
 void Robot::robotStop(std::string output_filename) {

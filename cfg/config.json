@@ -1,0 +1,10 @@
+{
+    "differential_drive" : {
+        "wheel_radius" : 0.05,
+        "trackwidth" : 0.3
+    },
+
+    "quadcopter" : {
+        
+    }
+}

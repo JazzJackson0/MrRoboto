@@ -273,17 +273,18 @@ void Robot::follow_local_path(std::vector<VectorXf> smooth_waypoints, Eigen::Ten
         // Motor Out
         uint32_t left_wheel_duty_cycle_temp = *((uint32_t*) (&left_wheel_duty_cycle));
         uint32_t right_wheel_duty_cycle_temp = *((uint32_t*) (&right_wheel_duty_cycle));
-        char duty_cycle_buff[8] = {0};
-        for (int i = 0; i < 8; i++) {
+        char duty_cycle_buff[UART_BUFFER_SIZE] = {0};
+        duty_cycle_buff[0] = FWD | FWD;
+        for (int i = 1; i < UART_BUFFER_SIZE; i++) {
 
-            if (i < 4)
+            if (i < 5)
                 duty_cycle_buff[i] = *((char*)&left_wheel_duty_cycle_temp + i);
 
             else
                 duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
         }   
 
-        serial->uartWrite(UART_NUM, duty_cycle_buff, 8);
+        serial->uartWrite(UART_NUM, duty_cycle_buff, UART_BUFFER_SIZE);
     }
 }
 
@@ -623,7 +624,7 @@ void Robot::robotStart(bool autonomous) {
 
     path_util = std::make_unique<PathUtil>();
 
-    controller = std::make_unique<Controller>(DIFF_BOT);
+    controller = std::make_unique<Controller>(DIFF_BOT, std::move(serial), UART_NUM);
 
     // Set Physical Parameters for Vehicle & Environment (Robot, Map, Etc...)
     set_parameters();
@@ -655,7 +656,7 @@ void Robot::mapEnv() {
 
     if (autonomous) {
         std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
-         explorer_thread.join();
+        explorer_thread.join();
     }
 
     else {

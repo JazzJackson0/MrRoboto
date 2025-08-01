@@ -6,3 +6,4 @@ build2/*
 sdk/
 temp/
 tests/*
+*.pbm

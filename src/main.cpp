@@ -25,14 +25,10 @@ int main(int argc, char* argv[]) {
     sigaction(SIGINT, &sigIntHandler, NULL);
 
     mr_roboto = Robot::CreateRobot();
-    mr_roboto->robotStart(true);
+    mr_roboto->robotStart(false);
     mr_roboto->mapAndLocalize(POSE_GRAPH);
     // mr_roboto->mapEnv();
     // mr_roboto->localize("../tests/map2.pbm");
     
     return 0;
-
-    
-
-    // return 0;
 }

@@ -91,6 +91,9 @@
 
 #define MAX_WHEEL_VEL 30
 
+#define UART_BUFFER_SIZE 9
+
+
 
 using json = nlohmann::json;
 using namespace rp::standalone::rplidar;
@@ -100,7 +103,10 @@ namespace diffdrive {
     class Robot {
 
         private:
-
+            const int STP = 0;
+            const int FWD = 1;
+            const int BKWD = 2;
+            const int BRK = 3;
             bool autonomous;
 
             std::fstream broadcast_output;

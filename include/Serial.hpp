@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include <cstdint>
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>

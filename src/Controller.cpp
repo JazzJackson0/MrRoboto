@@ -47,17 +47,17 @@ void Controller::diff_right_turn(int btnState) {
     if (btnState == PRESS) {
         char * data = create_data_packet(DIRECTION_PACKET, ((2 << FWD) | BKWD), 0, 0);
         serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "O Button Pressed" << std::endl;
+        std::cout << "(O) Right Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         uint8_t direction = ((2 << FWD) | FWD);
-        if (pressed[BACKWARD]) {
+        if (active[BACKWARD]) {
             direction = ((2 << BKWD) | BKWD);
         }
         char * data = create_data_packet(DIRECTION_PACKET, direction, 0, 0);
         serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "O Button Released" << std::endl;
+        std::cout << "(O) Right Button Released" << std::endl;
         return;
     }
 }
@@ -66,17 +66,17 @@ void Controller::diff_left_turn(int btnState) {
     if (btnState == PRESS) {
         char * data = create_data_packet(DIRECTION_PACKET, ((2 << BKWD) | FWD), 0, 0);
         serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "Square Button Pressed" << std::endl;  
+        std::cout << "(Square) Left Button Pressed" << std::endl;  
         return;
     }
     else if (btnState == RELEASE) {
         uint8_t direction = ((2 << FWD) | FWD);
-        if (pressed[BACKWARD]) {
+        if (active[BACKWARD]) {
             direction = ((2 << BKWD) | BKWD);
         }
         char * data = create_data_packet(DIRECTION_PACKET, direction, 0, 0);
         serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "Square Button Released" << std::endl;  
+        std::cout << "(Square) Left Button Released" << std::endl;  
         return;
     }
 }
@@ -85,13 +85,13 @@ void Controller::diff_forward(int btnState) {
     if (btnState == PRESS) {
         char * data = create_data_packet(FULL_PACKET, ((2 << FWD) | FWD), (motor.left_speed += DIFF_MOVE_DELTA), (motor.right_speed += DIFF_MOVE_DELTA));
         serial->uartWrite(device_fd, data, FULL_PACKET);
-        std::cout << "D-Pad Up Button Pressed" << std::endl;
+        std::cout << "(D-Pad Up) Forward Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_data_packet(SPEED_PACKET, 0, (motor.left_speed -= DIFF_MOVE_DELTA), (motor.right_speed -= DIFF_MOVE_DELTA));
         serial->uartWrite(device_fd, data, SPEED_PACKET);
-        std::cout << "D-Pad Up Button Released" << std::endl;
+        std::cout << "(D-Pad Up) Forward Button Released" << std::endl;
         return;
     }
 }
@@ -100,13 +100,13 @@ void Controller::diff_backward(int btnState) {
     if (btnState == PRESS) {
         char * data = create_data_packet(FULL_PACKET, ((2 << BKWD) | BKWD), (motor.left_speed += DIFF_MOVE_DELTA), (motor.right_speed += DIFF_MOVE_DELTA));
         serial->uartWrite(device_fd, data, FULL_PACKET);
-        std::cout << "D-Pad Down Button Pressed" << std::endl;
+        std::cout << "(D-Pad Down) Backward Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_data_packet(FULL_PACKET, ((2 << FWD) | FWD), (motor.left_speed -= DIFF_MOVE_DELTA), (motor.right_speed -= DIFF_MOVE_DELTA));
         serial->uartWrite(device_fd, data, FULL_PACKET);
-        std::cout << "D-Pad Down Button Released" << std::endl;
+        std::cout << "(D-Pad Down) Backward Button Released" << std::endl;
         return;
     }
 }
@@ -117,7 +117,7 @@ void Controller::diff_accelerate(int btnState) {
         motor.right_speed = (motor.right_speed * 1.75) >= PERIOD ? PERIOD : (motor.right_speed * 1.75);
         char * data = create_data_packet(SPEED_PACKET, 0, motor.left_speed, motor.right_speed);
         serial->uartWrite(device_fd, data, SPEED_PACKET);
-        std::cout << "R1 Button Pressed" << std::endl;
+        std::cout << "(R1) Accel Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
@@ -125,7 +125,7 @@ void Controller::diff_accelerate(int btnState) {
         motor.right_speed = (motor.right_speed / 1.75) >= PERIOD ? PERIOD : (motor.right_speed / 1.75);
         char * data = create_data_packet(SPEED_PACKET, 0, motor.left_speed, motor.right_speed);
         serial->uartWrite(device_fd, data, SPEED_PACKET);
-        std::cout << "R1 Button Released" << std::endl;
+        std::cout << "(R1) Accel Button Released" << std::endl;
         return;
     }
 }
@@ -140,11 +140,11 @@ void Controller::diff_deccelerate(int btnState) {
         // serial->pinWrite(MOTOR_SET1_PIN_B, PIN_HIGH);
         // serial->pwmUpdate(LEFT_CHIP, LEFT_PWM, (motor.left_speed = 0)); 
         // serial->pwmUpdate(RIGHT_CHIP, RIGHT_PWM, (motor.right_speed = 0)); 
-        std::cout << "L1 Button Pressed" << std::endl;
+        std::cout << "(L1) Deccel Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
-        std::cout << "L1 Button Released" << std::endl;
+        std::cout << "(L1) Deccel Button Released" << std::endl;
         return;
     }
 }
@@ -371,8 +371,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
     switch (button) {
         case SDL_CONTROLLER_BUTTON_Y: /*return "Triangle";*/
         // Pitch Forward
-            if (!pressed[BACKWARD]) {
-                pressed[FORWARD] = true;
+            pressed[FORWARD] = true;
+            if (!active[BACKWARD]) {
+                active[FORWARD] = true;
                 quad_pitch_forward(PRESS); 
             }
             else {
@@ -381,8 +382,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;    
         case SDL_CONTROLLER_BUTTON_A: /*return "X (Cross)";*/
         // Pitch Backward
-            if (!pressed[FORWARD]) {
-                pressed[BACKWARD] = true;
+            pressed[BACKWARD] = true;
+            if (!active[FORWARD]) {
+                active[BACKWARD] = true;
                 quad_pitch_backward(PRESS); 
             }
             else {
@@ -391,8 +393,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_B: /*return "O (Circle)";*/
         // Rotate (Yaw) Right-----------------------------
-            if (!pressed[LEFT_YAW]) {
-                pressed[RIGHT_YAW] = true;
+            pressed[RIGHT_YAW] = true;
+            if (!active[LEFT_YAW]) {
+                active[RIGHT_YAW] = true;
                 quad_yaw_right(PRESS); 
             }
             else {
@@ -401,8 +404,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_X: /*return "Square";*/
         // Rotate (Yaw) Left-----------------------------
-            if (!pressed[RIGHT_YAW]) {
-                pressed[LEFT_YAW] = true;
+            pressed[LEFT_YAW] = true;
+            if (!active[RIGHT_YAW]) {
+                active[LEFT_YAW] = true;
                 quad_yaw_left(PRESS); 
             }
             else {
@@ -411,8 +415,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_UP: /*return "D-Pad Up";*/
         // Move Up--------------------------
-            if (!pressed[DOWN]) {
-                pressed[UP] = true;
+            pressed[UP] = true;
+            if (!active[DOWN]) {
+                active[UP] = true;
                 quad_up(PRESS); 
             }
             else {
@@ -421,8 +426,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN: /*return "D-Pad Down";*/
         // Move Down--------------------------
-            if (!pressed[UP]) {
-                pressed[DOWN] = true;
+            pressed[DOWN] = true;
+            if (!active[UP]) {
+                active[DOWN] = true;
                 quad_down(PRESS); 
             }
             else {
@@ -431,8 +437,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_LEFT: /*return "D-Pad Left";*/
         // Bend (Roll) Left-----------------------------
-            if (!pressed[RIGHT_ROLL]) {
-                pressed[LEFT_ROLL] = true;
+            pressed[LEFT_ROLL] = true;
+            if (!active[RIGHT_ROLL]) {
+                active[LEFT_ROLL] = true;
                 quad_roll_left(PRESS); 
             }
             else {
@@ -441,8 +448,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: /*return "D-Pad Right";*/
         // Bend (Roll) Right-----------------------------
-            if (!pressed[LEFT_ROLL]) {
-                pressed[RIGHT_ROLL] = true;
+            pressed[RIGHT_ROLL] = true;
+            if (!active[LEFT_ROLL]) {
+                active[RIGHT_ROLL] = true;
                 quad_roll_right(PRESS); 
             }
             else {
@@ -451,8 +459,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: /*return "L1";*/
         // Deccelerate-----------------------------
-            if (!pressed[ACCEL]) {
-                pressed[DECCEL] = true;
+            pressed[DECCEL] = true;
+            if (!active[ACCEL]) {
+                active[DECCEL] = true;
                 quad_deccelerate(PRESS); 
             }
             else {
@@ -461,8 +470,9 @@ void Controller::quad_motors_on_button_press(SDL_GameControllerButton button) {
             return;
         case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: /*return "R1";*/
         // Accelerate-----------------------------
-            if (!pressed[DECCEL]) {
-                pressed[ACCEL] = true;
+            pressed[ACCEL] = true;
+            if (!active[DECCEL]) {
+                active[ACCEL] = true;
                 quad_accelerate(PRESS); 
             }
             else {
@@ -487,112 +497,152 @@ void Controller::quad_motors_on_button_release(SDL_GameControllerButton button) 
     switch (button) {
         case SDL_CONTROLLER_BUTTON_Y: /*return "Triangle";*/
         // Pitch Forward
-            if (!pressed[FORWARD]) {
+            pressed[FORWARD] = false;
+            if (!active[FORWARD]) {
                 waiting.erase(FORWARD);
             }
             else {
-                pressed[FORWARD] = false;
-                try { waiting[FORWARD](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[FORWARD] = false;
+                quad_pitch_forward(RELEASE);
+                if (pressed[BACKWARD]) { 
+                    waiting[BACKWARD](PRESS); 
+                    active[BACKWARD] = true;
+                } 
             }
             return;    
         case SDL_CONTROLLER_BUTTON_A: /*return "X (Cross)";*/
         // Pitch Backward
-            if (!pressed[BACKWARD]) {
+            pressed[BACKWARD] = false;
+            if (!active[BACKWARD]) {
                 waiting.erase(BACKWARD);
             }
             else {
-                pressed[BACKWARD] = false;
-                try { waiting[BACKWARD](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[BACKWARD] = false;
+                quad_pitch_backward(RELEASE);
+                if (pressed[FORWARD]) { 
+                    waiting[FORWARD](PRESS); 
+                    active[FORWARD] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_B: /*return "O (Circle)";*/
         // Rotate (Yaw) Right-----------------------------
-            if (!pressed[RIGHT_YAW]) {
+            pressed[RIGHT_YAW] = false;
+            if (!active[RIGHT_YAW]) {
                 waiting.erase(RIGHT_YAW);
             }
             else {
-                pressed[RIGHT_YAW] = false;
-                try { waiting[RIGHT_YAW](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[RIGHT_YAW] = false;
+                quad_yaw_right(RELEASE);
+                if (pressed[LEFT_YAW]) { 
+                    waiting[LEFT_YAW](PRESS); 
+                    active[LEFT_YAW] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_X: /*return "Square";*/
         // Rotate (Yaw) Left-----------------------------
-            if (!pressed[LEFT_YAW]) {
+            pressed[LEFT_YAW] = false;
+            if (!active[LEFT_YAW]) {
                 waiting.erase(LEFT_YAW);
             }
             else {
-                pressed[LEFT_YAW] = false;
-                try { waiting[LEFT_YAW](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[LEFT_YAW] = false;
+                quad_yaw_left(RELEASE);
+                if (RIGHT_YAW) { 
+                    waiting[RIGHT_YAW](PRESS); 
+                    active[RIGHT_YAW] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_UP: /*return "D-Pad Up";*/
         // Move Up--------------------------
-            if (!pressed[UP]) {
+            pressed[UP] = false;
+            if (!active[UP]) {
                 waiting.erase(UP);
             }
             else {
-                pressed[UP] = false;
-                try { waiting[UP](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[UP] = false;
+                quad_up(RELEASE);
+                if (pressed[DOWN]) { 
+                    waiting[DOWN](PRESS); 
+                    active[DOWN] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN: /*return "D-Pad Down";*/
         // Move Down--------------------------
-            if (!pressed[DOWN]) {
+            pressed[DOWN] = false;
+            if (!active[DOWN]) {
                 waiting.erase(DOWN);
             }
             else {
-                pressed[DOWN] = false;
-                try { waiting[DOWN](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[DOWN] = false;
+                quad_down(RELEASE);
+                if (pressed[UP]) { 
+                    waiting[UP](PRESS); 
+                    active[UP] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_LEFT: /*return "D-Pad Left";*/
         // Bend (Roll) Left-----------------------------
-            if (!pressed[LEFT_ROLL]) {
+            pressed[LEFT_ROLL] = false;
+            if (!active[LEFT_ROLL]) {
                 waiting.erase(LEFT_ROLL);
             }
             else {
-                pressed[LEFT_ROLL] = false;
-                try { waiting[LEFT_ROLL](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[LEFT_ROLL] = false;
+                quad_roll_left(RELEASE);
+                if (pressed[RIGHT_ROLL]) { 
+                    waiting[RIGHT_ROLL](PRESS); 
+                    active[RIGHT_ROLL] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: /*return "D-Pad Right";*/
         // Bend (Roll) Right-----------------------------
-            if (!pressed[RIGHT_ROLL]) {
+            pressed[RIGHT_ROLL] = false;
+            if (!active[RIGHT_ROLL]) {
                 waiting.erase(RIGHT_ROLL);
             }
             else {
-                pressed[RIGHT_ROLL] = false;
-                try { waiting[RIGHT_ROLL](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[RIGHT_ROLL] = false;
+                quad_roll_right(RELEASE);
+                if (pressed[LEFT_ROLL]) { 
+                    waiting[LEFT_ROLL](PRESS); 
+                    active[LEFT_ROLL] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: /*return "L1";*/
         // Deccelerate-----------------------------
-            if (!pressed[DECCEL]) {
+            pressed[DECCEL] = false;
+            if (!active[DECCEL]) {
                 waiting.erase(DECCEL);
             }
             else {
-                pressed[DECCEL] = false;
-                try { waiting[DECCEL](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[DECCEL] = false;
+                quad_deccelerate(RELEASE);
+                if (pressed[ACCEL]) { 
+                    waiting[ACCEL](PRESS); 
+                    active[ACCEL] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: /*return "R1";*/
         // Accelerate-----------------------------
-            if (!pressed[ACCEL]) {
+            pressed[ACCEL] = false;
+            if (!active[ACCEL]) {
                 waiting.erase(ACCEL);
             }
             else {
-                pressed[ACCEL] = false;
-                try { waiting[ACCEL](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[ACCEL] = false;
+                quad_accelerate(RELEASE);
+                if (pressed[DECCEL]) { 
+                    waiting[DECCEL](PRESS); 
+                    active[DECCEL] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_BACK: /*return "Share";*/
@@ -615,8 +665,9 @@ void Controller::differential_motors_on_button_press(SDL_GameControllerButton bu
     switch (button) {
         case SDL_CONTROLLER_BUTTON_B: /*return "O (Circle)";*/
             // Turn Right-----------------------------
-            if (!pressed[LEFT]) {
-               pressed[RIGHT] = true;
+            pressed[RIGHT] = true;
+            if (!active[LEFT]) {
+               active[RIGHT] = true;
                diff_right_turn(PRESS); 
             }
             else {
@@ -625,8 +676,9 @@ void Controller::differential_motors_on_button_press(SDL_GameControllerButton bu
             return;
         case SDL_CONTROLLER_BUTTON_X: /*return "Square";*/
             // Turn Left-----------------------------
-            if (!pressed[RIGHT]) {
-               pressed[LEFT] = true;
+            pressed[LEFT] = true;
+            if (!active[RIGHT]) {
+               active[LEFT] = true;
                diff_left_turn(PRESS); 
             }
             else {
@@ -635,8 +687,9 @@ void Controller::differential_motors_on_button_press(SDL_GameControllerButton bu
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_UP: /*return "D-Pad Up";*/
             // Move Forward--------------------------
-            if (!pressed[BACKWARD]) {
-               pressed[FORWARD] = true;
+            pressed[FORWARD] = true;
+            if (!active[BACKWARD]) {
+               active[FORWARD] = true;
                diff_forward(PRESS); 
             }
             else {
@@ -645,8 +698,9 @@ void Controller::differential_motors_on_button_press(SDL_GameControllerButton bu
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN: /*return "D-Pad Down";*/
             // Move Back--------------------------
-            if (!pressed[FORWARD]) {
-               pressed[BACKWARD] = true;
+            pressed[BACKWARD] = true;
+            if (!active[FORWARD]) {
+               active[BACKWARD] = true;
                diff_backward(PRESS); 
             }
             else {
@@ -655,8 +709,9 @@ void Controller::differential_motors_on_button_press(SDL_GameControllerButton bu
             return;
         case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: /*return "L1";*/
             // // (Hard) Stop-----------------------------
-            if (!pressed[ACCEL]) {
-               pressed[DECCEL] = true;
+            pressed[DECCEL] = true;
+            if (!active[ACCEL]) {
+               active[DECCEL] = true;
                diff_deccelerate(PRESS); 
             }
             else {
@@ -665,8 +720,9 @@ void Controller::differential_motors_on_button_press(SDL_GameControllerButton bu
             return;
         case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: /*return "R1";*/
             // Accelerate-----------------------------
-           if (!pressed[DECCEL]) {
-               pressed[ACCEL] = true;
+            pressed[ACCEL] = true;
+           if (!active[DECCEL]) {
+               active[ACCEL] = true;
                diff_accelerate(PRESS); 
             }
             else {
@@ -681,61 +737,95 @@ void Controller::differential_motors_on_button_release(SDL_GameControllerButton 
     switch (button) {
         case SDL_CONTROLLER_BUTTON_B: /*return "O (Circle)";*/
             // Turn Right-----------------------------
-            if (!pressed[RIGHT]) {
+            pressed[RIGHT] = false;
+            if (!active[RIGHT]) {
                 waiting.erase(RIGHT);
             }
             else {
-                pressed[RIGHT] = false;
-                try { waiting[RIGHT](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[RIGHT] = false;
+                diff_right_turn(RELEASE);
+                if (pressed[LEFT]) { 
+                    waiting[LEFT](PRESS); 
+                    active[LEFT] = true;
+                } 
             }
             return; 
         case SDL_CONTROLLER_BUTTON_X: /*return "Square";*/
             // Turn Left-----------------------------
-            if (!pressed[RIGHT]) {
-                waiting.erase(RIGHT);
+            pressed[LEFT] = false;
+            if (!active[LEFT]) {
+                waiting.erase(LEFT);
             }
             else {
-                pressed[RIGHT] = false;
-                try { waiting[RIGHT](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[LEFT] = false;
+                diff_left_turn(RELEASE);
+                if (pressed[RIGHT]) { 
+                    waiting[RIGHT](PRESS); 
+                    active[RIGHT] = true;
+                } 
+
             }
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_UP: /*return "D-Pad Up";*/
             // Move Forward--------------------------
-            if (!pressed[RIGHT]) {
-                waiting.erase(RIGHT);
+            pressed[FORWARD] = false;
+            if (!active[FORWARD]) {
+                waiting.erase(FORWARD);
             }
             else {
-                pressed[RIGHT] = false;
-                try { waiting[RIGHT](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[FORWARD] = false;
+                diff_forward(RELEASE);
+                if (pressed[BACKWARD]) { 
+                    waiting[BACKWARD](PRESS); 
+                    active[BACKWARD] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN: /*return "D-Pad Down";*/
             // Move Backward--------------------------
-            if (!pressed[RIGHT]) {
-                waiting.erase(RIGHT);
+            pressed[BACKWARD] = false;
+            if (!active[BACKWARD]) {
+                waiting.erase(BACKWARD);
             }
             else {
-                pressed[RIGHT] = false;
-                try { waiting[RIGHT](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[BACKWARD] = false;
+                diff_backward(RELEASE);
+                if (pressed[FORWARD]) { 
+                    waiting[FORWARD](PRESS); 
+                    active[FORWARD] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: /*return "L1";*/
             // // (Hard) Stop-----------------------------
-            if (!pressed[RIGHT]) {
-                waiting.erase(RIGHT);
+            pressed[DECCEL] = false;
+            if (!active[DECCEL]) {
+                waiting.erase(DECCEL);
             }
             else {
-                pressed[RIGHT] = false;
-                try { waiting[RIGHT](RELEASE);
-                } catch (const std::out_of_range& e) { return; }
+                active[DECCEL] = false;
+                diff_deccelerate(RELEASE);
+                if (pressed[ACCEL]) { 
+                    waiting[ACCEL](PRESS); 
+                    active[ACCEL] = true;
+                } 
             }
             return;
         case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: /*return "R1";*/
             // Accelerate-----------------------------
+            pressed[ACCEL] = false;
+            if (!active[ACCEL]) {
+                waiting.erase(ACCEL);
+            }
+            else {
+                active[ACCEL] = false;
+                diff_accelerate(RELEASE);
+                if (pressed[DECCEL]) { 
+                    waiting[DECCEL](PRESS); 
+                    active[DECCEL] = true;
+                } 
+            }
+            return;
             
         default: return; // "Unknown Button";
     }
@@ -748,6 +838,10 @@ Controller::Controller(int robot_type, std::unique_ptr<Serial> serial, int dev_n
     serial(std::move(serial)) {
 
     this->device_fd = serial->uartInit(dev_num);
+
+    for (int i = 0; i < 12; i++) {
+        active[i] = false;
+    }
 
     for (int i = 0; i < 12; i++) {
         pressed[i] = false;

@@ -6,7 +6,7 @@
 #include <map>
 #include <SDL2/SDL.h> // in /usr/include
 //#include <SDL3/SDL.h> // in /usr/local/include
-#include "../include/Serial.hpp"
+#include "Serial.hpp"
 
 
 // Quadcopter Parameters-------------------------------------------------------------------
@@ -93,6 +93,7 @@ class Controller {
         MotorSpeeds motor;
         int robot_type;
 
+        std::map<int, bool> active;
         std::map<int, bool> pressed;
         std::map<int, std::function<void(int)>> waiting;
 

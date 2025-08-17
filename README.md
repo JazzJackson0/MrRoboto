@@ -1,4 +1,5 @@
 
+Spin Up Container: docker run -it --rm --name rpi-cross-comp-container -v $(pwd):/workspace rpi4-cross-comp-img 
 
 Hardware
 --------

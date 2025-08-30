@@ -28,6 +28,7 @@ set_target_properties(GMockMain PROPERTIES
 # -------------------------------------------------------------------------------------------
 
 find_package(Threads REQUIRED)
+find_package(Iconv REQUIRED) # For statically built Ceres
 find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(OpenMP REQUIRED)

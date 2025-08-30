@@ -85,10 +85,8 @@ RUN git clone --depth 1 https://github.com/coin-or/CppAD.git /tmp/cppad \
       -DCMAKE_INSTALL_PREFIX=/usr/aarch64-linux-gnu \
       # install headers only
       -Dcppad_prefix=/usr/aarch64-linux-gnu \
-      # disable shared lib
-      -Dcppad_shared=OFF \
-      # Build static libs only (no shared)
-      -Dcppad_static=ON \
+      # Build static libs only (no shared) -> [https://cppad.readthedocs.io/latest/cmake.html#cmake-name]
+      -Dcppad_static_lib=true \
       # Don't add tests to build (CMake-wide)
       -DBUILD_TESTING=OFF \
  && make install \
@@ -101,8 +99,8 @@ RUN git clone --recurse-submodules https://github.com/ceres-solver/ceres-solver 
     && cmake .. \
         # Use custom toolchain file for cross-compilation
         -DCMAKE_TOOLCHAIN_FILE=/toolchain/arm64-toolchain.cmake \
-        # Build shared libs only (no static) (CMake-wide)
-        -DBUILD_SHARED_LIBS=ON \
+        # Build static libs only (no shared/dynamic) (CMake-wide)
+        -DBUILD_SHARED_LIBS=OFF \
         # Set installation location
         -DCMAKE_INSTALL_PREFIX=/usr \
     && make -j$(nproc) \
@@ -121,8 +119,8 @@ RUN git clone https://github.com/opencv/opencv.git /tmp/opencv \
        -DCMAKE_INSTALL_PREFIX=/usr \
        # Location of Extra OpenCV Contrib Modules
        -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib/modules \
-       # Build as shared libs instead of staic libs
-       -DBUILD_SHARED_LIBS=ON \
+       # Build as static libs instead of shared/dynamic
+       -DBUILD_SHARED_LIBS=OFF \
        # Skip compiling OpenCV’s internal test suites
        -DBUILD_TESTS=OFF \
        # Skip OpenCV’s performance benchmarking binaries.

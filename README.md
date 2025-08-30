@@ -1,5 +1,8 @@
 
-Spin Up Container: docker run -it --rm --name rpi-cross-comp-container -v $(pwd):/workspace rpi4-cross-comp-img 
+Spin Up Container: docker run --rm -it -v $(pwd):/workspace rpi-cc-img
+
+
+Create: docker build --no-cache -t rpi-cc-img .
 
 Hardware
 --------

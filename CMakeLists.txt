@@ -9,23 +9,23 @@ set(CMAKE_CXX_STANDARD 17)           # Specify C++17 standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)  # Make C++17 standard required
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
-# # #-----------------------FOR ARM ARCHITECTURE COMPILATION-------------------------------------
-# # CMake having trouble finding Google Mock without this (Needed for Ceres build)
-# find_package(GTest REQUIRED CONFIG)
-# include_directories(${GTEST_INCLUDE_DIRS})
-#     # Manually declare and import GMock libraries
-# add_library(GMock STATIC IMPORTED)
-# set_target_properties(GMock PROPERTIES
-#     IMPORTED_LOCATION "/usr/local/lib/libgmock.a"
-#     INTERFACE_INCLUDE_DIRECTORIES "/usr/local/include"
-# )
+# #-----------------------FOR ARM ARCHITECTURE COMPILATION-------------------------------------
+# CMake having trouble finding Google Mock without this (Needed for Ceres build)
+find_package(GTest REQUIRED CONFIG)
+include_directories(${GTEST_INCLUDE_DIRS})
+    # Manually declare and import GMock libraries
+add_library(GMock STATIC IMPORTED)
+set_target_properties(GMock PROPERTIES
+    IMPORTED_LOCATION "/usr/local/lib/libgmock.a"
+    INTERFACE_INCLUDE_DIRECTORIES "/usr/local/include"
+)
 
-# add_library(GMockMain STATIC IMPORTED)
-# set_target_properties(GMockMain PROPERTIES
-#     IMPORTED_LOCATION "/usr/local/lib/libgmock_main.a"
-#     INTERFACE_INCLUDE_DIRECTORIES "/usr/local/include"
-# )
-# # -------------------------------------------------------------------------------------------
+add_library(GMockMain STATIC IMPORTED)
+set_target_properties(GMockMain PROPERTIES
+    IMPORTED_LOCATION "/usr/local/lib/libgmock_main.a"
+    INTERFACE_INCLUDE_DIRECTORIES "/usr/local/include"
+)
+# -------------------------------------------------------------------------------------------
 
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -33,6 +33,7 @@ find_package(Ceres REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
+
 
 set(RPLIDAR_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/sdk/)
 
@@ -68,5 +69,5 @@ include_directories(
 
 add_executable(${TARGET} ${SOURCES})
 
-target_link_libraries(${TARGET} PRIVATE Threads::Threads OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${CERES_LIBRARIES} ${SDL2_LIBRARIES})
+target_link_libraries(${TARGET} PRIVATE Threads::Threads OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${CERES_LIBRARIES} ${SDL2_LIBRARIES} cppad_lib)
 

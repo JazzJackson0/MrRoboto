@@ -89,7 +89,7 @@ class Controller {
         enum robot_movements { FORWARD, BACKWARD, RIGHT, LEFT, UP, DOWN, ACCEL, DECCEL, LEFT_ROLL, RIGHT_ROLL, LEFT_YAW, RIGHT_YAW };
         uint8_t quad_motor_directions = 0;
         std::unique_ptr<Serial> serial;
-        int device_fd;
+        int dev_num;
         MotorSpeeds motor;
         int robot_type;
 

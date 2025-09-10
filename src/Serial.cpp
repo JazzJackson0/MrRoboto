@@ -54,7 +54,7 @@ int8_t Serial::uartInit(uint8_t uartNum) {
     struct termios settings; // termios: A general API for configuring the I/O characteristics of character devices, including both terminals and UARTs
 
     std::string path = "/dev/serial" + std::to_string(uartNum);
-    if((uart_buses[uartNum] = open(path.c_str(), O_RDWR | O_NDELAY, O_NOCTTY)) < 0) {
+    if((uart_buses[uartNum] = open(path.c_str(), O_RDWR | O_NDELAY, O_NOCTTY)); uart_buses[uartNum] < 0) {
         std::cerr << "ERROR: Unable to open file. Cannot initialize serial/uart-" << std::to_string(uartNum) << std::endl;
         return -1;
     }
@@ -118,14 +118,19 @@ int8_t Serial::i2cInit(uint8_t i2cNum, uint8_t slaveAddress) {
     i2c_buses[i2cNum] = open(path.c_str(), O_RDWR);
 
     if(i2c_buses[i2cNum] < 0) {
-        std::cerr << "ERROR: Unable to open I2C bus. Cannot initialize i2c-" << std::to_string(i2cNum) << "(" <<strerror(errno) << ")" << std::endl;
+        char buf[256];
+        // Using GNU version of strerror_r
+        std::cerr << "ERROR: Unable to open I2C bus. Cannot initialize i2c-" << std::to_string(i2cNum) 
+            << ". Reason: " << strerror_r(errno, buf, sizeof(buf)) << std::endl;
         return -1;
     }
 	
 	// Setup I2C Bus
-	if (ioctl(i2c_buses[i2cNum], I2C_SLAVE, slaveAddress) < 0) {
+	if (int result = ioctl(i2c_buses[i2cNum], I2C_SLAVE, slaveAddress); result < 0) {
+        char buf[256];
+        // Using GNU version of strerror_r
 		std::cerr << "ERROR: Failed to connect to I2C device at slave address 0x" << std::hex << (int)slaveAddress 
-            << "(" <<strerror(errno) << ")" << std::endl;
+            << "Reason: " <<strerror_r(errno, buf, sizeof(buf)) << std::endl;
         close(i2c_buses[i2cNum]);
         return -1;
 	}
@@ -148,7 +153,7 @@ int8_t Serial::spiInit(uint8_t spiNum, uint8_t spi_mode, uint32_t speed_hz, uint
     // snprintf(path, sizeof(path), "/dev/spidev0.%d", spiNum);
     std::string path = "/dev/spidev0." + std::to_string(spiNum);
     
-    if(spi_buses[spiNum] = open(path.c_str(), O_RDWR) < 0) {
+    if(spi_buses[spiNum] = open(path.c_str(), O_RDWR); spi_buses[spiNum] < 0) {
         std::cerr << "ERROR: Unable to open file. Cannot initialize spi-" << std::to_string(spiNum) << std::endl;
         return -1;
     }
@@ -230,9 +235,15 @@ int8_t Serial::pinRead(uint8_t gpioNum) {
 
 
 int8_t Serial::uartWrite(uint8_t uartNum, char* data, int datalen) {
-
-    if (write(uart_buses[uartNum], data, datalen) != datalen) {
-        std::cerr << "ERROR: Failed to write" << std::endl;
+    if (ssize_t result = write(uart_buses[uartNum], data, datalen); result != datalen) {
+        if (result == -1) {
+            char buf[256];
+            // Using GNU version of strerror_r
+            std::cerr << "ERROR: Failed to write. write(): " << strerror_r(errno, buf, sizeof(buf)) << std::endl;
+        }
+        else {
+            std::cerr << "WARNING: UART expected to write" << datalen << " bytes but received " << result << " bytes" << std::endl;
+        }
         return 0;
     }
     return 1;
@@ -241,8 +252,15 @@ int8_t Serial::uartWrite(uint8_t uartNum, char* data, int datalen) {
 
 int8_t Serial::uartRead(uint8_t uartNum, char* data, int datalen) {
 
-    if (write(uart_buses[uartNum], data, datalen) != datalen) {
-        std::cerr << "ERROR: Failed to write" << std::endl;
+    if (ssize_t result = read(uart_buses[uartNum], data, datalen); result != datalen) {
+        if (result == -1) {
+            char buf[256];
+            // Using GNU version of strerror_r
+            std::cerr << "ERROR: Failed to read. read(): " << strerror_r(errno, buf, sizeof(buf)) << std::endl;
+        }
+        else {
+            std::cerr << "WARNING: UART expected to read " << datalen << " bytes but received " << result << " bytes" << std::endl;
+        }
         return 0;
     }
     return 1;
@@ -254,11 +272,13 @@ int8_t Serial::i2cWrite(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     int bytesWritten = write(i2c_buses[i2cNum], dataBytes, byteNum);
     
     if (bytesWritten < 0) {
-        std::cerr << "ERROR: Failed to write to I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
+        char buf[256];
+        // Using GNU version of strerror_r
+        std::cerr << "ERROR: Failed to write to I2C bus: " << "write(): " << strerror_r(errno, buf, sizeof(buf)) << std::endl;
         return 0;
     } 
     else if (bytesWritten != byteNum) {
-        std::cerr << "WARNING: Expected to write " << byteNum << " bytes. Only wrote " << bytesWritten << std::endl;
+        std::cerr << "WARNING: I2C expected to write " << byteNum << " bytes. Only wrote " << bytesWritten << " bytes" << std::endl;
     }
         
     return 1;
@@ -270,11 +290,13 @@ int8_t Serial::i2cRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     int bytesRead = read(i2c_buses[i2cNum], dataBytes, byteNum);
     
     if (bytesRead < 0) {
-        std::cerr << "ERROR: Failed to read from I2C bus: " << "(" <<strerror(errno) << ")" << std::endl;
+        char buf[256];
+        // Using GNU version of strerror_r
+        std::cerr << "ERROR: Failed to read from I2C bus: " << "read(): " << strerror_r(errno, buf, sizeof(buf)) << std::endl;
         return 0;
     } 
     else if (bytesRead != byteNum) {
-        std::cerr << "WARNING: Expected " << byteNum << " bytes but received " << bytesRead << std::endl;
+        std::cerr << "WARNING: I2C expected " << byteNum << " bytes but received " << bytesRead << " bytes" << std::endl;
     }
         
     return 1;
@@ -293,7 +315,9 @@ int8_t Serial::i2cRead(uint8_t i2cNum, uint8_t *dataBytes, int byteNum) {
     // packets.nmsgs = 1;
 
     // if (ioctl(i2c_buses[i2cNum], I2C_RDWR, &packets) < 0) {
-    //     std::cerr << "I2C Bus Read failed: " << "(" <<strerror(errno) << ")" << std::endl;
+    //     char buf[256];
+    //     // Using GNU version of strerror_r
+    //     std::cerr << "I2C Bus Read failed: " << "(" <<strerror_r(errno, buf, sizeof(buf));
     //     close(i2c_buses[i2cNum]);
     //     return -1;
     // }
@@ -321,7 +345,7 @@ int Serial::spiTransfer(uint8_t spiNum, int8_t *dataBytes, int len) {
     }
 
     // Transfer Data
-    if (ioctl(spi_buses[spiNum], SPI_IOC_MESSAGE(len), spi_info) < 0) {
+    if (int result = ioctl(spi_buses[spiNum], SPI_IOC_MESSAGE(len), spi_info); result < 0) {
         std::cerr << "ERROR: Failed transfer data over SPI" << std::endl;
         close(spi_buses[spiNum]);
         return -1;

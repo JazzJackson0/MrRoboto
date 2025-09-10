@@ -1,7 +1,7 @@
 #include "../include/Controller.hpp"
 
 char* Controller::create_data_packet(uint8_t packet_type, uint8_t motor_directions, uint32_t left_speed, uint32_t right_speed) {
-    char data[packet_type] = {0};
+    char *data = new char[packet_type]();
     data[0] = packet_type;
     
     if (packet_type == DIRECTION_PACKET) {
@@ -9,14 +9,26 @@ char* Controller::create_data_packet(uint8_t packet_type, uint8_t motor_directio
     }
 
     else if (packet_type == SPEED_PACKET) {
-        data[1] = left_speed;
-        data[5] = right_speed;
+        data[1] = (left_speed >> 24) & 0xFF;
+        data[2] = (left_speed >> 16) & 0xFF;
+        data[3] = (left_speed >> 8) & 0xFF;
+        data[4] = left_speed & 0xFF;
+        data[5] = (right_speed >> 24) & 0xFF;
+        data[6] = (right_speed >> 16) & 0xFF;
+        data[7] = (right_speed >> 8) & 0xFF;
+        data[8] = right_speed & 0xFF;
     }
 
     else if (packet_type == FULL_PACKET) {
         data[1] = motor_directions;
-        data[2] = left_speed;
-        data[6] = right_speed;
+        data[2] = (left_speed >> 24) & 0xFF;
+        data[3] = (left_speed >> 16) & 0xFF;
+        data[4] = (left_speed >> 8) & 0xFF;
+        data[5] = left_speed & 0xFF;
+        data[6] = (right_speed >> 24) & 0xFF;
+        data[6] = (right_speed >> 16) & 0xFF;
+        data[6] = (right_speed >> 8) & 0xFF;
+        data[6] = right_speed & 0xFF;
     }
 
     return data;
@@ -25,7 +37,7 @@ char* Controller::create_data_packet(uint8_t packet_type, uint8_t motor_directio
 
 char* Controller::create_quad_data_packet(uint8_t packet_type, uint8_t motor_directions, 
     uint32_t front_left_speed, uint32_t back_left_speed, uint32_t front_right_speed, uint32_t back_right_speed) {
-    char data[packet_type] = {0};
+    char *data = new char[packet_type]();
     data[0] = packet_type;
     
     if (packet_type == DIRECTION_PACKET) {
@@ -33,10 +45,22 @@ char* Controller::create_quad_data_packet(uint8_t packet_type, uint8_t motor_dir
     }
 
     else if (packet_type == SPEED_PACKET) {
-        data[1] = front_left_speed;
-        data[5] = back_left_speed;
-        data[9] = front_right_speed;
-        data[13] = back_right_speed;
+        data[1] = (front_left_speed >> 24) & 0xFF;
+        data[2] = (front_left_speed >> 16) & 0xFF;
+        data[3] = (front_left_speed >> 8) & 0xFF;
+        data[4] = front_left_speed & 0xFF;
+        data[5] = (back_left_speed >> 24) & 0xFF;
+        data[6] = (back_left_speed >> 16) & 0xFF;
+        data[7] = (back_left_speed >> 8) & 0xFF;
+        data[8] = back_left_speed & 0xFF;
+        data[9] = (front_right_speed >> 24) & 0xFF;
+        data[10] = (front_right_speed >> 16) & 0xFF;
+        data[11] = (front_right_speed >> 8) & 0xFF;
+        data[12] = front_right_speed & 0xFF;
+        data[13] = (back_right_speed >> 24) & 0xFF;
+        data[14] = (back_right_speed >> 16) & 0xFF;
+        data[15] = (back_right_speed >> 8) & 0xFF;
+        data[16] = back_right_speed & 0xFF;
     }
 
     return data;
@@ -46,8 +70,9 @@ char* Controller::create_quad_data_packet(uint8_t packet_type, uint8_t motor_dir
 void Controller::diff_right_turn(int btnState) {
     if (btnState == PRESS) {
         char * data = create_data_packet(DIRECTION_PACKET, ((2 << FWD) | BKWD), 0, 0);
-        serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "(O) Right Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, DIRECTION_PACKET);
+        delete[] data;
+        // std::cout << "(O) Right Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
@@ -56,8 +81,9 @@ void Controller::diff_right_turn(int btnState) {
             direction = ((2 << BKWD) | BKWD);
         }
         char * data = create_data_packet(DIRECTION_PACKET, direction, 0, 0);
-        serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "(O) Right Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, DIRECTION_PACKET);
+        delete[] data;
+        // std::cout << "(O) Right Button Released" << std::endl;
         return;
     }
 }
@@ -65,8 +91,9 @@ void Controller::diff_right_turn(int btnState) {
 void Controller::diff_left_turn(int btnState) {
     if (btnState == PRESS) {
         char * data = create_data_packet(DIRECTION_PACKET, ((2 << BKWD) | FWD), 0, 0);
-        serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "(Square) Left Button Pressed" << std::endl;  
+        serial->uartWrite(this->dev_num, data, DIRECTION_PACKET);
+        delete[] data;
+        // std::cout << "(Square) Left Button Pressed" << std::endl;  
         return;
     }
     else if (btnState == RELEASE) {
@@ -75,38 +102,47 @@ void Controller::diff_left_turn(int btnState) {
             direction = ((2 << BKWD) | BKWD);
         }
         char * data = create_data_packet(DIRECTION_PACKET, direction, 0, 0);
-        serial->uartWrite(device_fd, data, DIRECTION_PACKET);
-        std::cout << "(Square) Left Button Released" << std::endl;  
+        serial->uartWrite(this->dev_num, data, DIRECTION_PACKET);
+        delete[] data;
+        // std::cout << "(Square) Left Button Released" << std::endl;  
         return;
     }
 }
 
 void Controller::diff_forward(int btnState) {
     if (btnState == PRESS) {
-        char * data = create_data_packet(FULL_PACKET, ((2 << FWD) | FWD), (motor.left_speed += DIFF_MOVE_DELTA), (motor.right_speed += DIFF_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, FULL_PACKET);
-        std::cout << "(D-Pad Up) Forward Button Pressed" << std::endl;
+        char * data = create_data_packet(FULL_PACKET, ((2 << FWD) | FWD), 
+            (motor.left_speed += DIFF_MOVE_DELTA), (motor.right_speed += DIFF_MOVE_DELTA));
+        serial->uartWrite(this->dev_num, data, FULL_PACKET);
+        delete[] data;
+        // std::cout << "(D-Pad Up) Forward Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
-        char * data = create_data_packet(SPEED_PACKET, 0, (motor.left_speed -= DIFF_MOVE_DELTA), (motor.right_speed -= DIFF_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, SPEED_PACKET);
-        std::cout << "(D-Pad Up) Forward Button Released" << std::endl;
+        char * data = create_data_packet(SPEED_PACKET, 0, 
+            (motor.left_speed -= DIFF_MOVE_DELTA), (motor.right_speed -= DIFF_MOVE_DELTA));
+        serial->uartWrite(this->dev_num, data, SPEED_PACKET);
+        delete[] data;
+        // std::cout << "(D-Pad Up) Forward Button Released" << std::endl;
         return;
     }
 }
 
 void Controller::diff_backward(int btnState) {
     if (btnState == PRESS) {
-        char * data = create_data_packet(FULL_PACKET, ((2 << BKWD) | BKWD), (motor.left_speed += DIFF_MOVE_DELTA), (motor.right_speed += DIFF_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, FULL_PACKET);
-        std::cout << "(D-Pad Down) Backward Button Pressed" << std::endl;
+        char * data = create_data_packet(FULL_PACKET, ((2 << BKWD) | BKWD), 
+            (motor.left_speed += DIFF_MOVE_DELTA), (motor.right_speed += DIFF_MOVE_DELTA));
+        serial->uartWrite(this->dev_num, data, FULL_PACKET);
+        delete[] data;
+        // std::cout << "(D-Pad Down) Backward Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
-        char * data = create_data_packet(FULL_PACKET, ((2 << FWD) | FWD), (motor.left_speed -= DIFF_MOVE_DELTA), (motor.right_speed -= DIFF_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, FULL_PACKET);
-        std::cout << "(D-Pad Down) Backward Button Released" << std::endl;
+        char * data = create_data_packet(FULL_PACKET, ((2 << FWD) | FWD), 
+            (motor.left_speed -= DIFF_MOVE_DELTA), (motor.right_speed -= DIFF_MOVE_DELTA));
+        serial->uartWrite(this->dev_num, data, FULL_PACKET);
+        delete[] data;
+        // std::cout << "(D-Pad Down) Backward Button Released" << std::endl;
         return;
     }
 }
@@ -116,16 +152,18 @@ void Controller::diff_accelerate(int btnState) {
         motor.left_speed = (motor.left_speed * 1.75) >= PERIOD ? PERIOD : (motor.left_speed * 1.75);
         motor.right_speed = (motor.right_speed * 1.75) >= PERIOD ? PERIOD : (motor.right_speed * 1.75);
         char * data = create_data_packet(SPEED_PACKET, 0, motor.left_speed, motor.right_speed);
-        serial->uartWrite(device_fd, data, SPEED_PACKET);
-        std::cout << "(R1) Accel Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, SPEED_PACKET);
+        delete[] data;
+        // std::cout << "(R1) Accel Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         motor.left_speed = (motor.left_speed / 1.75) >= PERIOD ? PERIOD : (motor.left_speed / 1.75);
         motor.right_speed = (motor.right_speed / 1.75) >= PERIOD ? PERIOD : (motor.right_speed / 1.75);
         char * data = create_data_packet(SPEED_PACKET, 0, motor.left_speed, motor.right_speed);
-        serial->uartWrite(device_fd, data, SPEED_PACKET);
-        std::cout << "(R1) Accel Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, SPEED_PACKET);
+        delete[] data;
+        // std::cout << "(R1) Accel Button Released" << std::endl;
         return;
     }
 }
@@ -140,11 +178,11 @@ void Controller::diff_deccelerate(int btnState) {
         // serial->pinWrite(MOTOR_SET1_PIN_B, PIN_HIGH);
         // serial->pwmUpdate(LEFT_CHIP, LEFT_PWM, (motor.left_speed = 0)); 
         // serial->pwmUpdate(RIGHT_CHIP, RIGHT_PWM, (motor.right_speed = 0)); 
-        std::cout << "(L1) Deccel Button Pressed" << std::endl;
+        // std::cout << "(L1) Deccel Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
-        std::cout << "(L1) Deccel Button Released" << std::endl;
+        // std::cout << "(L1) Deccel Button Released" << std::endl;
         return;
     }
 }
@@ -156,16 +194,18 @@ void Controller::quad_yaw_right(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, 0, 
             (motor.front_left_speed += QUAD_MOVE_DELTA), motor.back_left_speed, 
             motor.front_right_speed, (motor.back_right_speed += QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "O Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "O Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, 0, 
             (motor.front_left_speed -= QUAD_MOVE_DELTA), motor.back_left_speed, 
             motor.front_right_speed, (motor.back_right_speed -= QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "O Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "O Button Released" << std::endl;
         return;
     }
 }
@@ -176,16 +216,18 @@ void Controller::quad_yaw_left(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             motor.front_left_speed, (motor.back_left_speed += QUAD_MOVE_DELTA), 
             (motor.front_right_speed += QUAD_MOVE_DELTA), motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "Square Button Pressed" << std::endl;  
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "Square Button Pressed" << std::endl;  
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             motor.front_left_speed, (motor.back_left_speed -= QUAD_MOVE_DELTA), 
             (motor.front_right_speed -= QUAD_MOVE_DELTA), motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "Square Button Released" << std::endl;  
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "Square Button Released" << std::endl;  
         return;
     }
 }
@@ -197,16 +239,18 @@ void Controller::quad_roll_right(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             motor.front_left_speed, (motor.back_left_speed += QUAD_MOVE_DELTA), 
             (motor.front_left_speed += QUAD_MOVE_DELTA), motor.back_left_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "O Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "O Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             motor.front_left_speed, (motor.back_left_speed -= QUAD_MOVE_DELTA), 
             (motor.front_left_speed -= QUAD_MOVE_DELTA), motor.back_left_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "O Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "O Button Released" << std::endl;
         return;
     }
 }
@@ -217,16 +261,18 @@ void Controller::quad_roll_left(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             (motor.front_right_speed += QUAD_MOVE_DELTA), motor.back_right_speed, 
             motor.front_right_speed, (motor.back_right_speed += QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "Square Button Pressed" << std::endl;  
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "Square Button Pressed" << std::endl;  
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             (motor.front_right_speed -= QUAD_MOVE_DELTA), motor.back_right_speed, 
             motor.front_right_speed, (motor.back_right_speed -= QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "Square Button Released" << std::endl;  
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "Square Button Released" << std::endl;  
         return;
     }
 }
@@ -237,16 +283,18 @@ void Controller::quad_pitch_forward(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             motor.front_left_speed, (motor.back_left_speed += QUAD_MOVE_DELTA), 
             motor.front_right_speed, (motor.back_right_speed += QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Up Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Up Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
             motor.front_left_speed, (motor.back_left_speed -= QUAD_MOVE_DELTA), 
             motor.front_right_speed, (motor.back_right_speed -= QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Up Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Up Button Released" << std::endl;
         return;
     }
 }
@@ -257,16 +305,18 @@ void Controller::quad_pitch_backward(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
         (motor.front_left_speed += QUAD_MOVE_DELTA), motor.back_left_speed,
         (motor.front_right_speed += QUAD_MOVE_DELTA), motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Down Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Down Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, quad_motor_directions, 
         (motor.front_left_speed -= QUAD_MOVE_DELTA), motor.back_left_speed,
         (motor.front_right_speed -= QUAD_MOVE_DELTA), motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Down Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Down Button Released" << std::endl;
         return;
     }
 }
@@ -278,16 +328,18 @@ void Controller::quad_up(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, 
             0, (motor.front_left_speed += QUAD_MOVE_DELTA), (motor.back_left_speed += QUAD_MOVE_DELTA),
             (motor.front_right_speed += QUAD_MOVE_DELTA), (motor.back_right_speed += QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Down Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Down Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, 
             0, (motor.front_left_speed -= QUAD_MOVE_DELTA), (motor.back_left_speed -= QUAD_MOVE_DELTA),
             (motor.front_right_speed -= QUAD_MOVE_DELTA), (motor.back_right_speed -= QUAD_MOVE_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Down Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Down Button Released" << std::endl;
         return;
     }
 }
@@ -298,16 +350,18 @@ void Controller::quad_down(int btnState) {
         char * data = create_quad_data_packet(QUAD_PACKET, 
             0, (motor.front_left_speed -= QUAD_DOWN_DELTA), (motor.back_left_speed -= QUAD_DOWN_DELTA),
             (motor.front_right_speed -= QUAD_DOWN_DELTA), (motor.back_right_speed -= QUAD_DOWN_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Down Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Down Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
         char * data = create_quad_data_packet(QUAD_PACKET, 
             0, (motor.front_left_speed += QUAD_DOWN_DELTA), (motor.back_left_speed += QUAD_DOWN_DELTA),
             (motor.front_right_speed += QUAD_DOWN_DELTA), (motor.back_right_speed += QUAD_DOWN_DELTA));
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "D-Pad Down Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "D-Pad Down Button Released" << std::endl;
         return;
     }
 }
@@ -321,8 +375,9 @@ void Controller::quad_accelerate(int btnState) {
         motor.back_right_speed = (motor.back_right_speed * 1.75) >= PERIOD ? PERIOD : (motor.back_right_speed * 1.75);
         char * data = create_quad_data_packet(QUAD_PACKET, 0, motor.front_left_speed, motor.back_left_speed, 
             motor.front_right_speed, motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "R1 Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "R1 Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
@@ -332,8 +387,9 @@ void Controller::quad_accelerate(int btnState) {
         motor.back_right_speed = (motor.back_right_speed / 1.75) >= PERIOD ? PERIOD : (motor.back_right_speed / 1.75);
         char * data = create_quad_data_packet(QUAD_PACKET, 0, motor.front_left_speed, motor.back_left_speed, 
             motor.front_right_speed, motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "R1 Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "R1 Button Released" << std::endl;
         return;
     }
 }
@@ -348,8 +404,9 @@ void Controller::quad_deccelerate(int btnState) {
         motor.back_right_speed = (motor.back_right_speed / 1.75) >= PERIOD ? PERIOD : (motor.back_right_speed / 1.75);
         char * data = create_quad_data_packet(QUAD_PACKET, 0, motor.front_left_speed, motor.back_left_speed, 
             motor.front_right_speed, motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "L1 Button Pressed" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "L1 Button Pressed" << std::endl;
         return;
     }
     else if (btnState == RELEASE) {
@@ -359,8 +416,9 @@ void Controller::quad_deccelerate(int btnState) {
         motor.back_right_speed = (motor.back_right_speed * 1.75) >= PERIOD ? PERIOD : (motor.back_right_speed * 1.75);
         char * data = create_quad_data_packet(QUAD_PACKET, 0, motor.front_left_speed, motor.back_left_speed, 
             motor.front_right_speed, motor.back_right_speed);
-        serial->uartWrite(device_fd, data, QUAD_PACKET);
-        std::cout << "L1 Button Released" << std::endl;
+        serial->uartWrite(this->dev_num, data, QUAD_PACKET);
+        delete[] data;
+        // std::cout << "L1 Button Released" << std::endl;
         return;
     }
 }
@@ -835,15 +893,10 @@ Controller::Controller() {}
 
 
 Controller::Controller(int robot_type, std::unique_ptr<Serial> serial, int dev_num) : robot_type(robot_type), 
-    serial(std::move(serial)) {
-
-    this->device_fd = serial->uartInit(dev_num);
+    serial(std::move(serial)), dev_num(dev_num) {
 
     for (int i = 0; i < 12; i++) {
         active[i] = false;
-    }
-
-    for (int i = 0; i < 12; i++) {
         pressed[i] = false;
     }
 
@@ -856,7 +909,7 @@ Controller::Controller(int robot_type, std::unique_ptr<Serial> serial, int dev_n
         // Set to motors hover speed T = F_g
         char * data = create_quad_data_packet(DIRECTION_PACKET, 0, motor.front_left_speed, motor.back_left_speed, 
             motor.front_right_speed, motor.back_right_speed);
-        serial->uartWrite(device_fd, data, DIRECTION_PACKET);
+        serial->uartWrite(dev_num, data, DIRECTION_PACKET);
 
         // Set Motor Directions
         // char * data = create_quad_data_packet(DIRECTION_PACKET, (CLOCKWISE, CLOCKWISE, CLOCKWISE, CLOCKWISE), 0, 0, 0, 0);

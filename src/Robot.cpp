@@ -7,17 +7,17 @@ namespace diffdrive {
 bool Robot::map_ready() {
     bool result;
     std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
-    result = map_data_available;
+    result = this->map_data_available;
     map_state_lock.unlock();
     return result;
 }
 
 void Robot::set_physical_parameters(float robot_wheel_radius, float robot_trackwidth) {
 
-    trackwidth = robot_trackwidth;
-    wheel_radius = robot_wheel_radius;
+    this->trackwidth = robot_trackwidth;
+    this->wheel_radius = robot_wheel_radius;
     odom->setTrackwidth(trackwidth);
-    physical_set = true;
+    this->physical_set = true;
     // std::cout << "Phyisical Parameters Set.\n";
     // std::cout << "Track Width: " << trackwidth << "\n";
     // std::cout << "Wheel Radius: " << wheel_radius << "\n";
@@ -25,23 +25,23 @@ void Robot::set_physical_parameters(float robot_wheel_radius, float robot_trackw
 
 
 void Robot::set_map_dimensions(int width, int height) {
-    map_height = height;
-    map_width = width;
+    this->map_height = height;
+    this->map_width = width;
     map_builder->update2DMapDimensions(height, width);
     slam1->setMapDimensions(map_height, map_width);
     slam2->setMapDimensions(map_height, map_width);
-    map_set = true;
+    this->map_set = true;
     // std::cout << "Map Parameters Set: (" << height << " x " << width << ")" << std::endl;
-    current_map = Eigen::Tensor<float, 2>(height, width);
-    current_map.setConstant(0.3);
+    this->current_map = Eigen::Tensor<float, 2>(height, width);
+    this->current_map.setConstant(0.3);
 }
 
 bool Robot::map_params_set() {
-    return map_set;
+    return this->map_set;
 }
 
 bool Robot::physical_params_set() {
-    return physical_set;
+    return this->physical_set;
 }
 
 void Robot::set_parameters() {
@@ -51,8 +51,8 @@ void Robot::set_parameters() {
 
     json map_data = json::parse(map_f);
     json diffbot_data = json::parse(diff_f);
-    set_physical_parameters(diffbot_data["wheel_radius"], diffbot_data["robot_trackwidth"]);
-    set_map_dimensions(map_data["width"], map_data["height"]);
+    set_map_dimensions(map_data["map_dimensions"]["width"], map_data["map_dimensions"]["height"]);
+    set_physical_parameters(diffbot_data["differential_drive"]["wheel_radius"], diffbot_data["differential_drive"]["trackwidth"]);
 
 }
 
@@ -124,7 +124,7 @@ PointCloud Robot::get_cloud(int broadcast_state) {
 
         
         std::unique_lock<std::mutex> pos_lock(pos_mutex);
-        VectorXf pos = current_pos;
+        VectorXf pos = this->current_pos;
         pos_lock.unlock();
 
         // Get coordinate of ray.
@@ -194,16 +194,16 @@ void Robot::find_frontier() {
     while (1) {
 
         std::unique_lock<std::mutex> map_lock(map_mutex);
-        Eigen::Tensor<float, 2> map = current_map;
+        Eigen::Tensor<float, 2> map = this->current_map;
         map_lock.unlock();
 
         std::unique_lock<std::mutex> cloud_lock(map_mutex);
-        PointCloud cloud = current_cloud;
+        PointCloud cloud = this->current_cloud;
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> pos_lock(map_mutex);
-        VectorXi pos = map_builder->mapCoordinateToDataStructureIndex(current_pos.head<2>());
-        VectorXf flt_pos = current_pos;
+        VectorXi pos = map_builder->mapCoordinateToDataStructureIndex(this->current_pos.head<2>());
+        VectorXf flt_pos = this->current_pos;
         pos_lock.unlock();
         
         map_builder->applyInflationLayer(map, 5); // Create Cost Map
@@ -283,7 +283,7 @@ void Robot::follow_local_path(std::vector<VectorXf> smooth_waypoints, Eigen::Ten
             else
                 duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
         }   
-
+        std::cout << "Writing to UART..." << std::endl;
         serial->uartWrite(UART_NUM, duty_cycle_buff, UART_BUFFER_SIZE);
     }
 }
@@ -297,28 +297,28 @@ void Robot::run_slam(int algorithm) {
         PointCloud cloud = get_cloud(NO_BROADCAST);
 
         std::unique_lock<std::mutex> cloud_lock(cloud_mutex);
-        current_cloud = cloud;
+        this->current_cloud = cloud;
         cloud_lock.unlock();
 
         if (algorithm == POSE_GRAPH) {
             
             Eigen::Tensor<float, 2> new_map = slam1->run(cloud);
-            // std::cout << current_map << "\n";
+            // std::cout << this->current_map << "\n";
             // std::cout << std::endl;
             
             std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = new_map;
+            this->current_map = new_map;
             map_lock.unlock();
 
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
-                map_data_available = true;
+                this->map_data_available = true;
                 first_map = false;
             } 
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
-            current_pos = slam1->broadcastCurrentPose();  
+            this->current_pos = slam1->broadcastCurrentPose();  
         }
         
         else if (algorithm == EKF) {
@@ -339,21 +339,21 @@ void Robot::run_slam(int algorithm) {
             //-------------------------------------------------
 
             Eigen::Tensor<float, 2> new_map = slam2->run(cloud, ctrl);
-            // std::cout << current_map << std::endl;
+            // std::cout << this->current_map << std::endl;
             // std::cout << std::endl;
 
             if (first_map) {
                 std::unique_lock<std::mutex> map_state_lock(map_ready_mutex);
-                map_data_available = true;
+                this->map_data_available = true;
                 first_map = false;
             }
 
             std::unique_lock<std::mutex> map_lock(map_mutex);
-            current_map = new_map;
+            this->current_map = new_map;
             map_lock.unlock();
 
             std::unique_lock<std::mutex> pos_lock(pos_mutex);
-            current_pos = slam2->broadcastCurrentPose();       
+            this->current_pos = slam2->broadcastCurrentPose();       
         }
     }
 }
@@ -429,7 +429,7 @@ void Robot::run_localizer(Eigen::Tensor<float, 2> map) {
         PointCloud cloud = get_cloud(NO_BROADCAST);
 
         std::unique_lock<std::mutex> cloud_lock(cloud_mutex);
-        current_cloud = cloud;
+        this->current_cloud = cloud;
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
@@ -454,17 +454,17 @@ void Robot::run_mapper() {
         std::vector<VectorXf> scan = get_scan();
 
         std::unique_lock<std::mutex> scan_lock(scan_mutex);
-        current_scan = scan;
+        this->current_scan = scan;
         scan_lock.unlock();
 
         std::unique_lock<std::mutex> pos_lock(pos_mutex);
-        VectorXf pos = current_pos;
+        VectorXf pos = this->current_pos;
         pos_lock.unlock();
 
         Eigen::Tensor<float, 2> new_map = og_map->updateGridMap(pos, scan);
 
         std::unique_lock<std::mutex> map_lock(map_mutex);
-        current_map = new_map;
+        this->current_map = new_map;
         map_lock.unlock();
 
 
@@ -472,13 +472,13 @@ void Robot::run_mapper() {
         // PointCloud cloud = GetCloud(NO_BROADCAST);
 
         // std::unique_lock<std::mutex> cloud_lock(cloud_mutex);
-        // current_cloud = cloud;
+        // this->current_cloud = cloud;
         // cloud_lock.unlock();
 
         // Eigen::Tensor<float, 2> new_map = og_map->updateGridMapWithPointCloud(cloud);
 
         // std::unique_lock<std::mutex> map_lock(map_mutex);
-        // current_map = new_map;
+        // this->current_map = new_map;
         // map_lock.unlock();
     }
 }
@@ -492,7 +492,7 @@ void Robot::save_map(std::string output_filename) {
     }
 
     std::unique_lock<std::mutex> map_lock(map_mutex);
-    Eigen::Tensor<float, 2> map = current_map;
+    Eigen::Tensor<float, 2> map = this->current_map;
     map_lock.unlock();
 
     map_builder->tensor2DToMapFile(map, output_filename, PGM, 255);
@@ -565,18 +565,18 @@ void Robot::robotStart(bool autonomous) {
 
     std::cout << "Starting Robot..." << std::endl;
 
-    map_set = false;
-    physical_set = false;
-    map_data_available = false;
+    this->map_set = false;
+    this->physical_set = false;
+    this->map_data_available = false;
 
     start_scanner();
 
-    // Setupe for PWM Out Values
+    // Setup for PWM Out Values
     serial = std::make_unique<Serial>();
     serial->uartInit(UART_NUM); 
 
     // Set Current Position
-    current_pos = VectorXf::Zero(3);
+    this->current_pos = VectorXf::Zero(3);
     
     // Setup Map Builder
     map_builder = std::make_unique<MapBuilder>(800, 800);
@@ -588,7 +588,7 @@ void Robot::robotStart(bool autonomous) {
     
     // Setup SLAM 2
     slam2 = std::make_unique<EKFSlam>(POSE_DIM, LANDMARK_DIM);
-    slam2->setInitialState(current_pos, PROCESS_UNCERTAINTY, MEASUREMENT_UNCERTAINTY);
+    slam2->setInitialState(this->current_pos, PROCESS_UNCERTAINTY, MEASUREMENT_UNCERTAINTY);
 
     // Setup SLAM 3
     v_slam = std::make_unique<vSLAM>();
@@ -624,7 +624,8 @@ void Robot::robotStart(bool autonomous) {
 
     path_util = std::make_unique<PathUtil>();
 
-    controller = std::make_unique<Controller>(DIFF_BOT, std::move(serial), UART_NUM);
+    if (!this->autonomous)
+        controller = std::make_unique<Controller>(DIFF_BOT, std::move(serial), UART_NUM);
 
     // Set Physical Parameters for Vehicle & Environment (Robot, Map, Etc...)
     set_parameters();
@@ -656,12 +657,12 @@ void Robot::mapEnv() {
 
     if (autonomous) {
         std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
-        explorer_thread.join();
+        explorer_thread.detach();
     }
 
     else {
         std::thread controller_thread(&Controller::controllerRun, controller.get());
-        controller_thread.join();
+        controller_thread.detach();
     }
         
     std::thread mapping_thread(&diffdrive::Robot::run_mapper, this);
@@ -683,17 +684,17 @@ void Robot::localize(std::string map_filename) {
     }
     Eigen::Tensor<float, 2> map = map_builder->mapFileToTensor2D(map_filename, PBM);
     std::unique_lock<std::mutex> map_lock(map_mutex);
-    current_map = map;
+    this->current_map = map;
     map_lock.unlock();
 
     if (autonomous) {
         std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
-         explorer_thread.join();
+         explorer_thread.detach();
     }
 
     else {
         std::thread controller_thread(&Controller::controllerRun, controller.get());
-        controller_thread.join();
+        controller_thread.detach();
     }
 
     std::thread localizer_thread(&diffdrive::Robot::run_localizer, this, map);
@@ -713,14 +714,14 @@ void Robot::mapAndLocalize(int algorithm) {
         return;
     }
 
-    if (autonomous) {
+    if (this->autonomous) {
         std::thread explorer_thread(&diffdrive::Robot::find_frontier, this);
-         explorer_thread.join();
+         explorer_thread.detach();
     }
 
     else {
         std::thread controller_thread(&Controller::controllerRun, controller.get());
-        controller_thread.join();
+        controller_thread.detach();
     }
 
     std::thread slam_thread(&diffdrive::Robot::run_slam, this, algorithm);

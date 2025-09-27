@@ -22,49 +22,39 @@ void Odom::setTrackwidth(float robot_trackwidth) {
     trackwidth = robot_trackwidth;
 }
 
-VectorXf Odom::getNewPosition() {
+VectorXf Odom::getEncoderDerivedPosition() {
     VectorXf new_position(3);
-    uint8_t *encoder_buffer = new uint8_t[8];
-    serial->i2cRead(I2C_NUM, encoder_buffer, 8);
-    uint32_t left = *((uint32_t*)encoder_buffer);
-    uint32_t right = *((uint32_t*)(encoder_buffer + 4));
-    // left_distance = (float)left;
-    // right_distance = (float)right;
-    left_distance = *((float *)&left);
-    right_distance = *((float *)&right);
+    uint8_t *encoder_buffer = new uint8_t[12];
+    serial->i2cRead(I2C_NUM, encoder_buffer, 12);
+    uint32_t x = *((uint32_t*)encoder_buffer);
+    uint32_t y = *((uint32_t*)(encoder_buffer + 4));
+    uint32_t th = *((uint32_t*)(encoder_buffer + 8));
+    float x_pos = *((float *)&x);
+    float y_pos = *((float *)&y);
+    float theta = *((float *)&th);
 
-    float phi = left_distance - right_distance / trackwidth;
-    float r_center = trackwidth / 2;
-    VectorXf P(2);
-    P << previous_pose[0] - r_center * std::cos(previous_pose[2]), previous_pose[0] - r_center * std::sin(previous_pose[2]);
-    new_position << P[0] + r_center * std::cos(phi + previous_pose[2]), P[1] + r_center * std::sin(phi + previous_pose[2]), phi + previous_pose[2];
-
+    new_position << x_pos, y_pos, theta;
     delete encoder_buffer;
     return new_position;
 }
 
-VectorXf Odom::getNewVelocities() {
+VectorXf Odom::getEncoderDerivedVelocities() {
 
     VectorXf new_velocity(2);
     uint8_t *encoder_buffer = new uint8_t[8];
     serial->i2cRead(I2C_NUM, encoder_buffer, 8);
-    uint32_t left = *((uint32_t*)encoder_buffer);
-    uint32_t right = *((uint32_t*)(encoder_buffer + 4));
-    // left_distance = (float)left;
-    // right_distance = (float)right;
-    left_distance = *((float *)&left);
-    right_distance = *((float *)&right);
+    uint32_t rot = *((uint32_t*)encoder_buffer);
+    uint32_t trans = *((uint32_t*)(encoder_buffer + 4));
+    float rotational = *((float *)&rot);
+    float translational = *((float *)&trans);
 
-    float phi = left_distance - right_distance / trackwidth;
-    float r_center = trackwidth / 2;
-    new_velocity << r_center/dt, phi/dt;
+    new_velocity << rotational, translational;
 
     delete encoder_buffer;
     return new_velocity;
 }
 
-// No true odometry calculation. Just raw imu reads.
-VectorXf Odom::getNewRawVelocities() {
+VectorXf Odom::getIMUDerivedVelocities() {
 
     VectorXf new_velocity(2);
     uint8_t *imu_buffer = new uint8_t[16];

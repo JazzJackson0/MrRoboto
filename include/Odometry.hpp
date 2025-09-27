@@ -28,11 +28,11 @@ class Odom {
 
         void setTrackwidth(float robot_trackwidth);
 
-        VectorXf getNewPosition();
+        VectorXf getEncoderDerivedPosition();
 
-        VectorXf getNewVelocities();
+        VectorXf getEncoderDerivedVelocities();
 
-        VectorXf getNewRawVelocities();
+        VectorXf getIMUDerivedVelocities();
 };
 
 

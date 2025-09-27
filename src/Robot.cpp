@@ -251,8 +251,8 @@ void Robot::follow_local_path(std::vector<VectorXf> smooth_waypoints, Eigen::Ten
         d_window->setGoal(smooth_waypoints[i]);
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        // VectorXf odom_vels = odom->getNewVelocities();
-        VectorXf odom_vels = odom->getNewRawVelocities();
+        // VectorXf odom_vels = odom->getEncoderDerivedVelocities();
+        VectorXf odom_vels = odom->getIMUDerivedVelocities();
         odom_lock.unlock();
         VectorXf vels = d_window->run(pos, cloud, odom_vels);
         
@@ -324,8 +324,8 @@ void Robot::run_slam(int algorithm) {
         else if (algorithm == EKF) {
 
             std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-            // VectorXf odom_out = odom->getNewVelocities();
-            VectorXf odom_out = odom->getNewRawVelocities();
+            // VectorXf odom_out = odom->getEncoderDerivedVelocities();
+            VectorXf odom_out = odom->getIMUDerivedVelocities();
             odom_lock.unlock();
 
             ControlCommand ctrl;
@@ -433,8 +433,8 @@ void Robot::run_localizer(Eigen::Tensor<float, 2> map) {
         cloud_lock.unlock();
 
         std::unique_lock<std::mutex> odom_lock(odom_read_mutex);
-        // VectorXf odom_out = odom->getNewVelocities();
-        VectorXf odom_out = odom->getNewRawVelocities();
+        // VectorXf odom_out = odom->getEncoderDerivedVelocities();
+        VectorXf odom_out = odom->getIMUDerivedVelocities();
         odom_lock.unlock();
 
         ControlCommand ctrl;

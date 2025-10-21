@@ -1,29 +1,51 @@
+# Mr. Roboto
 
-Spin Up Container: docker run --rm -it -v $(pwd):/workspace rpi-cc-img
+TODO
 
+---
 
-Create: docker build --no-cache -t rpi-cc-img .
+## Project Overview
 
-Hardware
---------
+This project implements:
+- A
+- B
+- C
 
-Raspberry Pi 4
-Pins:
+---
 
-    Encoder & IMU IN [From Pico]
-    + i2c1 sda: GPIO 2 (3)
-    + i2c1 scl: GPIO 3 (5)
-
-    ----------------------------
-
-    PWM OUT [To Pico]
-    + uart tx [UART0]: GPIO 14 (8)
-
-    ----------------------------
-
-    Power
-    + vcc (For Pico): (2)
-    + gnd: (6)
+## Docker Setup
+**Spin Up Container**: docker run --rm -it -v $(pwd):/workspace rpi-cc-img
 
 
+**Create**: docker build --no-cache -t rpi-cc-img .
 
+
+## Hardware Setup
+
+### Microprocessor
+- **Board:** Raspberry Pi 4
+
+### Power
+- **VSYS (for Pico):** Pin 2  
+- **GND:** Pin 6
+
+### I2C Encoder & IMU (Pico ↔ Pi)
+| Signal | Pi Pin | Notes |
+|---------|-----------|-------|
+| SDA | GPIO 2 (Pin 3) | I2C1 SDA |
+| SCL | GPIO 3 (Pin 5) | I2C1 SCL |
+
+### UART PWM (Pi ↔ Pico)
+| Function | Pi Pin | Notes |
+|-----------|-----------|-------|
+| UART0 TX (to Pico)   | GPIO 14 (Pin 8) | Sends PWM values |
+
+---
+
+## Software Components
+
+- **Pose Graph Optimization** – Some Features, ...
+- **Particle Filter** – Some Features, ...
+- **Etc** – Some Features, ...
+
+---

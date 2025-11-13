@@ -49,3 +49,12 @@ This project implements:
 - **Etc** – Some Features, ...
 
 ---
+
+## Controller Buttons
+
+- **Forward**: D-Pad Up
+- **Backward**: D-Pad Down
+- **Right**: CIRCLE
+- **Left**: SQUARE
+- **Accelerate**: R1
+- **Decelerate**: L1

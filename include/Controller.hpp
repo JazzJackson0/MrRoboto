@@ -29,7 +29,7 @@
 
 
 // Differential Drive Parameters-------------------------------------------------------------------
-#define DIFF_MOVE_DELTA 3000
+#define DIFF_MOVE_DELTA 50 // Percentage (0% - 100%)
 
 // Left Motors PWM1A (P9_14 - [PWM1_A] Chip 5 - PWM0)
 #define LEFT_CHIP 5

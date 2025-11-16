@@ -29,7 +29,7 @@
 
 
 // Differential Drive Parameters-------------------------------------------------------------------
-#define DIFF_MOVE_DELTA 50 // Percentage (0% - 100%)
+#define DIFF_MOVE_DELTA 50.0f // Percentage (0% - 100%)
 
 // Left Motors PWM1A (P9_14 - [PWM1_A] Chip 5 - PWM0)
 #define LEFT_CHIP 5
@@ -70,23 +70,33 @@
 struct MotorSpeeds {
 
     // Quad
-    int front_right_speed;
-    int front_left_speed;
-    int back_right_speed;
-    int back_left_speed;
+    float front_right_speed;
+    float front_left_speed;
+    float back_right_speed;
+    float back_left_speed;
 
     // Drone
-    int right_speed;
-    int left_speed;
+    float right_speed;
+    float left_speed;
+};
+
+struct WaitingCommands {
+    int command;
+    std::function<void(int)> function;
+    WaitingCommands(int command, std::function<void(int)> function) :
+        command(command), function(function) {
+
+    }
 };
 
 class Controller {
 
     private:
         
-        enum motor_directions_1 { STP, BKWD, FWD, BRK }; // STP = 0 0, BKWD 0 1, FWD = 1 0, BRK 1 1
-        enum motor_directions_2 { CLOCKWISE, COUNTER_CLOCKWISE };
-        enum robot_movements { FORWARD, BACKWARD, RIGHT, LEFT, UP, DOWN, ACCEL, DECCEL, LEFT_ROLL, RIGHT_ROLL, LEFT_YAW, RIGHT_YAW };
+        enum MotorCommands { STP, BKWD, FWD, BRK, CLOCKWISE, COUNTER_CLOCKWISE }; // STP = 0 0, BKWD 0 1, FWD = 1 0, BRK 1 1
+        enum RobotCommands { MOVE_FWD = ((2 << FWD) | FWD), MOVE_BKWD = ((2 << BKWD) | BKWD), TURN_RIGHT = ((2 << FWD) | BKWD), 
+                              TURN_LEFT = ((2 << BKWD) | FWD), STOP = ((2 << STP) | STP), BRAKE = ((2 << BRK) | BRK), ACCEL };
+        enum RobotMovements { FORWARD, BACKWARD, RIGHT, LEFT, UP, DOWN, LEFT_ROLL, RIGHT_ROLL, LEFT_YAW, RIGHT_YAW, BRAKED, ACCELERATE, DECELERATE };
         uint8_t quad_motor_directions = 0;
         std::unique_ptr<Serial> serial;
         int dev_num;
@@ -95,7 +105,9 @@ class Controller {
 
         std::map<int, bool> active;
         std::map<int, bool> pressed;
-        std::map<int, std::function<void(int)>> waiting;
+        std::vector<WaitingCommands> waiting;
+
+        bool button_active;
 
         
         // Controller
@@ -104,63 +116,65 @@ class Controller {
 
         /**
          * @brief 
-         * @param 
-         * @param 
-         * @param 
-         * @param 
+         * @param packet_type
+         * @param motor_directions
+         * @param left_speed
+         * @param right_speed
          * @return 
          */
-        char* create_data_packet(uint8_t packet_type, uint8_t motor_directions, uint32_t left_speed, uint32_t right_speed);
+        uint8_t* create_data_packet(uint8_t packet_type, uint8_t motor_directions, float left_speed, float right_speed);
         
         /**
          * @brief 
-         * @param 
-         * @param 
-         * @param 
-         * @param 
-         * @param 
-         * @param 
+         * @param packet_type
+         * @param motor_directions
+         * @param front_left_speed
+         * @param back_left_speed
+         * @param front_right_speed
+         * @param back_right_speed
          * @return 
          */
-        char* create_quad_data_packet(uint8_t packet_type, uint8_t motor_directions, 
-            uint32_t front_left_speed, uint32_t back_left_speed, uint32_t front_right_speed, uint32_t back_right_speed);
+        uint8_t* create_quad_data_packet(uint8_t packet_type, uint8_t motor_directions, 
+            float front_left_speed, float back_left_speed, float front_right_speed, float back_right_speed);
 
         /**
-         * @brief 
-         * @param btnState 
+         * @brief
+         * @param movement
          */
-        void diff_right_turn(int btnState);
+        void remove_waiting(RobotMovements movement);
 
         /**
-         * @brief 
-         * @param btnState 
+         * @brief
          */
-        void diff_left_turn(int btnState);
-
-        /**
-         * @brief 
-         * @param btnState 
-         */
-        void diff_forward(int btnState);
+        void update_waiting();
         
         /**
+         * @brief
+         * @param btnState
+         * @param command 
+         */
+        void log_button_press(int btnState, RobotCommands command);
+
+        /**
          * @brief 
          * @param btnState 
+         * @param command
          */
-        void diff_backward(int btnState);
+        void diff_robot_move(int btnState, RobotCommands command);
+
 
         /**
          * @brief 
          * @param btnState 
          */
-        void diff_accelerate(int btnState);
+        void diff_robot_accelerate(int btnState);
 
 
         /**
          * @brief 
          * @param btnState 
          */
-        void diff_deccelerate(int btnState);
+        void diff_robot_break(int btnState);
 
         /**
          * @brief 

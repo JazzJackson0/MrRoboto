@@ -149,7 +149,7 @@ class Serial {
          * @param datalen 
          * @return int8_t 
          */
-        int8_t uartWrite(uint8_t uartNum, char* data, int datalen);
+        int8_t uartWrite(uint8_t uartNum, uint8_t* data, int datalen);
 
 
         /**
@@ -160,7 +160,7 @@ class Serial {
          * @param datalen 
          * @return int8_t 
          */
-        int8_t uartRead(uint8_t uartNum, char* data, int datalen);
+        int8_t uartRead(uint8_t uartNum, uint8_t* data, int datalen);
 
 
         /**

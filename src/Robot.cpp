@@ -273,15 +273,15 @@ void Robot::follow_local_path(std::vector<VectorXf> smooth_waypoints, Eigen::Ten
         // Motor Out
         uint32_t left_wheel_duty_cycle_temp = *((uint32_t*) (&left_wheel_duty_cycle));
         uint32_t right_wheel_duty_cycle_temp = *((uint32_t*) (&right_wheel_duty_cycle));
-        char duty_cycle_buff[UART_BUFFER_SIZE] = {0};
+        uint8_t duty_cycle_buff[UART_BUFFER_SIZE] = {0};
         duty_cycle_buff[0] = FWD | FWD;
         for (int i = 1; i < UART_BUFFER_SIZE; i++) {
 
             if (i < 5)
-                duty_cycle_buff[i] = *((char*)&left_wheel_duty_cycle_temp + i);
+                duty_cycle_buff[i] = *((uint8_t*)&left_wheel_duty_cycle_temp + i);
 
             else
-                duty_cycle_buff[i] = *((char*)&right_wheel_duty_cycle_temp + (i - 4));
+                duty_cycle_buff[i] = *((uint8_t*)&right_wheel_duty_cycle_temp + (i - 4));
         }   
         std::cout << "Writing to UART..." << std::endl;
         serial->uartWrite(UART_NUM, duty_cycle_buff, UART_BUFFER_SIZE);

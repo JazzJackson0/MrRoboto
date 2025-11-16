@@ -234,7 +234,7 @@ int8_t Serial::pinRead(uint8_t gpioNum) {
 
 
 
-int8_t Serial::uartWrite(uint8_t uartNum, char* data, int datalen) {
+int8_t Serial::uartWrite(uint8_t uartNum, uint8_t* data, int datalen) {
     if (ssize_t result = write(uart_buses[uartNum], data, datalen); result != datalen) {
         if (result == -1) {
             char buf[256];
@@ -250,7 +250,7 @@ int8_t Serial::uartWrite(uint8_t uartNum, char* data, int datalen) {
 }
 
 
-int8_t Serial::uartRead(uint8_t uartNum, char* data, int datalen) {
+int8_t Serial::uartRead(uint8_t uartNum, uint8_t* data, int datalen) {
 
     if (ssize_t result = read(uart_buses[uartNum], data, datalen); result != datalen) {
         if (result == -1) {

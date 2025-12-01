@@ -54,39 +54,65 @@ int8_t Serial::uartInit(uint8_t uartNum) {
     struct termios settings; // termios: A general API for configuring the I/O characteristics of character devices, including both terminals and UARTs
 
     std::string path = "/dev/serial" + std::to_string(uartNum);
-    if((uart_buses[uartNum] = open(path.c_str(), O_RDWR | O_NDELAY, O_NOCTTY)); uart_buses[uartNum] < 0) {
+
+    // Open Serial Port
+    if((uart_buses[uartNum] = open(path.c_str(), O_RDWR | O_NOCTTY)); uart_buses[uartNum] < 0) {
         std::cerr << "ERROR: Unable to open file. Cannot initialize serial/uart-" << std::to_string(uartNum) << std::endl;
         return -1;
     }
 
-    // Retrieve & Save current tty terminal settings for uart device
+    // 1. Backup existing settings. Retrieve & Save current tty terminal settings for uart device
     if (tcgetattr(uart_buses[uartNum], &default_terminal_settings[uartNum]) != 0) {
         std::cerr << "ERROR: Failed to get UART attributes." << std::endl;
         close(uart_buses[uartNum]);
         return -1;
     }
 
-    // Register function to restore terminal settings at exit
-    atexit(RestoreTerminal);
+    // 2. Initialize new settings from old.
+    settings = default_terminal_settings[uartNum];
 
+    // 3. Convert new settings to raw mode (Puts port in Raw UART Mode)
+    /**
+     *      No canonical processing
+     *      No echo
+     *      No newline translation
+     *      No Ctrl+C / Ctrl+Z signal interpretation
+     *      No parity checking
+     *      No output post-processing
+     *      Immediate byte-level behavior
+     */
+    cfmakeraw(&settings);
+
+    // 5. Add UART-specific flags
+    settings.c_cflag &= ~CBAUD;
     cfsetspeed(&settings, B9600); // Baudrate
-    settings.c_cflag &= ~PARENB;  // No parity bit
-    settings.c_cflag &= ~CSTOPB;  // 1 stop bit
     settings.c_cflag &= ~CSIZE;   // Clear Data Size bits
     settings.c_cflag |= CS8;      // Set Data Size: 8 data bits
-    settings.c_cflag |= (CLOCAL | CREAD); // Ignore Modem Status | Dont ignore Received data
-    settings.c_iflag = IGNPAR; // Input Modes: Ignore Parity Errors
-    settings.c_oflag &= ~OPOST; // Set raw output mode (disable pre-processing)
-    settings.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Local Modes: Disable canonical mode & echo
-        // Canonical Mode - (line buffering and special character processing)
-            // Non-Canonical Mode: Raw data without line editing or special character processing
-        // Echo - Echoes typed characters back to the terminal
-        // Echoe - Echoes the erase character (like backspace) as a space+backspace
-        // Isig - Enables signal characters (Ctrl+C, Ctrl+Z, etc.)
+    // settings.c_cflag &= ~PARENB;  // No parity bit
+    // settings.c_cflag &= ~CSTOPB;  // 1 stop bit
+    // settings.c_cflag |= (CLOCAL | CREAD); // Ignore Modem Status | Dont ignore Received data
+    // settings.c_iflag = IGNPAR; // Input Modes: Ignore Parity Errors
+    // settings.c_oflag &= ~OPOST; // Set raw output mode (disable pre-processing)
+    // settings.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Local Modes: Disable canonical mode & echo
+    //     // Canonical Mode - (line buffering and special character processing)
+    //         // Non-Canonical Mode: Raw data without line editing or special character processing
+    //     // Echo - Echoes typed characters back to the terminal
+    //     // Echoe - Echoes the erase character (like backspace) as a space+backspace
+    //     // Isig - Enables signal characters (Ctrl+C, Ctrl+Z, etc.)
+
+    // 5-a. Enable receiver, ignore modem control lines
+    settings.c_cflag |= (CLOCAL | CREAD);
+
+    // 5-b. Set VMIN/VTIME (non-blocking reads)
+    settings.c_cc[VMIN]  = 0;
+    settings.c_cc[VTIME] = 0;
 
 
-    // Apply Serial Port Settings
-    tcflush(uart_buses[uartNum], TCIFLUSH); // TCIFLUSH: Flush uart's input-data buffer
+    // 4. Register function to restore terminal settings at exit
+    atexit(RestoreTerminal);
+
+    // 6. Apply settings
+    tcflush(uart_buses[uartNum], TCIOFLUSH); // TCIOFLUSH: Flush uart's input & output data buffer
     if (tcsetattr(uart_buses[uartNum], TCSANOW, &settings) != 0) { // TCSANOW: Apply settings immediately
         std::cerr << "ERROR: Failed to set UART attributes." << std::endl;
         close(uart_buses[uartNum]);
@@ -235,6 +261,12 @@ int8_t Serial::pinRead(uint8_t gpioNum) {
 
 
 int8_t Serial::uartWrite(uint8_t uartNum, uint8_t* data, int datalen) {
+    // // TEST with sending dummy first-------------------
+    // uint8_t dummy = 99;
+    // write(uart_buses[uartNum], &dummy, 1);
+    // // TEST ------------------------------------------
+
+
     if (ssize_t result = write(uart_buses[uartNum], data, datalen); result != datalen) {
         if (result == -1) {
             char buf[256];
@@ -246,6 +278,7 @@ int8_t Serial::uartWrite(uint8_t uartNum, uint8_t* data, int datalen) {
         }
         return 0;
     }
+    tcdrain(uart_buses[uartNum]); // Force immediate transmit of data (instead of buffering)
     return 1;
 }
 

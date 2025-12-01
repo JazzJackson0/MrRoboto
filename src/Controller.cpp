@@ -111,6 +111,7 @@ void Controller::log_button_press(int btnState, RobotCommands command) {
             } else if (btnState == RELEASE) {
                 std::cout << "(D-Pad Up) Forward Button Released" << std::endl;
             }
+            break;
         }
         case MOVE_BKWD: {
             if (btnState == PRESS) {
@@ -118,6 +119,7 @@ void Controller::log_button_press(int btnState, RobotCommands command) {
             } else if (btnState == RELEASE) {
                 std::cout << "(D-Pad Down) Backward Button Released" << std::endl;
             }
+            break;
         }
         case TURN_LEFT: {
             if (btnState == PRESS) {
@@ -125,6 +127,7 @@ void Controller::log_button_press(int btnState, RobotCommands command) {
             } else if (btnState == RELEASE) {
                 std::cout << "(Square) Left Button Released" << std::endl;
             }
+            break;
         }
         case TURN_RIGHT: {
             if (btnState == PRESS) {
@@ -132,6 +135,7 @@ void Controller::log_button_press(int btnState, RobotCommands command) {
             } else if (btnState == RELEASE) {
                 std::cout << "(O) Right Button Released" << std::endl;
             }
+            break;
         }
         case ACCEL: {
             if (btnState == PRESS) {
@@ -139,6 +143,7 @@ void Controller::log_button_press(int btnState, RobotCommands command) {
             } else if (btnState == RELEASE) {
                 std::cout << "(R1) Accel Button Released" << std::endl;
             }
+            break;
         }
         case BRAKE: {
             if (btnState == PRESS) {
@@ -146,7 +151,10 @@ void Controller::log_button_press(int btnState, RobotCommands command) {
             } else if (btnState == RELEASE) {
                 std::cout << "(L1) Brake Button Released" << std::endl;
             }
+            break;
         }
+        default:
+            break;
     }
 }
 

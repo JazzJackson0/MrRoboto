@@ -1,54 +1,42 @@
-# Mr. Roboto
+# Project: Mr Roboto
 
-TODO
-
----
-
-## Project Overview
-
-This project implements:
-- A
-- B
-- C
-
----
-
-## Docker Setup
-**Spin Up Container**: docker run --rm -it -v $(pwd):/workspace rpi-cc-img
+## Summary
 
 
-**Create**: docker build --no-cache -t rpi-cc-img .
-
-
-## Hardware Setup
-
-### Microprocessor
-- **Board:** Raspberry Pi 4
-
-### Power
-- **VSYS (for Pico):** Pin 2  
-- **GND:** Pin 6
-
-### I2C Encoder & IMU (Pico ↔ Pi)
-| Signal | Pi Pin | Notes |
-|---------|-----------|-------|
-| SDA | GPIO 2 (Pin 3) | I2C1 SDA |
-| SCL | GPIO 3 (Pin 5) | I2C1 SCL |
-
-### UART PWM (Pi ↔ Pico)
-| Function | Pi Pin | Notes |
-|-----------|-----------|-------|
-| UART0 TX (to Pico)   | GPIO 14 (Pin 8) | Sends PWM values |
-
----
-
-## Software Components
-
+## Features
 - **Pose Graph Optimization** – Some Features, ...
 - **Particle Filter** – Some Features, ...
 - **Etc** – Some Features, ...
 
----
+
+## Requirements
+
+### Hardware Requirements
+**Board**: Raspberry Pi  
+- Power source for Pi 
+**Sensor:** RpLidar A1 
+**Sensor**: Wireless Bluetooth dongle + Sony Dualshock PS4 Controller**  
+**Raspberry Pi Pico**
+
+### Software Requirements
+
+### Other
+
+
+## Dependencies
+### **dependency name** - `version`
+**Uses**
+- Use A
+- Use B
+
+**Files Using Dependency**
+- File A
+- File B
+- File C
+
+**Notes**
+- Note A
+- Note B
 
 ## Controller Buttons
 
@@ -56,5 +44,31 @@ This project implements:
 - **Backward**: D-Pad Down
 - **Right**: CIRCLE
 - **Left**: SQUARE
-- **Accelerate**: R1
-- **Decelerate**: L1
+- **Accelerate**: R0
+- **Decelerate**: L0
+
+
+## Other???
+Live Output View 
+(But first, ensure point cloud data is being output to stdout)
+`./demo | python3 display.py`
+
+
+## Build Notes
+### Some CMakeLists.txt Alteration
+```cmake
+cmake_minimum_required(VERSION 3.10)
+project( MyProject )
+add_executable( MyProject main.cpp )
+```
+
+### Some Makefile Alteration
+```makefile
+CC = gcc
+CFLAGS = -Wall -g
+
+main: main.o
+	(CC) (CFLAGS) -o main main.o
+```
+
+

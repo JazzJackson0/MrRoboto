@@ -1,6 +1,8 @@
 docs/*.png
 docs/*.xlsx
 docs/*.md
+docs/output-artifacts/
+docs/images/
 build/*
 build2/*
 sdk/
